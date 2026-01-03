@@ -125,13 +125,13 @@ const knownScamAddresses = [
 ];
 
 const investigators = [
-  { username: "CryptoHunter_AE", email: "hunter@cryptoguard.ae", rank: "Sentinel", points: 15420, verified: 89 },
-  { username: "BlockchainWatch", email: "watch@cryptoguard.ae", rank: "Investigator", points: 8750, verified: 45 },
-  { username: "DeFiDetective", email: "detective@cryptoguard.ae", rank: "Investigator", points: 7200, verified: 38 },
-  { username: "ChainAnalyst", email: "analyst@cryptoguard.ae", rank: "Analyst", points: 4500, verified: 22 },
-  { username: "ScamBuster_Dubai", email: "buster@cryptoguard.ae", rank: "Analyst", points: 3800, verified: 18 },
-  { username: "CryptoGuardian", email: "guardian@cryptoguard.ae", rank: "Novice", points: 1200, verified: 8 },
-  { username: "UAECryptoWatch", email: "uaewatch@cryptoguard.ae", rank: "Novice", points: 650, verified: 4 },
+  { username: "CryptoHunter_AE", email: "hunter@dubaiverified.com", rank: "Sentinel", points: 15420, verified: 89 },
+  { username: "BlockchainWatch", email: "watch@dubaiverified.com", rank: "Investigator", points: 8750, verified: 45 },
+  { username: "DeFiDetective", email: "detective@dubaiverified.com", rank: "Investigator", points: 7200, verified: 38 },
+  { username: "ChainAnalyst", email: "analyst@dubaiverified.com", rank: "Analyst", points: 4500, verified: 22 },
+  { username: "ScamBuster_Dubai", email: "buster@dubaiverified.com", rank: "Analyst", points: 3800, verified: 18 },
+  { username: "DubaiGuardian", email: "guardian@dubaiverified.com", rank: "Novice", points: 1200, verified: 8 },
+  { username: "UAECryptoWatch", email: "uaewatch@dubaiverified.com", rank: "Novice", points: 650, verified: 4 },
 ];
 
 export async function seedDatabase() {
@@ -186,7 +186,7 @@ export async function seedDatabase() {
   const [demoUser] = await db.insert(users).values({
     username: "demo-user",
     password: "demo-password",
-    email: "demo@cryptoguard.ae"
+    email: "demo@dubaiverified.com"
   }).onConflictDoNothing().returning();
 
   if (demoUser) {

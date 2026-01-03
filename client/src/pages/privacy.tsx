@@ -15,7 +15,7 @@ export default function Privacy() {
           </div>
         </div>
         <p className="text-muted-foreground">
-          CryptoGuard is committed to protecting your personal data in accordance with the UAE Personal Data Protection Law (PDPL).
+          DubaiVerified is committed to protecting your personal data in accordance with the UAE Personal Data Protection Law (PDPL).
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export default function Privacy() {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground pt-6 border-t">
-          <p>For data protection inquiries, contact: privacy@cryptoguard.ae</p>
+          <p>For data protection inquiries, contact: privacy@dubaiverified.com</p>
           <p className="mt-2">Last updated: January 2026</p>
         </div>
       </div>

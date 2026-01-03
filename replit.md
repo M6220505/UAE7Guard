@@ -1,8 +1,8 @@
-# CryptoGuard - Sovereign Crypto Intelligence Platform
+# DubaiVerified - Sovereign Crypto Intelligence Platform
 
 ## Overview
 
-CryptoGuard is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for investors, institutions, and enterprises. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
+DubaiVerified is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for investors, institutions, and enterprises. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
 
 ## User Preferences
 

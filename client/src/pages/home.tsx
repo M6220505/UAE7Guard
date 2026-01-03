@@ -52,7 +52,7 @@ export default function Home() {
         <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
           <div className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight">CryptoGuard</span>
+            <span className="text-xl font-bold tracking-tight">DubaiVerified</span>
           </div>
           <nav className="hidden items-center gap-6 md:flex">
             <Link href="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -173,7 +173,7 @@ export default function Home() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            <span className="font-semibold">CryptoGuard</span>
+            <span className="font-semibold">DubaiVerified</span>
           </div>
           <p className="text-sm text-muted-foreground">
             PDPL Compliant. UAE Federal Decree-Law No. 45 of 2021.

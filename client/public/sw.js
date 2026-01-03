@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cryptoguard-v1';
+const CACHE_NAME = 'dubaiverified-v1';
 const urlsToCache = [
   '/',
   '/index.html'

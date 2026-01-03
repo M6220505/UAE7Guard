@@ -15,7 +15,7 @@ export default function Terms() {
           </div>
         </div>
         <p className="text-muted-foreground">
-          By accessing CryptoGuard, you agree to these terms and conditions governing the use of our threat intelligence platform.
+          By accessing DubaiVerified, you agree to these terms and conditions governing the use of our threat intelligence platform.
         </p>
       </div>
 
@@ -28,7 +28,7 @@ export default function Terms() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <p>CryptoGuard provides:</p>
+            <p>DubaiVerified provides:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Real-time cryptocurrency address threat lookup</li>
               <li>Community-driven scam report submission and verification</li>
@@ -47,7 +47,7 @@ export default function Terms() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <p>As a user of CryptoGuard, you agree to:</p>
+            <p>As a user of DubaiVerified, you agree to:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li><strong>Accurate Reporting:</strong> Submit only truthful and verifiable information in scam reports</li>
               <li><strong>Evidence Standards:</strong> Provide credible evidence when reporting suspicious addresses</li>
@@ -68,7 +68,7 @@ export default function Terms() {
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>Please be aware of the following:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li><strong>No Financial Advice:</strong> CryptoGuard does not provide financial, legal, or investment advice</li>
+              <li><strong>No Financial Advice:</strong> DubaiVerified does not provide financial, legal, or investment advice</li>
               <li><strong>Information Only:</strong> Threat data is provided for informational purposes and requires independent verification</li>
               <li><strong>No Guarantee:</strong> We do not guarantee the accuracy or completeness of all threat intelligence</li>
               <li><strong>Human Verification:</strong> All reports undergo human review but may contain errors</li>
@@ -110,7 +110,7 @@ export default function Terms() {
               <li>Unauthorized access to other users' data</li>
               <li>Using the platform to facilitate illegal activities</li>
               <li>Scraping or automated data extraction without permission</li>
-              <li>Impersonating other users or CryptoGuard personnel</li>
+              <li>Impersonating other users or DubaiVerified personnel</li>
             </ul>
           </CardContent>
         </Card>
@@ -125,13 +125,13 @@ export default function Terms() {
           <CardContent className="text-sm text-muted-foreground">
             <p>
               These terms are governed by the laws of the United Arab Emirates. Any disputes arising from the use 
-              of CryptoGuard shall be subject to the exclusive jurisdiction of the courts of the UAE.
+              of DubaiVerified shall be subject to the exclusive jurisdiction of the courts of the UAE.
             </p>
           </CardContent>
         </Card>
 
         <div className="text-center text-sm text-muted-foreground pt-6 border-t">
-          <p>For legal inquiries, contact: legal@cryptoguard.ae</p>
+          <p>For legal inquiries, contact: legal@dubaiverified.com</p>
           <p className="mt-2">Last updated: January 2026</p>
         </div>
       </div>
