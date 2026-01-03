@@ -100,6 +100,85 @@ export const securityLogsRelations = relations(securityLogs, ({ one }) => ({
   user: one(users, { fields: [securityLogs.userId], references: [users.id] }),
 }));
 
+// Live Monitoring - Wallet Watch for real-time alerts
+export const liveMonitoring = pgTable("live_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  walletAddress: text("wallet_address").notNull(),
+  label: text("label"),
+  network: text("network").default("ethereum").notNull(), // ethereum, bsc, polygon
+  isActive: boolean("is_active").default(true).notNull(),
+  lastChecked: timestamp("last_checked"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("live_monitoring_wallet_idx").on(table.walletAddress),
+]);
+
+export const liveMonitoringRelations = relations(liveMonitoring, ({ one, many }) => ({
+  user: one(users, { fields: [liveMonitoring.userId], references: [users.id] }),
+  alerts: many(monitoringAlerts),
+}));
+
+// Monitoring Alerts - Real-time movement alerts
+export const monitoringAlerts = pgTable("monitoring_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monitoringId: varchar("monitoring_id").notNull().references(() => liveMonitoring.id),
+  alertType: text("alert_type").notNull(), // outgoing, incoming, large_transfer
+  amount: text("amount"),
+  toAddress: text("to_address"),
+  fromAddress: text("from_address"),
+  txHash: text("tx_hash"),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const monitoringAlertsRelations = relations(monitoringAlerts, ({ one }) => ({
+  monitoring: one(liveMonitoring, { fields: [monitoringAlerts.monitoringId], references: [liveMonitoring.id] }),
+}));
+
+// Escrow Transactions - Smart Lock for secure transactions
+export const escrowTransactions = pgTable("escrow_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  buyerId: varchar("buyer_id").notNull().references(() => users.id),
+  sellerId: varchar("seller_id"),
+  assetType: text("asset_type").notNull(), // real_estate, luxury_watch, vehicle, crypto, other
+  assetDescription: text("asset_description").notNull(),
+  amount: text("amount").notNull(),
+  currency: text("currency").default("AED").notNull(),
+  buyerWallet: text("buyer_wallet").notNull(),
+  sellerWallet: text("seller_wallet"),
+  status: text("status").default("pending").notNull(), // pending, funded, verified, released, disputed, cancelled
+  buyerVerified: boolean("buyer_verified").default(false).notNull(),
+  sellerVerified: boolean("seller_verified").default(false).notNull(),
+  assetTransferred: boolean("asset_transferred").default(false).notNull(),
+  releaseConditions: text("release_conditions"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const escrowTransactionsRelations = relations(escrowTransactions, ({ one }) => ({
+  buyer: one(users, { fields: [escrowTransactions.buyerId], references: [users.id] }),
+}));
+
+// Price Slippage Calculations
+export const slippageCalculations = pgTable("slippage_calculations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  tokenSymbol: text("token_symbol").notNull(),
+  tokenAddress: text("token_address"),
+  amount: text("amount").notNull(),
+  currentPrice: text("current_price"),
+  estimatedSlippage: text("estimated_slippage"),
+  liquidityDepth: text("liquidity_depth"),
+  recommendation: text("recommendation"), // proceed, caution, avoid
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const slippageCalculationsRelations = relations(slippageCalculations, ({ one }) => ({
+  user: one(users, { fields: [slippageCalculations.userId], references: [users.id] }),
+}));
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -131,6 +210,34 @@ export const insertSecurityLogSchema = createInsertSchema(securityLogs).omit({
   createdAt: true,
 });
 
+export const insertLiveMonitoringSchema = createInsertSchema(liveMonitoring).omit({
+  id: true,
+  isActive: true,
+  lastChecked: true,
+  createdAt: true,
+});
+
+export const insertMonitoringAlertSchema = createInsertSchema(monitoringAlerts).omit({
+  id: true,
+  isRead: true,
+  createdAt: true,
+});
+
+export const insertEscrowTransactionSchema = createInsertSchema(escrowTransactions).omit({
+  id: true,
+  status: true,
+  buyerVerified: true,
+  sellerVerified: true,
+  assetTransferred: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSlippageCalculationSchema = createInsertSchema(slippageCalculations).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -143,3 +250,11 @@ export type InsertScamReport = z.infer<typeof insertScamReportSchema>;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
 export type InsertWatchlist = z.infer<typeof insertWatchlistSchema>;
 export type InsertSecurityLog = z.infer<typeof insertSecurityLogSchema>;
+export type LiveMonitoring = typeof liveMonitoring.$inferSelect;
+export type MonitoringAlert = typeof monitoringAlerts.$inferSelect;
+export type EscrowTransaction = typeof escrowTransactions.$inferSelect;
+export type SlippageCalculation = typeof slippageCalculations.$inferSelect;
+export type InsertLiveMonitoring = z.infer<typeof insertLiveMonitoringSchema>;
+export type InsertMonitoringAlert = z.infer<typeof insertMonitoringAlertSchema>;
+export type InsertEscrowTransaction = z.infer<typeof insertEscrowTransactionSchema>;
+export type InsertSlippageCalculation = z.infer<typeof insertSlippageCalculationSchema>;

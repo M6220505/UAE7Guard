@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema } from "@shared/schema";
+import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -256,6 +256,132 @@ export async function registerRoutes(
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // ===== LIVE MONITORING =====
+  app.get("/api/live-monitoring", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        return res.json([]);
+      }
+      const items = await storage.getLiveMonitoring(user.id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch monitored wallets" });
+    }
+  });
+
+  app.post("/api/live-monitoring", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        user = await storage.createUser({
+          username: "demo-user",
+          password: "demo-password",
+          email: "demo@cryptoguard.ae"
+        });
+      }
+      
+      const data = insertLiveMonitoringSchema.parse({
+        ...req.body,
+        userId: user.id
+      });
+      const item = await storage.createLiveMonitoring(data);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to add wallet to monitoring" });
+    }
+  });
+
+  app.delete("/api/live-monitoring/:id", async (req, res) => {
+    try {
+      await storage.deleteLiveMonitoring(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove wallet from monitoring" });
+    }
+  });
+
+  // ===== ESCROW =====
+  app.get("/api/escrow", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        return res.json([]);
+      }
+      const items = await storage.getEscrowTransactions(user.id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch escrow transactions" });
+    }
+  });
+
+  app.post("/api/escrow", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        user = await storage.createUser({
+          username: "demo-user",
+          password: "demo-password",
+          email: "demo@cryptoguard.ae"
+        });
+      }
+      
+      const data = insertEscrowTransactionSchema.parse({
+        ...req.body,
+        buyerId: user.id
+      });
+      const item = await storage.createEscrowTransaction(data);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create escrow transaction" });
+    }
+  });
+
+  // ===== SLIPPAGE CALCULATIONS =====
+  app.get("/api/slippage", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        return res.json([]);
+      }
+      const items = await storage.getSlippageCalculations(user.id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch slippage calculations" });
+    }
+  });
+
+  app.post("/api/slippage", async (req, res) => {
+    try {
+      let user = await storage.getUserByUsername("demo-user");
+      if (!user) {
+        user = await storage.createUser({
+          username: "demo-user",
+          password: "demo-password",
+          email: "demo@cryptoguard.ae"
+        });
+      }
+      
+      const data = insertSlippageCalculationSchema.parse({
+        ...req.body,
+        userId: user.id
+      });
+      const item = await storage.createSlippageCalculation(data);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to save slippage calculation" });
     }
   });
 

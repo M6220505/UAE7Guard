@@ -7,7 +7,9 @@ import {
   ShieldCheck,
   Scale,
   Lock,
-  Gem
+  Gem,
+  Radio,
+  TrendingDown
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,6 +39,21 @@ const mainNavItems = [
     title: "Due Diligence",
     url: "/due-diligence",
     icon: Gem,
+  },
+  {
+    title: "Live Monitoring",
+    url: "/live-monitoring",
+    icon: Radio,
+  },
+  {
+    title: "Escrow",
+    url: "/escrow",
+    icon: Lock,
+  },
+  {
+    title: "Price Slippage",
+    url: "/slippage",
+    icon: TrendingDown,
   },
   {
     title: "Leaderboard",

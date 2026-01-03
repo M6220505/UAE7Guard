@@ -1,8 +1,12 @@
 import { 
   users, userReputation, scamReports, alerts, watchlist, securityLogs,
+  liveMonitoring, escrowTransactions, slippageCalculations,
   type User, type InsertUser, type UserReputation, type ScamReport, 
   type Alert, type InsertAlert, type Watchlist, type InsertWatchlist,
-  type SecurityLog, type InsertSecurityLog, type InsertScamReport
+  type SecurityLog, type InsertSecurityLog, type InsertScamReport,
+  type LiveMonitoring, type InsertLiveMonitoring,
+  type EscrowTransaction, type InsertEscrowTransaction,
+  type SlippageCalculation, type InsertSlippageCalculation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -50,6 +54,19 @@ export interface IStorage {
     threatsNeutralized: number;
     reputationScore: number;
   }>;
+
+  // Live Monitoring
+  getLiveMonitoring(userId: string): Promise<LiveMonitoring[]>;
+  createLiveMonitoring(data: InsertLiveMonitoring): Promise<LiveMonitoring>;
+  deleteLiveMonitoring(id: string): Promise<void>;
+
+  // Escrow
+  getEscrowTransactions(userId: string): Promise<EscrowTransaction[]>;
+  createEscrowTransaction(data: InsertEscrowTransaction): Promise<EscrowTransaction>;
+
+  // Slippage
+  getSlippageCalculations(userId: string): Promise<SlippageCalculation[]>;
+  createSlippageCalculation(data: InsertSlippageCalculation): Promise<SlippageCalculation>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -272,6 +289,49 @@ export class DatabaseStorage implements IStorage {
       threatsNeutralized: verifiedThreats,
       reputationScore: 0,
     };
+  }
+
+  // Live Monitoring
+  async getLiveMonitoring(userId: string): Promise<LiveMonitoring[]> {
+    return await db.select().from(liveMonitoring)
+      .where(eq(liveMonitoring.userId, userId))
+      .orderBy(desc(liveMonitoring.createdAt));
+  }
+
+  async createLiveMonitoring(data: InsertLiveMonitoring): Promise<LiveMonitoring> {
+    const [item] = await db.insert(liveMonitoring).values({
+      ...data,
+      walletAddress: data.walletAddress.toLowerCase()
+    }).returning();
+    return item;
+  }
+
+  async deleteLiveMonitoring(id: string): Promise<void> {
+    await db.delete(liveMonitoring).where(eq(liveMonitoring.id, id));
+  }
+
+  // Escrow
+  async getEscrowTransactions(userId: string): Promise<EscrowTransaction[]> {
+    return await db.select().from(escrowTransactions)
+      .where(eq(escrowTransactions.buyerId, userId))
+      .orderBy(desc(escrowTransactions.createdAt));
+  }
+
+  async createEscrowTransaction(data: InsertEscrowTransaction): Promise<EscrowTransaction> {
+    const [item] = await db.insert(escrowTransactions).values(data).returning();
+    return item;
+  }
+
+  // Slippage
+  async getSlippageCalculations(userId: string): Promise<SlippageCalculation[]> {
+    return await db.select().from(slippageCalculations)
+      .where(eq(slippageCalculations.userId, userId))
+      .orderBy(desc(slippageCalculations.createdAt));
+  }
+
+  async createSlippageCalculation(data: InsertSlippageCalculation): Promise<SlippageCalculation> {
+    const [item] = await db.insert(slippageCalculations).values(data).returning();
+    return item;
   }
 }
 

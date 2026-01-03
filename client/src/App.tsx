@@ -16,6 +16,9 @@ import Admin from "@/pages/admin";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import DueDiligence from "@/pages/due-diligence";
+import LiveMonitoring from "@/pages/live-monitoring";
+import Escrow from "@/pages/escrow";
+import Slippage from "@/pages/slippage";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const style = {
@@ -56,6 +59,9 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/reports" component={Reports} />
         <Route path="/due-diligence" component={DueDiligence} />
+        <Route path="/live-monitoring" component={LiveMonitoring} />
+        <Route path="/escrow" component={Escrow} />
+        <Route path="/slippage" component={Slippage} />
         <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/admin" component={Admin} />
         <Route path="/privacy" component={Privacy} />
