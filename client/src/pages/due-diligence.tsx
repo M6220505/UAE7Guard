@@ -55,7 +55,7 @@ const assetTypes = [
   { value: "other", label: "Other High-Value Asset", icon: Gem },
 ];
 
-const MIN_TRANSACTION_VALUE = 5000000;
+const MIN_TRANSACTION_VALUE = 500000;
 
 const dueDiligenceSchema = z.object({
   transactionValue: z.string().min(1, "Transaction value is required").refine((val) => {
@@ -423,7 +423,7 @@ export default function DueDiligence() {
             Transaction Due Diligence
           </h1>
           <p className="text-amber-200/60 max-w-2xl mx-auto">
-            Advanced risk assessment for high-value transactions exceeding AED 5,000,000. 
+            Advanced risk assessment for high-value transactions exceeding AED 500,000. 
             Powered by blockchain intelligence and human-verified threat data.
           </p>
         </div>
@@ -454,7 +454,7 @@ export default function DueDiligence() {
                               AED
                             </span>
                             <Input
-                              placeholder="5,000,000"
+                              placeholder="500,000"
                               className="pl-14 bg-zinc-800 border-amber-500/30 text-amber-100 placeholder:text-amber-200/30 focus:border-amber-400"
                               {...field}
                               onChange={(e) => field.onChange(formatAED(e.target.value))}
@@ -463,7 +463,7 @@ export default function DueDiligence() {
                           </div>
                         </FormControl>
                         <FormDescription className="text-amber-200/40">
-                          Minimum AED 5,000,000 for due diligence
+                          Minimum AED 500,000 for due diligence
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
