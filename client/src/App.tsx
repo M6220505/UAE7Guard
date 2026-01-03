@@ -19,6 +19,7 @@ import DueDiligence from "@/pages/due-diligence";
 import LiveMonitoring from "@/pages/live-monitoring";
 import Escrow from "@/pages/escrow";
 import Slippage from "@/pages/slippage";
+import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const style = {
@@ -79,6 +80,7 @@ function App() {
         <TooltipProvider>
           <Router />
           <Toaster />
+          <IOSInstallPrompt />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
