@@ -118,7 +118,7 @@ function calculateRiskScore(
 
   let recommendation: "block" | "review" | "approve";
   if (riskIndex > 70) recommendation = "block";
-  else if (riskIndex > 30) recommendation = "review";
+  else if (riskIndex >= 30) recommendation = "review";
   else recommendation = "approve";
 
   return {
@@ -135,7 +135,7 @@ function calculateRiskScore(
 function RiskGauge({ value }: { value: number }) {
   let color = "bg-green-500";
   if (value > 70) color = "bg-red-500";
-  else if (value > 30) color = "bg-yellow-500";
+  else if (value >= 30) color = "bg-yellow-500";
 
   return (
     <div className="relative pt-4">
