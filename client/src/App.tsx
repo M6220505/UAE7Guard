@@ -15,6 +15,7 @@ import LeaderboardPage from "@/pages/leaderboard-page";
 import Admin from "@/pages/admin";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
+import DueDiligence from "@/pages/due-diligence";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const style = {
@@ -54,6 +55,7 @@ function Router() {
       <Switch>
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/reports" component={Reports} />
+        <Route path="/due-diligence" component={DueDiligence} />
         <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/admin" component={Admin} />
         <Route path="/privacy" component={Privacy} />

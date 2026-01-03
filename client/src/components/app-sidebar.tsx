@@ -6,7 +6,8 @@ import {
   Shield,
   ShieldCheck,
   Scale,
-  Lock
+  Lock,
+  Gem
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,6 +32,11 @@ const mainNavItems = [
     title: "Reports",
     url: "/reports",
     icon: FileText,
+  },
+  {
+    title: "Due Diligence",
+    url: "/due-diligence",
+    icon: Gem,
   },
   {
     title: "Leaderboard",

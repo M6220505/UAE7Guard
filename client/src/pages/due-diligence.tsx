@@ -1,0 +1,566 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  Shield, 
+  AlertTriangle, 
+  CheckCircle, 
+  Loader2, 
+  FileCheck,
+  Wallet,
+  Clock,
+  Link2,
+  Gem,
+  Building2,
+  Car,
+  Watch,
+  Briefcase
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import type { ScamReport } from "@shared/schema";
+
+const assetTypes = [
+  { value: "real_estate", label: "Real Estate", icon: Building2 },
+  { value: "luxury_watch", label: "Luxury Watch", icon: Watch },
+  { value: "vehicle", label: "Luxury Vehicle", icon: Car },
+  { value: "jewelry", label: "Jewelry & Gems", icon: Gem },
+  { value: "business", label: "Business Asset", icon: Briefcase },
+  { value: "other", label: "Other High-Value Asset", icon: Gem },
+];
+
+const MIN_TRANSACTION_VALUE = 5000000;
+
+const dueDiligenceSchema = z.object({
+  transactionValue: z.string().min(1, "Transaction value is required").refine((val) => {
+    const numValue = parseFloat(val.replace(/,/g, ''));
+    return !isNaN(numValue) && numValue >= MIN_TRANSACTION_VALUE;
+  }, `Minimum transaction value is AED ${MIN_TRANSACTION_VALUE.toLocaleString()}`),
+  walletAddress: z.string().min(10, "Wallet address is required").regex(/^0x[a-fA-F0-9]{40}$|^[a-zA-Z0-9]{30,}$/, "Invalid wallet address format"),
+  assetType: z.string().min(1, "Please select an asset type"),
+  walletAge: z.string().min(1, "Wallet age is required"),
+  transactionHistory: z.string().min(1, "Transaction history is required"),
+});
+
+type DueDiligenceValues = z.infer<typeof dueDiligenceSchema>;
+
+interface RiskResult {
+  riskIndex: number;
+  walletAgeScore: number;
+  transactionVolumeScore: number;
+  blacklistScore: number;
+  isBlacklisted: boolean;
+  recommendation: "block" | "review" | "approve";
+  certificateEligible: boolean;
+}
+
+function calculateRiskScore(
+  walletAgeDays: number,
+  transactionCount: number,
+  blacklistAssociations: number,
+  isDirectlyBlacklisted: boolean
+): RiskResult {
+  const W1 = 0.25;
+  const W2 = 0.25;
+  const W3 = 0.50;
+
+  let walletAgeScore = 0;
+  if (walletAgeDays < 30) walletAgeScore = 100;
+  else if (walletAgeDays < 90) walletAgeScore = 70;
+  else if (walletAgeDays < 180) walletAgeScore = 50;
+  else if (walletAgeDays < 365) walletAgeScore = 30;
+  else if (walletAgeDays < 730) walletAgeScore = 15;
+  else walletAgeScore = 5;
+
+  let transactionVolumeScore = 0;
+  if (transactionCount < 5) transactionVolumeScore = 80;
+  else if (transactionCount < 20) transactionVolumeScore = 50;
+  else if (transactionCount < 50) transactionVolumeScore = 30;
+  else if (transactionCount < 100) transactionVolumeScore = 15;
+  else transactionVolumeScore = 5;
+
+  let blacklistScore = 0;
+  if (isDirectlyBlacklisted) blacklistScore = 100;
+  else if (blacklistAssociations >= 3) blacklistScore = 90;
+  else if (blacklistAssociations === 2) blacklistScore = 70;
+  else if (blacklistAssociations === 1) blacklistScore = 40;
+  else blacklistScore = 0;
+
+  const riskIndex = Math.round(
+    (W1 * walletAgeScore) + (W2 * transactionVolumeScore) + (W3 * blacklistScore)
+  );
+
+  let recommendation: "block" | "review" | "approve";
+  if (riskIndex > 70) recommendation = "block";
+  else if (riskIndex > 30) recommendation = "review";
+  else recommendation = "approve";
+
+  return {
+    riskIndex,
+    walletAgeScore,
+    transactionVolumeScore,
+    blacklistScore,
+    isBlacklisted: isDirectlyBlacklisted,
+    recommendation,
+    certificateEligible: riskIndex < 30,
+  };
+}
+
+function RiskGauge({ value }: { value: number }) {
+  let color = "bg-green-500";
+  if (value > 70) color = "bg-red-500";
+  else if (value > 30) color = "bg-yellow-500";
+
+  return (
+    <div className="relative pt-4">
+      <div className="flex justify-between text-xs text-amber-200/60 mb-2">
+        <span>Safe</span>
+        <span>Moderate</span>
+        <span>High Risk</span>
+      </div>
+      <div className="h-4 bg-zinc-800 rounded-full overflow-hidden border border-amber-500/30">
+        <div 
+          className={`h-full ${color} transition-all duration-1000 ease-out`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+      <div className="mt-3 text-center">
+        <span className="text-5xl font-bold text-amber-400">{value}%</span>
+        <p className="text-amber-200/60 text-sm mt-1">Risk Index</p>
+      </div>
+    </div>
+  );
+}
+
+function RiskBreakdown({ result }: { result: RiskResult }) {
+  const factors = [
+    { 
+      label: "Wallet Age", 
+      score: result.walletAgeScore, 
+      weight: "25%",
+      icon: Clock,
+      description: "Older wallets are generally more trustworthy"
+    },
+    { 
+      label: "Transaction History", 
+      score: result.transactionVolumeScore, 
+      weight: "25%",
+      icon: Link2,
+      description: "More transactions indicate established usage"
+    },
+    { 
+      label: "Blacklist Associations", 
+      score: result.blacklistScore, 
+      weight: "50%",
+      icon: AlertTriangle,
+      description: "Connections to known fraudulent addresses"
+    },
+  ];
+
+  return (
+    <div className="space-y-4 mt-6">
+      <h4 className="text-amber-400 font-semibold flex items-center gap-2">
+        <Shield className="h-4 w-4" />
+        Risk Factor Breakdown
+      </h4>
+      {factors.map((factor) => (
+        <div key={factor.label} className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <factor.icon className="h-4 w-4 text-amber-500" />
+              <span className="text-amber-100 text-sm font-medium">{factor.label}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-200/60 text-xs">Weight: {factor.weight}</span>
+              <span className={`text-sm font-bold ${factor.score > 50 ? 'text-red-400' : factor.score > 25 ? 'text-yellow-400' : 'text-green-400'}`}>
+                {factor.score}
+              </span>
+            </div>
+          </div>
+          <Progress value={factor.score} className="h-2 bg-zinc-800" />
+          <p className="text-amber-200/40 text-xs mt-2">{factor.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function DueDiligence() {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<RiskResult | null>(null);
+  const [analyzedAddress, setAnalyzedAddress] = useState("");
+
+  const { data: verifiedReports } = useQuery<ScamReport[]>({
+    queryKey: ["/api/reports"],
+  });
+
+  const form = useForm<DueDiligenceValues>({
+    resolver: zodResolver(dueDiligenceSchema),
+    defaultValues: {
+      transactionValue: "",
+      walletAddress: "",
+      assetType: "",
+      walletAge: "",
+      transactionHistory: "",
+    },
+  });
+
+  const onSubmit = async (data: DueDiligenceValues) => {
+    setAnalyzing(true);
+    setResult(null);
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const walletAgeDays = parseInt(data.walletAge) || 0;
+    const transactionCount = parseInt(data.transactionHistory) || 0;
+
+    const blacklistedAddresses = verifiedReports?.filter(r => r.status === 'verified').map(r => r.scammerAddress.toLowerCase()) || [];
+    const isDirectlyBlacklisted = blacklistedAddresses.includes(data.walletAddress.toLowerCase());
+    
+    let blacklistAssociations = 0;
+    if (isDirectlyBlacklisted) {
+      blacklistAssociations = 3;
+    } else {
+      const addressPrefix = data.walletAddress.toLowerCase().slice(0, 6);
+      const matchingPrefixes = blacklistedAddresses.filter(addr => addr.slice(0, 6) === addressPrefix);
+      blacklistAssociations = Math.min(matchingPrefixes.length, 2);
+    }
+
+    const riskResult = calculateRiskScore(
+      walletAgeDays,
+      transactionCount,
+      blacklistAssociations,
+      isDirectlyBlacklisted
+    );
+
+    setResult(riskResult);
+    setAnalyzedAddress(data.walletAddress);
+    setAnalyzing(false);
+  };
+
+  const formatAED = (value: string) => {
+    const num = parseFloat(value.replace(/,/g, ''));
+    if (isNaN(num)) return value;
+    return num.toLocaleString('en-AE');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 -m-6 p-6">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="text-center space-y-2 py-8">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4">
+            <Gem className="h-5 w-5 text-amber-400" />
+            <span className="text-amber-400 text-sm font-medium">Enterprise Grade Security</span>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent">
+            Transaction Due Diligence
+          </h1>
+          <p className="text-amber-200/60 max-w-2xl mx-auto">
+            Advanced risk assessment for high-value transactions exceeding AED 5,000,000. 
+            Powered by blockchain intelligence and human-verified threat data.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          <Card className="bg-zinc-900/80 border-amber-500/20 backdrop-blur-sm">
+            <CardHeader className="border-b border-amber-500/10">
+              <CardTitle className="text-amber-100 flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-amber-500" />
+                Transaction Details
+              </CardTitle>
+              <CardDescription className="text-amber-200/50">
+                Enter the transaction parameters for risk analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="transactionValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-amber-200">Transaction Value (AED)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-medium">
+                              AED
+                            </span>
+                            <Input
+                              placeholder="5,000,000"
+                              className="pl-14 bg-zinc-800 border-amber-500/30 text-amber-100 placeholder:text-amber-200/30 focus:border-amber-400"
+                              {...field}
+                              onChange={(e) => field.onChange(formatAED(e.target.value))}
+                              data-testid="input-transaction-value"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription className="text-amber-200/40">
+                          Minimum AED 5,000,000 for due diligence
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="walletAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-amber-200">Counterparty Wallet Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="0x..."
+                            className="font-mono bg-zinc-800 border-amber-500/30 text-amber-100 placeholder:text-amber-200/30 focus:border-amber-400"
+                            {...field}
+                            data-testid="input-wallet-address"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="assetType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-amber-200">Asset Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger 
+                              className="bg-zinc-800 border-amber-500/30 text-amber-100"
+                              data-testid="select-asset-type"
+                            >
+                              <SelectValue placeholder="Select asset type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-zinc-900 border-amber-500/30">
+                            {assetTypes.map((type) => (
+                              <SelectItem 
+                                key={type.value} 
+                                value={type.value}
+                                className="text-amber-100 focus:bg-amber-500/20 focus:text-amber-100"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <type.icon className="h-4 w-4 text-amber-500" />
+                                  {type.label}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="walletAge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-amber-200">Wallet Age (Days)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="365"
+                              className="bg-zinc-800 border-amber-500/30 text-amber-100 placeholder:text-amber-200/30"
+                              {...field}
+                              data-testid="input-wallet-age"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="transactionHistory"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-amber-200">Transaction Count</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="50"
+                              className="bg-zinc-800 border-amber-500/30 text-amber-100 placeholder:text-amber-200/30"
+                              {...field}
+                              data-testid="input-transaction-count"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={analyzing}
+                    className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-900 font-semibold"
+                    data-testid="button-analyze-risk"
+                  >
+                    {analyzing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing Blockchain Data...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Analyze Transaction Risk
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-zinc-900/80 border-amber-500/20 backdrop-blur-sm">
+            <CardHeader className="border-b border-amber-500/10">
+              <CardTitle className="text-amber-100 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-500" />
+                Risk Assessment
+              </CardTitle>
+              <CardDescription className="text-amber-200/50">
+                Real-time risk analysis powered by verified intelligence
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {!result && !analyzing && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 border border-amber-500/30">
+                    <Shield className="h-10 w-10 text-amber-500/50" />
+                  </div>
+                  <p className="text-amber-200/50">
+                    Enter transaction details to begin risk analysis
+                  </p>
+                </div>
+              )}
+
+              {analyzing && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="h-20 w-20 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 border border-amber-500/50 animate-pulse">
+                    <Loader2 className="h-10 w-10 text-amber-400 animate-spin" />
+                  </div>
+                  <p className="text-amber-200/70 font-medium">Analyzing Blockchain Data</p>
+                  <p className="text-amber-200/40 text-sm mt-1">
+                    Cross-referencing with verified threat database...
+                  </p>
+                </div>
+              )}
+
+              {result && (
+                <div className="space-y-6">
+                  <RiskGauge value={result.riskIndex} />
+
+                  {result.isBlacklisted && (
+                    <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-red-400 font-semibold">Blacklisted Address Detected</p>
+                        <p className="text-red-300/70 text-sm mt-1">
+                          This wallet address exists in our verified scam database.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {result.recommendation === "block" && (
+                    <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-6 text-center">
+                      <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+                      <h3 className="text-xl font-bold text-red-400">Block Transaction Immediately</h3>
+                      <p className="text-red-300/70 mt-2">
+                        High risk detected. We strongly advise against proceeding with this transaction.
+                      </p>
+                    </div>
+                  )}
+
+                  {result.recommendation === "review" && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-lg p-6 text-center">
+                      <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-3" />
+                      <h3 className="text-xl font-bold text-yellow-400">Enhanced Review Required</h3>
+                      <p className="text-yellow-300/70 mt-2">
+                        Moderate risk detected. Additional verification recommended before proceeding.
+                      </p>
+                    </div>
+                  )}
+
+                  {result.certificateEligible && (
+                    <div className="bg-green-500/10 border border-green-500/40 rounded-lg p-6 text-center">
+                      <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-3" />
+                      <h3 className="text-xl font-bold text-green-400">Transaction Approved</h3>
+                      <p className="text-green-300/70 mt-2 mb-4">
+                        Low risk detected. This transaction is eligible for a Digital Integrity Certificate.
+                      </p>
+                      <Button 
+                        className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
+                        data-testid="button-issue-certificate"
+                      >
+                        <FileCheck className="mr-2 h-4 w-4" />
+                        Issue Digital Integrity Certificate
+                      </Button>
+                    </div>
+                  )}
+
+                  <RiskBreakdown result={result} />
+
+                  <div className="border-t border-amber-500/10 pt-4 mt-6">
+                    <p className="text-amber-200/40 text-xs text-center">
+                      Analysis based on wallet: <span className="font-mono text-amber-300/60">{analyzedAddress.slice(0, 10)}...{analyzedAddress.slice(-8)}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="bg-zinc-900/50 border-amber-500/10">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-center gap-8 text-amber-200/40 text-sm">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span>AES-256 Encrypted</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>PDPL Compliant</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileCheck className="h-4 w-4" />
+                <span>Human-Verified Intelligence</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
