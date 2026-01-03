@@ -16,11 +16,17 @@ import {
   Building2,
   Car,
   Watch,
-  Briefcase
+  Briefcase,
+  ScrollText,
+  Scale,
+  FileWarning,
+  Gavel
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -205,7 +211,144 @@ function RiskBreakdown({ result }: { result: RiskResult }) {
   );
 }
 
+function TermsAgreement({ onAccept }: { onAccept: () => void }) {
+  const [agreed, setAgreed] = useState(false);
+
+  const terms = [
+    {
+      icon: ScrollText,
+      title: "Nature of Service",
+      titleAr: "طبيعة الخدمة",
+      content: "The user acknowledges that CryptoGuard is a technical advisory tool that relies on analyzing publicly available data on the Blockchain. This platform does not provide financial or legal advice, and does not replace the necessity of conducting formal Due Diligence through authorized entities in the UAE such as VARA or ADGM."
+    },
+    {
+      icon: FileWarning,
+      title: "Limitation of Liability",
+      titleAr: "حدود المسؤولية",
+      content: "To the maximum extent permitted by UAE law, the Developer (Mohammed Ali) or CryptoGuard platform shall not be liable for any financial losses, direct or indirect, resulting from using this tool in making investment or commercial decisions. Specifically for transactions exceeding AED 1,000,000, the responsibility for final verification of parties' identities and fund legitimacy lies solely with the user."
+    },
+    {
+      icon: Scale,
+      title: "Data Accuracy",
+      titleAr: "دقة البيانات",
+      content: "Due to the volatile and decentralized nature of digital assets, the platform does not guarantee 100% data accuracy. Risk Scores are probabilistic estimates based on software algorithms and may not reflect the actual hidden risks."
+    },
+    {
+      icon: Gavel,
+      title: "UAE Compliance",
+      titleAr: "الامتثال لقوانين الإمارات",
+      content: "The use of this platform and any disputes arising therefrom are subject to the laws of the United Arab Emirates. The courts of Dubai/Abu Dhabi (or ADGM/DIFC courts as applicable) shall have jurisdiction over any disputes."
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 -m-6 p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-2 py-8">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4">
+            <Scale className="h-5 w-5 text-amber-400" />
+            <span className="text-amber-400 text-sm font-medium">Legal Disclaimer</span>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent">
+            Terms & Conditions
+          </h1>
+          <p className="text-amber-200/60 max-w-2xl mx-auto">
+            Please read and accept the following terms before using the Transaction Due Diligence service.
+          </p>
+        </div>
+
+        <Card className="bg-zinc-900/80 border-amber-500/20 backdrop-blur-sm">
+          <CardHeader className="border-b border-amber-500/10">
+            <CardTitle className="text-amber-100 flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-amber-500" />
+              Service Agreement
+            </CardTitle>
+            <CardDescription className="text-amber-200/50">
+              High-Value Transaction Due Diligence Terms
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-6">
+                {terms.map((term, index) => (
+                  <div key={index} className="bg-zinc-800/50 rounded-lg p-5 border border-amber-500/10">
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+                        <term.icon className="h-5 w-5 text-amber-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-amber-100 font-semibold">{index + 1}. {term.title}</h3>
+                          <span className="text-amber-400/60 text-sm">({term.titleAr})</span>
+                        </div>
+                        <p className="text-amber-200/70 text-sm leading-relaxed">
+                          {term.content}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-5 mt-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-red-400 font-semibold mb-1">Important Notice</h4>
+                      <p className="text-red-300/70 text-sm">
+                        For transactions exceeding AED 1,000,000, the responsibility for final verification of parties' identities and fund legitimacy lies solely with the user. This platform serves as an advisory tool only.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+
+            <div className="border-t border-amber-500/10 mt-6 pt-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <Checkbox 
+                  id="terms-agreement"
+                  checked={agreed}
+                  onCheckedChange={(checked) => setAgreed(checked === true)}
+                  className="border-amber-500/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 mt-1"
+                  data-testid="checkbox-agree-terms"
+                />
+                <label 
+                  htmlFor="terms-agreement" 
+                  className="text-amber-200/80 text-sm cursor-pointer leading-relaxed"
+                >
+                  I have read, understood, and agree to the above terms and conditions. I acknowledge that CryptoGuard is an advisory tool and does not replace formal Due Diligence through authorized UAE entities.
+                </label>
+              </div>
+
+              <Button
+                onClick={onAccept}
+                disabled={!agreed}
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-900 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="button-accept-terms"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                I Agree - Proceed to Due Diligence
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-zinc-900/50 border-amber-500/10">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-center gap-6 text-amber-200/40 text-xs">
+              <span>UAE Federal Law Compliant</span>
+              <span>VARA / ADGM Guidelines</span>
+              <span>PDPL Decree-Law No. 45</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function DueDiligence() {
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<RiskResult | null>(null);
   const [analyzedAddress, setAnalyzedAddress] = useState("");
@@ -224,6 +367,10 @@ export default function DueDiligence() {
       transactionHistory: "",
     },
   });
+
+  if (!termsAccepted) {
+    return <TermsAgreement onAccept={() => setTermsAccepted(true)} />;
+  }
 
   const onSubmit = async (data: DueDiligenceValues) => {
     setAnalyzing(true);
