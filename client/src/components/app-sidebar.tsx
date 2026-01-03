@@ -9,7 +9,8 @@ import {
   Lock,
   Gem,
   Radio,
-  TrendingDown
+  TrendingDown,
+  Download
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,11 @@ const mainNavItems = [
     title: "Leaderboard",
     url: "/leaderboard",
     icon: Trophy,
+  },
+  {
+    title: "Export",
+    url: "/export",
+    icon: Download,
   },
 ];
 

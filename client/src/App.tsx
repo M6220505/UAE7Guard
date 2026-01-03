@@ -19,6 +19,7 @@ import DueDiligence from "@/pages/due-diligence";
 import LiveMonitoring from "@/pages/live-monitoring";
 import Escrow from "@/pages/escrow";
 import Slippage from "@/pages/slippage";
+import Export from "@/pages/export";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -63,6 +64,7 @@ function Router() {
         <Route path="/live-monitoring" component={LiveMonitoring} />
         <Route path="/escrow" component={Escrow} />
         <Route path="/slippage" component={Slippage} />
+        <Route path="/export" component={Export} />
         <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/admin" component={Admin} />
         <Route path="/privacy" component={Privacy} />
