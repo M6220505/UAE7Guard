@@ -2,7 +2,7 @@
 
 ## Overview
 
-CryptoGuard is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for UAE family offices. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
+CryptoGuard is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for investors, institutions, and enterprises. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
 
 ## User Preferences
 

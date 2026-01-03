@@ -3,7 +3,7 @@
 ## Design Approach
 **Reference-Based Strategy**: Drawing inspiration from enterprise security and fintech leaders - Linear's precision, Stripe's trustworthiness, Bloomberg Terminal's data density, and Coinbase's crypto-native patterns.
 
-**Core Philosophy**: Institutional-grade security platform that conveys authority, precision, and trust to UAE family offices. Balance data density with clarity, urgency with calm professionalism.
+**Core Philosophy**: Institutional-grade security platform that conveys authority, precision, and trust to investors, institutions, and enterprises. Balance data density with clarity, urgency with calm professionalism.
 
 ---
 
@@ -43,7 +43,7 @@
 Top navigation bar with logo left, primary actions center, user profile/reputation badge right. Fixed positioning with subtle backdrop blur for glassmorphism effect when scrolling.
 
 ### Hero Section (Landing Page)
-Full-width hero (min-h-screen) with dramatic gradient background image showing abstract security/blockchain visualization. Centered headline emphasizing "Sovereign Intelligence" and "UAE Family Office Protection". Primary CTA button with blurred background overlay. Trust indicators below: "AES-256 Encrypted • PDPL Compliant • Real-Time Intelligence"
+Full-width hero (min-h-screen) with dramatic gradient background image showing abstract security/blockchain visualization. Centered headline emphasizing "Sovereign Intelligence" and "Institutional Digital Asset Protection". Primary CTA button with blurred background overlay. Trust indicators below: "AES-256 Encrypted • PDPL Compliant • Real-Time Intelligence"
 
 ### Threat Search Interface
 Prominent search bar (max-w-2xl, centered) with mono font input for addresses. Instant visual feedback: Green (clean), Yellow (suspicious), Red (verified threat) with severity indicators and animated transitions.
@@ -125,7 +125,7 @@ Charts: Clean line graphs for trend analysis, minimal styling focusing on data c
 
 **Arabic/English Toggle**: Language switcher in top-right. RTL-ready layouts with proper text alignment. Arabic typography uses Tajawal font family for body, maintaining hierarchy.
 
-**Trust Signals**: Display compliance badges (PDPL, AES-256), family office testimonials (if available), encryption status indicators consistently across platform.
+**Trust Signals**: Display compliance badges (PDPL, AES-256), client testimonials (if available), encryption status indicators consistently across platform.
 
 **Data Sensitivity**: All sensitive data (addresses, API keys) displayed in mono font with copy-to-clipboard functionality. Masked by default with reveal toggle.
 

@@ -83,7 +83,7 @@ export default function Home() {
           <div className="container relative mx-auto px-4 text-center">
             <Badge className="mb-6" variant="secondary">
               <Globe className="mr-1 h-3 w-3" />
-              UAE Family Office Protection
+              Institutional Digital Asset Protection
             </Badge>
             <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               Sovereign Crypto
@@ -126,7 +126,7 @@ export default function Home() {
                 Institutional-Grade Protection
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Built for UAE family offices requiring sovereign security and regulatory compliance.
+                Built for investors, institutions, and enterprises requiring sovereign security and regulatory compliance.
               </p>
             </div>
 
