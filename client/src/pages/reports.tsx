@@ -91,10 +91,10 @@ function ReportsList({ filter }: { filter: "all" | "verified" | "pending" }) {
                     <span className="font-mono text-sm truncate max-w-xs">
                       {report.scammerAddress}
                     </span>
-                    <Badge size="sm" variant="outline">
+                    <Badge variant="outline">
                       {scamTypeLabels[report.scamType] || report.scamType}
                     </Badge>
-                    <Badge size="sm" className={config.color}>
+                    <Badge className={config.color}>
                       {config.label}
                     </Badge>
                   </div>
