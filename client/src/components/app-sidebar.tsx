@@ -5,7 +5,8 @@ import {
   Trophy, 
   Shield,
   ShieldCheck,
-  Settings
+  Scale,
+  Lock
 } from "lucide-react";
 import {
   Sidebar,
@@ -108,9 +109,22 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <div className="text-xs text-muted-foreground">
-          <p>PDPL Compliant</p>
-          <p className="mt-1">UAE Federal Decree-Law No. 45</p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs">
+            <Link href="/privacy" className="flex items-center gap-1 text-muted-foreground hover:text-foreground" data-testid="link-privacy">
+              <Lock className="h-3 w-3" />
+              Privacy
+            </Link>
+            <span className="text-muted-foreground">|</span>
+            <Link href="/terms" className="flex items-center gap-1 text-muted-foreground hover:text-foreground" data-testid="link-terms">
+              <Scale className="h-3 w-3" />
+              Terms
+            </Link>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            <p>PDPL Compliant</p>
+            <p className="mt-0.5">UAE Federal Decree-Law No. 45</p>
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

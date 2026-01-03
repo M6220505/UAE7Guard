@@ -107,7 +107,7 @@ export function Leaderboard() {
                   <span className="font-medium truncate">
                     {entry.user?.username || "Anonymous"}
                   </span>
-                  <Badge size="sm" className={config.badge}>
+                  <Badge className={config.badge}>
                     {entry.rank}
                   </Badge>
                 </div>
