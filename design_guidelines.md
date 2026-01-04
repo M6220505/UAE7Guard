@@ -1,4 +1,4 @@
-# DubaiVerified Platform Design Guidelines
+# UAE7Guard Platform Design Guidelines
 
 ## Design Approach
 **Reference-Based Strategy**: Drawing inspiration from enterprise security and fintech leaders - Linear's precision, Stripe's trustworthiness, Bloomberg Terminal's data density, and Coinbase's crypto-native patterns.

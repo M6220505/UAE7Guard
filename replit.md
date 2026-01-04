@@ -1,8 +1,8 @@
-# DubaiVerified - Sovereign Crypto Intelligence Platform
+# UAE7Guard - Sovereign Crypto Intelligence Platform
 
 ## Overview
 
-DubaiVerified is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for investors, institutions, and enterprises. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
+UAE7Guard is an enterprise-grade cryptocurrency fraud detection and intelligence platform designed for investors, institutions, and enterprises. The platform provides real-time threat lookup, scam report management, a reputation-based investigator network, and emergency response protocols. It emphasizes institutional security with AES-256 encryption, PDPL compliance, and human-verified threat intelligence.
 
 ## User Preferences
 

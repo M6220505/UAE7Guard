@@ -15,7 +15,7 @@ export default function Privacy() {
           </div>
         </div>
         <p className="text-muted-foreground">
-          DubaiVerified is committed to protecting your personal data in accordance with the UAE Personal Data Protection Law (PDPL).
+          UAE7Guard is committed to protecting your personal data in accordance with the UAE Personal Data Protection Law (PDPL).
         </p>
       </div>
 
