@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured } from "./alchemy";
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
+import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -704,6 +705,193 @@ Provide comprehensive risk analysis.`;
       res.status(500).json({ 
         error: "Failed to decrypt audit log",
         errorAr: "فشل في فك تشفير السجل"
+      });
+    }
+  });
+
+  // ===== SOVEREIGN VERIFICATION REPORT =====
+  app.post("/api/sovereign/report", async (req, res) => {
+    try {
+      if (!isEncryptionConfigured()) {
+        return res.status(503).json({ 
+          error: "Encryption vault not configured",
+          errorAr: "القبو المشفر غير مفعّل"
+        });
+      }
+
+      const reportSchema = z.object({
+        walletAddress: z.string().min(10),
+        transactionValueAED: z.number().min(50000),
+        network: z.string().default("ethereum"),
+        walletAgeDays: z.number().min(1),
+        includeAI: z.boolean().default(true),
+      });
+
+      const input = reportSchema.parse(req.body);
+      
+      let blockchainData = {
+        balance: "N/A",
+        transactionCount: 0,
+        isSmartContract: false,
+        recentTransactions: [] as Array<{ hash: string; from: string; to: string; value: string }>,
+      };
+
+      if (isAlchemyConfigured()) {
+        try {
+          const walletData = await getFullWalletData(input.walletAddress, input.network);
+          blockchainData = {
+            balance: walletData.balance?.balanceInEth || "0",
+            transactionCount: walletData.transactions?.length || 0,
+            isSmartContract: walletData.contractInfo?.isContract || false,
+            recentTransactions: walletData.transactions?.slice(0, 5).map((tx) => ({
+              hash: tx.hash,
+              from: tx.from,
+              to: tx.to || "",
+              value: tx.value || "0",
+            })) || [],
+          };
+        } catch (e) {
+          console.log("Blockchain data fetch failed, using defaults");
+        }
+      }
+
+      const reports = await storage.getReportsByAddress(input.walletAddress);
+      const verifiedReports = reports.filter(r => r.status === 'verified');
+
+      const riskInput: RiskInput = {
+        walletAddress: input.walletAddress,
+        walletAgeDays: input.walletAgeDays,
+        transactionCount: blockchainData.transactionCount,
+        blacklistAssociations: verifiedReports.length,
+        isDirectlyBlacklisted: verifiedReports.length > 0,
+        transactionValue: input.transactionValueAED,
+        isSmartContract: blockchainData.isSmartContract,
+      };
+
+      const riskResult = calculateMillionDirhamRisk(riskInput);
+
+      let aiAnalysis: SovereignReportInput["aiAnalysis"];
+      
+      if (input.includeAI && openai) {
+        try {
+          const prompt = `Analyze this Ethereum wallet for fraud risk. Return JSON only.
+Wallet: ${input.walletAddress}
+Transaction Value: AED ${input.transactionValueAED}
+Balance: ${blockchainData.balance} ETH
+Transactions: ${blockchainData.transactionCount}
+Is Smart Contract: ${blockchainData.isSmartContract}
+Verified Threats in Database: ${verifiedReports.length}
+Risk Score: ${riskResult.riskScore}/100
+
+Provide:
+{
+  "analysis": "Brief English analysis (2-3 sentences)",
+  "analysisAr": "Arabic translation",
+  "recommendation": "English recommendation",
+  "recommendationAr": "Arabic translation",
+  "factors": ["risk factor 1", "risk factor 2"]
+}`;
+
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+            max_tokens: 500,
+          });
+
+          const aiResult = JSON.parse(response.choices[0]?.message?.content || "{}");
+          aiAnalysis = {
+            analysis: aiResult.analysis || "",
+            analysisAr: aiResult.analysisAr || "",
+            recommendation: aiResult.recommendation || "",
+            recommendationAr: aiResult.recommendationAr || "",
+            factors: aiResult.factors || [],
+            model: "GPT-4o (Replit AI Integrations)",
+          };
+        } catch (e) {
+          console.log("AI analysis failed, continuing without it");
+        }
+      }
+
+      const reportInput: SovereignReportInput = {
+        walletAddress: input.walletAddress,
+        transactionValueAED: input.transactionValueAED,
+        network: input.network,
+        blockchainData,
+        riskAnalysis: {
+          riskScore: riskResult.riskScore,
+          riskLevel: riskResult.riskLevel,
+          historyScore: riskResult.formula?.history || 0,
+          associationScore: riskResult.formula?.associations || 0,
+          walletAgeDays: input.walletAgeDays,
+          formula: riskResult.formula?.calculation || "",
+        },
+        aiAnalysis,
+        verifiedThreats: verifiedReports.length,
+      };
+
+      const report = generateSovereignReport(reportInput);
+
+      const auditDataToEncrypt: AuditLogData = {
+        walletAddress: input.walletAddress,
+        transactionValueAED: input.transactionValueAED,
+        riskScore: riskResult.riskScore,
+        riskLevel: riskResult.riskLevel,
+        analysisDetails: {
+          historyScore: riskResult.formula?.history || 0,
+          associationScore: riskResult.formula?.associations || 0,
+          walletAgeDays: input.walletAgeDays,
+          formula: riskResult.formula?.calculation || "",
+        },
+        blockchainData: {
+          balance: blockchainData.balance,
+          transactionCount: blockchainData.transactionCount,
+          isSmartContract: blockchainData.isSmartContract,
+          network: input.network,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const encryptedAudit = createEncryptedAuditLog(auditDataToEncrypt);
+
+      await storage.createAuditLog({
+        transactionHash: encryptedAudit.transactionHash,
+        walletAddress: input.walletAddress,
+        transactionValueAED: input.transactionValueAED.toString(),
+        riskScore: riskResult.riskScore,
+        riskLevel: riskResult.riskLevel,
+        encryptedData: encryptedAudit.encryptedData,
+        encryptionIV: encryptedAudit.encryptionIV,
+        dataHash: encryptedAudit.dataHash,
+        timestampUtc: encryptedAudit.timestampUtc,
+        network: input.network,
+      });
+
+      res.json({
+        success: true,
+        report: {
+          ...report,
+          auditTrail: {
+            ...report.auditTrail,
+            transactionHash: encryptedAudit.transactionHash,
+            dataHash: encryptedAudit.dataHash,
+            encryptedAt: encryptedAudit.timestampUtc.toISOString(),
+          },
+        },
+        textReport: formatReportForDisplay(report),
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid report request",
+          errorAr: "طلب تقرير غير صالح",
+          details: error.errors 
+        });
+      }
+      console.error("Sovereign report error:", error);
+      res.status(500).json({ 
+        error: "Failed to generate sovereign report",
+        errorAr: "فشل في إنشاء التقرير السيادي"
       });
     }
   });
