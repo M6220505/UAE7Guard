@@ -376,11 +376,16 @@ export interface AIInsight {
 
 export interface HybridVerificationResult {
   verificationId: string;
+  certificateId: string;
   walletAddress: string;
+  destinationWallet?: string;
+  assetType: AssetType;
   transactionAmountAED: number;
   thresholdMet: boolean;
   onChainFacts: OnChainFacts;
   aiInsight: AIInsight;
+  sanctionCheckPassed: boolean;
+  mixerInteractionDetected: boolean;
   verificationTimestamp: string;
   sources: {
     blockchain: string;
@@ -392,8 +397,21 @@ export const hybridVerificationInputSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
     message: "Invalid wallet address format | تنسيق عنوان المحفظة غير صالح",
   }),
+  destinationWallet: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
+    message: "Invalid destination wallet format | تنسيق محفظة الوجهة غير صالح",
+  }).optional(),
+  assetType: z.enum(["digital_asset", "real_estate_escrow", "investment_fund", "trade_settlement"]).default("digital_asset"),
   network: z.string().default("ethereum"),
   transactionAmountAED: z.coerce.number().min(10000, {
     message: "Minimum amount is 10,000 AED | الحد الأدنى 10,000 درهم",
   }),
 });
+
+export type AssetType = "digital_asset" | "real_estate_escrow" | "investment_fund" | "trade_settlement";
+
+export const assetTypeLabels: Record<AssetType, { en: string; ar: string }> = {
+  digital_asset: { en: "High-Value Digital Asset", ar: "أصول رقمية عالية القيمة" },
+  real_estate_escrow: { en: "Real Estate Escrow", ar: "ضمان عقاري" },
+  investment_fund: { en: "Investment Fund Transfer", ar: "تحويل صندوق استثماري" },
+  trade_settlement: { en: "Trade Settlement", ar: "تسوية تجارية" },
+};

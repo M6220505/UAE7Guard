@@ -24,14 +24,20 @@ import {
   Wallet, 
   Clock, 
   ArrowRightLeft,
-  Server,
+  FileText,
   BadgeCheck,
-  Copy
+  Copy,
+  AlertCircle,
+  Lock,
+  Globe
 } from "lucide-react";
-import type { HybridVerificationResult } from "@shared/schema";
+import type { HybridVerificationResult, AssetType } from "@shared/schema";
+import { assetTypeLabels } from "@shared/schema";
 
 const formSchema = z.object({
   walletAddress: z.string().min(42, "Invalid wallet address").max(42, "Invalid wallet address"),
+  destinationWallet: z.string().min(42, "Invalid wallet address").max(42, "Invalid wallet address").optional().or(z.literal("")),
+  assetType: z.enum(["digital_asset", "real_estate_escrow", "investment_fund", "trade_settlement"]),
   network: z.string().default("ethereum"),
   transactionAmountAED: z.coerce.number().min(10000, "Minimum amount is 10,000 AED"),
 });
@@ -50,6 +56,8 @@ export default function HybridVerification() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       walletAddress: "",
+      destinationWallet: "",
+      assetType: "digital_asset",
       network: "ethereum",
       transactionAmountAED: 10000,
     },
@@ -57,15 +65,19 @@ export default function HybridVerification() {
 
   const verifyMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/hybrid-verification", data);
+      const payload = {
+        ...data,
+        destinationWallet: data.destinationWallet || undefined,
+      };
+      const response = await apiRequest("POST", "/api/hybrid-verification", payload);
       return response.json();
     },
     onSuccess: (data) => {
       if (data.success) {
         setVerification(data.verification);
         toast({
-          title: "Verification Complete",
-          description: "Hybrid verification generated successfully",
+          title: "Certificate Generated",
+          description: "SovereignVault Transaction Integrity Report ready",
         });
       }
     },
@@ -82,22 +94,13 @@ export default function HybridVerification() {
     verifyMutation.mutate(data);
   };
 
-  const getRiskIcon = (level: string) => {
-    switch (level) {
-      case "safe": return <CheckCircle className="h-6 w-6 text-emerald-500" />;
-      case "suspicious": return <AlertTriangle className="h-6 w-6 text-amber-500" />;
-      case "dangerous": return <XCircle className="h-6 w-6 text-red-500" />;
-      default: return <Shield className="h-6 w-6 text-zinc-500" />;
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: "Copied to clipboard" });
   };
 
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case "safe": return "text-emerald-500";
-      case "suspicious": return "text-amber-500";
-      case "dangerous": return "text-red-500";
-      default: return "text-zinc-500";
-    }
+  const formatWalletShort = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   const getRiskBadgeVariant = (level: string): "default" | "secondary" | "destructive" | "outline" => {
@@ -109,23 +112,18 @@ export default function HybridVerification() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied", description: "Copied to clipboard" });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3" data-testid="heading-hybrid-verification">
             <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-              <Shield className="h-8 w-8 text-cyan-400" />
+              <FileText className="h-8 w-8 text-cyan-400" />
             </div>
-            Hybrid Verification | التحقق الهجين
+            SovereignVault | التقرير السيادي
           </h1>
           <p className="text-zinc-400" data-testid="text-page-description">
-            Dual-source verification for transactions AED 10,000+ | تحقق ثنائي المصدر للمعاملات فوق 10,000 درهم
+            Transaction Integrity Report for High-Value Transactions (AED 10,000+)
           </p>
         </div>
 
@@ -134,26 +132,78 @@ export default function HybridVerification() {
             <CardHeader className="border-b border-cyan-500/10">
               <CardTitle className="text-cyan-100 flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-cyan-500" />
-                Verification Request | طلب التحقق
+                Transaction Details | تفاصيل المعاملة
               </CardTitle>
               <CardDescription className="text-cyan-200/50">
-                Enter wallet details for hybrid blockchain + AI verification
+                Enter transaction information for sovereign verification
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="assetType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-cyan-200">Asset Type | نوع الأصل</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-zinc-800/50 border-zinc-700" data-testid="select-asset-type">
+                              <SelectValue placeholder="Select asset type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="digital_asset" data-testid="option-digital-asset">
+                              High-Value Digital Asset
+                            </SelectItem>
+                            <SelectItem value="real_estate_escrow" data-testid="option-real-estate">
+                              Real Estate Escrow
+                            </SelectItem>
+                            <SelectItem value="investment_fund" data-testid="option-investment">
+                              Investment Fund Transfer
+                            </SelectItem>
+                            <SelectItem value="trade_settlement" data-testid="option-trade">
+                              Trade Settlement
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="transactionAmountAED"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-cyan-200">Nominal Value (AED) | القيمة الاسمية</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min={10000}
+                            className="bg-zinc-800/50 border-zinc-700"
+                            data-testid="input-amount"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="walletAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Wallet Address | عنوان المحفظة</FormLabel>
+                        <FormLabel className="text-cyan-200">Source Wallet | محفظة المصدر</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="0x..."
-                            className="bg-zinc-800/50 border-zinc-700 font-mono"
+                            className="bg-zinc-800/50 border-zinc-700 font-mono text-sm"
                             data-testid="input-wallet-address"
                           />
                         </FormControl>
@@ -162,243 +212,280 @@ export default function HybridVerification() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="network"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-cyan-200">Network | الشبكة</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-zinc-800/50 border-zinc-700" data-testid="select-network">
-                                <SelectValue placeholder="Select network" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="ethereum" data-testid="option-ethereum">Ethereum</SelectItem>
-                              <SelectItem value="polygon" data-testid="option-polygon">Polygon</SelectItem>
-                              <SelectItem value="arbitrum" data-testid="option-arbitrum">Arbitrum</SelectItem>
-                              <SelectItem value="optimism" data-testid="option-optimism">Optimism</SelectItem>
-                              <SelectItem value="base" data-testid="option-base">Base</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="destinationWallet"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-cyan-200">Destination Wallet (Optional) | محفظة الوجهة</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="0x..."
+                            className="bg-zinc-800/50 border-zinc-700 font-mono text-sm"
+                            data-testid="input-destination-wallet"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="transactionAmountAED"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-cyan-200">Amount (AED) | المبلغ</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="network"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-cyan-200">Network | الشبكة</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={10000}
-                              className="bg-zinc-800/50 border-zinc-700"
-                              data-testid="input-amount"
-                            />
+                            <SelectTrigger className="bg-zinc-800/50 border-zinc-700" data-testid="select-network">
+                              <SelectValue placeholder="Select network" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                          <SelectContent>
+                            <SelectItem value="ethereum" data-testid="option-ethereum">Ethereum</SelectItem>
+                            <SelectItem value="polygon" data-testid="option-polygon">Polygon</SelectItem>
+                            <SelectItem value="arbitrum" data-testid="option-arbitrum">Arbitrum</SelectItem>
+                            <SelectItem value="optimism" data-testid="option-optimism">Optimism</SelectItem>
+                            <SelectItem value="base" data-testid="option-base">Base</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20" data-testid="card-threshold-info">
-                    <p className="text-sm text-cyan-300 flex items-center gap-2" data-testid="text-threshold-info">
-                      <BadgeCheck className="h-4 w-4" />
-                      Minimum threshold: AED 10,000 | الحد الأدنى: 10,000 درهم
+                  <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30" data-testid="card-confidential-notice">
+                    <p className="text-sm text-amber-300 flex items-center gap-2" data-testid="text-confidential">
+                      <Lock className="h-4 w-4" />
+                      Strictly Confidential | Internal Audit Grade
                     </p>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600"
                     disabled={verifyMutation.isPending || !status?.configured}
-                    data-testid="button-verify"
+                    data-testid="button-generate-report"
                   >
                     {verifyMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Performing Hybrid Verification...
+                        Generating Certificate...
                       </>
                     ) : (
                       <>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Start Hybrid Verification | بدء التحقق الهجين
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generate Integrity Report
                       </>
                     )}
                   </Button>
-
-                  {!status?.configured && (
-                    <p className="text-sm text-amber-400 text-center">
-                      Blockchain service not configured. ALCHEMY_API_KEY required.
-                    </p>
-                  )}
                 </form>
               </Form>
             </CardContent>
           </Card>
 
           {verification ? (
-            <Card className="bg-zinc-900/80 border-emerald-500/20 backdrop-blur-sm">
-              <CardHeader className="border-b border-emerald-500/10">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <CardTitle className="text-emerald-100 flex items-center gap-2" data-testid="text-verification-id">
-                      <BadgeCheck className="h-5 w-5 text-emerald-500" />
-                      {verification.verificationId}
-                    </CardTitle>
-                    <CardDescription className="text-emerald-200/50" data-testid="text-verification-timestamp">
-                      {new Date(verification.verificationTimestamp).toLocaleString("en-AE")}
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    size="icon" 
-                    variant="outline" 
-                    onClick={() => copyToClipboard(verification.verificationId)}
-                    data-testid="button-copy-id"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <ScrollArea className="h-[500px] pr-4">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50" data-testid="card-risk-summary">
-                      <div className="flex items-center gap-3">
-                        {getRiskIcon(verification.aiInsight.riskLevel)}
-                        <div>
-                          <p className="text-sm text-zinc-400">AI Risk Assessment</p>
-                          <p className={`text-2xl font-bold ${getRiskColor(verification.aiInsight.riskLevel)}`} data-testid="text-risk-score">
-                            {verification.aiInsight.riskScore}/100
-                          </p>
+            <Card className="bg-zinc-900/95 border-cyan-500/30 backdrop-blur-sm" data-testid="card-certificate">
+              <CardContent className="p-0">
+                <ScrollArea className="h-[700px]">
+                  <div className="p-6 space-y-6">
+                    <div className="text-center border-b border-zinc-700 pb-6">
+                      <div className="flex justify-center mb-3">
+                        <div className="p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
+                          <Shield className="h-10 w-10 text-cyan-400" />
                         </div>
                       </div>
-                      <Badge 
-                        variant={getRiskBadgeVariant(verification.aiInsight.riskLevel)} 
-                        className="text-lg px-4 py-1"
-                        data-testid="badge-risk-level"
-                      >
-                        {verification.aiInsight.riskLevel.toUpperCase()}
-                      </Badge>
-                    </div>
-
-                    <Separator className="bg-zinc-700" />
-
-                    <div>
-                      <h4 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
-                        <Database className="h-4 w-4 text-cyan-400" />
-                        On-Chain Facts | بيانات السلسلة
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-lg bg-zinc-800/30 text-center">
-                          <p className="text-xs text-zinc-500">Balance</p>
-                          <p className="text-lg font-bold text-zinc-100" data-testid="text-balance">
-                            {verification.onChainFacts.balanceInEth} ETH
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-zinc-800/30 text-center">
-                          <p className="text-xs text-zinc-500">Transactions</p>
-                          <p className="text-lg font-bold text-zinc-100" data-testid="text-tx-count">
-                            {verification.onChainFacts.transactionCount}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-zinc-800/30 text-center">
-                          <p className="text-xs text-zinc-500">Wallet Age</p>
-                          <p className="text-lg font-bold text-zinc-100" data-testid="text-wallet-age">
-                            {verification.onChainFacts.walletAgeDays} days
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-zinc-800/30 text-center">
-                          <p className="text-xs text-zinc-500">Is Contract</p>
-                          <p className="text-lg font-bold text-zinc-100" data-testid="text-is-contract">
-                            {verification.onChainFacts.isContract ? "Yes" : "No"}
-                          </p>
-                        </div>
+                      <h2 className="text-2xl font-bold text-white mb-1" data-testid="heading-certificate-title">
+                        SovereignVault: Transaction Integrity Report
+                      </h2>
+                      <p className="text-amber-400 text-sm font-medium" data-testid="text-confidential-label">
+                        Strictly Confidential | Internal Audit Grade
+                      </p>
+                      <div className="mt-4 space-y-1">
+                        <p className="text-zinc-400 font-mono text-sm" data-testid="text-certificate-id">
+                          [CERTIFICATE ID: {verification.certificateId}]
+                        </p>
+                        <p className="text-zinc-500 text-xs" data-testid="text-generation-date">
+                          [GENERATION DATE: {new Date(verification.verificationTimestamp).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "2-digit" })}]
+                        </p>
                       </div>
                     </div>
 
-                    {verification.onChainFacts.recentTransactions.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
-                          <ArrowRightLeft className="h-4 w-4 text-cyan-400" />
-                          Recent Transactions (Last 20)
-                        </h4>
-                        <div className="space-y-2 max-h-[200px] overflow-y-auto" data-testid="list-transactions">
-                          {verification.onChainFacts.recentTransactions.slice(0, 10).map((tx, i) => (
-                            <div 
-                              key={i} 
-                              className="p-2 rounded bg-zinc-800/30 font-mono text-xs"
-                              data-testid={`tx-item-${i}`}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-cyan-300 flex items-center gap-2" data-testid="heading-section-1">
+                        <span className="text-cyan-500">1.</span> TRANSACTION OVERVIEW
+                      </h3>
+                      <div className="grid gap-3 pl-5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Asset Type:</span>
+                          <span className="text-zinc-200" data-testid="text-asset-type">
+                            {assetTypeLabels[verification.assetType]?.en || verification.assetType}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Nominal Value:</span>
+                          <span className="text-xl font-bold text-cyan-300" data-testid="text-nominal-value">
+                            AED {verification.transactionAmountAED.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Source Wallet:</span>
+                          <button
+                            onClick={() => copyToClipboard(verification.walletAddress)}
+                            className="flex items-center gap-2 text-zinc-200 font-mono text-sm hover-elevate active-elevate-2 px-2 py-1 rounded"
+                            data-testid="button-copy-source"
+                          >
+                            {formatWalletShort(verification.walletAddress)}
+                            <Copy className="h-3 w-3 text-zinc-500" />
+                          </button>
+                        </div>
+                        {verification.destinationWallet && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-400">Destination Wallet:</span>
+                            <button
+                              onClick={() => copyToClipboard(verification.destinationWallet!)}
+                              className="flex items-center gap-2 text-zinc-200 font-mono text-sm hover-elevate active-elevate-2 px-2 py-1 rounded"
+                              data-testid="button-copy-destination"
                             >
-                              <div className="flex justify-between items-center">
-                                <span className="text-zinc-400 truncate max-w-[150px]">{tx.hash.slice(0, 16)}...</span>
-                                <Badge variant="outline" className="text-xs">{tx.asset}</Badge>
-                              </div>
-                              <div className="text-zinc-500 mt-1">
-                                {tx.value} {tx.asset}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                              {formatWalletShort(verification.destinationWallet)}
+                              <Copy className="h-3 w-3 text-zinc-500" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     <Separator className="bg-zinc-700" />
 
-                    <div>
-                      <h4 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
-                        <Brain className="h-4 w-4 text-purple-400" />
-                        AI Insight | تحليل الذكاء
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20" data-testid="card-ai-analysis">
-                          <p className="text-sm text-zinc-300 mb-2" data-testid="text-ai-analysis">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-cyan-300 flex items-center gap-2" data-testid="heading-section-2">
+                        <span className="text-cyan-500">2.</span> ON-CHAIN FORENSIC DATA
+                        <Badge variant="outline" className="ml-2 text-xs">Powered by Alchemy</Badge>
+                      </h3>
+                      <div className="grid gap-3 pl-5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Wallet Seniority:</span>
+                          <div className="flex items-center gap-2">
+                            {verification.onChainFacts.walletAgeDays > 730 ? (
+                              <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            ) : verification.onChainFacts.walletAgeDays > 180 ? (
+                              <AlertCircle className="h-4 w-4 text-amber-500" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-500" />
+                            )}
+                            <span className="text-zinc-200" data-testid="text-wallet-seniority">
+                              {verification.onChainFacts.walletAgeDays > 730 
+                                ? `Verified (Age: > 24 Months)` 
+                                : `Age: ${verification.onChainFacts.walletAgeDays} days`}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Balance:</span>
+                          <span className="text-zinc-200 font-mono" data-testid="text-balance">
+                            {verification.onChainFacts.balanceInEth} ETH
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Liquidity Consistency:</span>
+                          <span className="text-zinc-200" data-testid="text-liquidity">
+                            {verification.onChainFacts.transactionCount > 50 ? "Stable" : "Limited History"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Sanction List Check:</span>
+                          <div className="flex items-center gap-2">
+                            {verification.sanctionCheckPassed ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                <span className="text-emerald-400" data-testid="text-sanction-status">
+                                  PASS (Zero hits on OFAC/UN/UAE Lists)
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                <span className="text-red-400" data-testid="text-sanction-status">
+                                  FAIL - Review Required
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Interaction Risk:</span>
+                          <div className="flex items-center gap-2">
+                            {!verification.mixerInteractionDetected ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                <span className="text-emerald-400" data-testid="text-mixer-status">
+                                  Low (No Tumbler/Mixer interaction)
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle className="h-4 w-4 text-red-500" />
+                                <span className="text-red-400" data-testid="text-mixer-status">
+                                  HIGH - Mixer Interaction Detected
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-zinc-400">Contract Status:</span>
+                          <span className="text-zinc-200" data-testid="text-contract-status">
+                            {verification.onChainFacts.isContract ? "Smart Contract" : "EOA (User Wallet)"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator className="bg-zinc-700" />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-cyan-300 flex items-center gap-2" data-testid="heading-section-3">
+                        <span className="text-cyan-500">3.</span> AI BEHAVIORAL ANALYSIS
+                        <Badge variant="outline" className="ml-2 text-xs">GPT-4o</Badge>
+                      </h3>
+                      <div className="pl-5 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-zinc-400">Risk Assessment:</span>
+                          <Badge variant={getRiskBadgeVariant(verification.aiInsight.riskLevel)} data-testid="badge-risk-level">
+                            {verification.aiInsight.riskLevel.toUpperCase()} ({verification.aiInsight.riskScore}/100)
+                          </Badge>
+                        </div>
+                        
+                        {verification.aiInsight.fraudPatterns.length > 0 && (
+                          <div>
+                            <span className="text-zinc-400 text-sm">Detected Patterns:</span>
+                            <div className="flex flex-wrap gap-2 mt-2" data-testid="list-fraud-patterns">
+                              {verification.aiInsight.fraudPatterns.map((pattern, i) => (
+                                <Badge key={i} variant="destructive" className="text-xs" data-testid={`badge-pattern-${i}`}>
+                                  {pattern}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                          <p className="text-zinc-300 text-sm leading-relaxed" data-testid="text-ai-analysis">
                             {verification.aiInsight.analysis}
                           </p>
-                          <p className="text-sm text-zinc-400 text-right" dir="rtl" data-testid="text-ai-analysis-ar">
+                          <p className="text-zinc-400 text-sm mt-2 leading-relaxed" dir="rtl" data-testid="text-ai-analysis-ar">
                             {verification.aiInsight.analysisAr}
                           </p>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <p className="text-xs text-amber-400 mb-1">Liquidity Risk | مخاطر السيولة</p>
-                            <p className="text-sm text-zinc-300" data-testid="text-liquidity-risk">
-                              {verification.aiInsight.liquidityRisk}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                            <p className="text-xs text-blue-400 mb-1">Large Amount Analysis | تحليل المبالغ الكبيرة</p>
-                            <p className="text-sm text-zinc-300" data-testid="text-large-amount">
-                              {verification.aiInsight.largeAmountAnalysis}
-                            </p>
-                          </div>
-                        </div>
-
-                        {verification.aiInsight.fraudPatterns.length > 0 && (
-                          <div className="flex flex-wrap gap-2" data-testid="list-fraud-patterns">
-                            {verification.aiInsight.fraudPatterns.map((pattern, i) => (
-                              <Badge key={i} variant="destructive" className="text-xs" data-testid={`badge-pattern-${i}`}>
-                                {pattern}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20" data-testid="card-recommendation">
-                          <p className="text-xs text-emerald-400 mb-1">Recommendation | التوصية</p>
-                          <p className="text-sm text-zinc-300" data-testid="text-recommendation">
+                        <div className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                          <p className="text-sm font-medium text-cyan-200 mb-1">Recommendation:</p>
+                          <p className="text-zinc-300 text-sm" data-testid="text-recommendation">
                             {verification.aiInsight.recommendation}
                           </p>
-                          <p className="text-sm text-zinc-400 text-right mt-2" dir="rtl" data-testid="text-recommendation-ar">
+                          <p className="text-zinc-400 text-sm mt-1" dir="rtl" data-testid="text-recommendation-ar">
                             {verification.aiInsight.recommendationAr}
                           </p>
                         </div>
@@ -407,40 +494,20 @@ export default function HybridVerification() {
 
                     <Separator className="bg-zinc-700" />
 
-                    <div>
-                      <h4 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
-                        <Server className="h-4 w-4" />
-                        Verification Sources | مصادر التحقق
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-lg bg-zinc-800/30">
-                          <p className="text-xs text-zinc-500">Blockchain</p>
-                          <p className="text-sm text-zinc-200 font-mono" data-testid="text-source-blockchain">
-                            {verification.sources.blockchain}
-                          </p>
+                    <div className="text-center pt-4 border-t border-zinc-700">
+                      <div className="flex justify-center gap-6 text-xs text-zinc-500">
+                        <div className="flex items-center gap-1">
+                          <Database className="h-3 w-3" />
+                          <span data-testid="text-source-blockchain">{verification.sources.blockchain}</span>
                         </div>
-                        <div className="p-3 rounded-lg bg-zinc-800/30">
-                          <p className="text-xs text-zinc-500">AI Model</p>
-                          <p className="text-sm text-zinc-200 font-mono" data-testid="text-source-ai">
-                            {verification.sources.ai}
-                          </p>
+                        <div className="flex items-center gap-1">
+                          <Brain className="h-3 w-3" />
+                          <span data-testid="text-source-ai">{verification.sources.ai}</span>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20" data-testid="card-amount-info">
-                      <div className="flex justify-between items-center">
-                        <span className="text-zinc-400">Transaction Amount</span>
-                        <span className="text-xl font-bold text-cyan-300" data-testid="text-amount">
-                          AED {verification.transactionAmountAED.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-zinc-400">Threshold Met</span>
-                        <Badge variant={verification.thresholdMet ? "default" : "destructive"} data-testid="badge-threshold">
-                          {verification.thresholdMet ? "Yes" : "No"}
-                        </Badge>
-                      </div>
+                      <p className="text-zinc-600 text-xs mt-3" data-testid="text-verification-id">
+                        Internal Reference: {verification.verificationId}
+                      </p>
                     </div>
                   </div>
                 </ScrollArea>
@@ -450,11 +517,13 @@ export default function HybridVerification() {
             <Card className="bg-zinc-900/80 border-zinc-700/50 backdrop-blur-sm flex items-center justify-center" data-testid="card-empty-state">
               <CardContent className="text-center py-20">
                 <div className="p-4 rounded-full bg-zinc-800/50 w-fit mx-auto mb-4">
-                  <Shield className="h-12 w-12 text-zinc-600" />
+                  <FileText className="h-12 w-12 text-zinc-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-zinc-400 mb-2" data-testid="heading-empty-state">No Verification Yet</h3>
+                <h3 className="text-xl font-semibold text-zinc-400 mb-2" data-testid="heading-empty-state">
+                  No Report Generated
+                </h3>
                 <p className="text-zinc-500 max-w-sm mx-auto" data-testid="text-empty-state">
-                  Enter wallet details and click "Start Hybrid Verification" to generate a dual-source analysis
+                  Enter transaction details to generate a SovereignVault Transaction Integrity Report
                 </p>
               </CardContent>
             </Card>
