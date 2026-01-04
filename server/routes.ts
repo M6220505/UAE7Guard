@@ -3,6 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
 import { z } from "zod";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -382,6 +388,99 @@ export async function registerRoutes(
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to save slippage calculation" });
+    }
+  });
+
+  // ===== AI SCAM PREDICTION =====
+  app.post("/api/ai/predict", async (req, res) => {
+    try {
+      const { walletAddress, transactionValue } = req.body;
+
+      if (!walletAddress) {
+        return res.status(400).json({ error: "Wallet address is required" });
+      }
+
+      // Get existing reports for this address
+      const existingReports = await storage.getReportsByAddress(walletAddress);
+      const hasVerifiedReports = existingReports.some(r => r.status === "verified");
+      const reportCount = existingReports.length;
+
+      // Build context for AI analysis
+      const context = {
+        address: walletAddress,
+        transactionValue: transactionValue || "Unknown",
+        existingReports: reportCount,
+        hasVerifiedThreats: hasVerifiedReports,
+        reportTypes: existingReports.map(r => r.scamType),
+        severities: existingReports.map(r => r.severity),
+      };
+
+      const systemPrompt = `You are UAE7Guard's AI Security Analyst, specialized in cryptocurrency fraud detection and prevention for UAE investors. Analyze wallet addresses for potential scam indicators.
+
+Your analysis should consider:
+1. Historical threat reports in our database
+2. Common scam patterns (rugpulls, honeypots, phishing, pump & dump)
+3. VARA/ADGM compliance factors
+4. Transaction value risk assessment
+
+Respond in JSON format with these fields:
+{
+  "riskScore": <number 0-100>,
+  "riskLevel": "<safe|suspicious|dangerous>",
+  "factors": [{"name": "string", "impact": "positive|negative|neutral", "description": "string"}],
+  "analysis": "Detailed analysis in English",
+  "analysisAr": "Detailed analysis in Arabic",
+  "recommendation": "Clear action recommendation",
+  "recommendationAr": "Clear action recommendation in Arabic"
+}
+
+Risk Level Guidelines:
+- safe (0-25): No indicators of malicious activity
+- suspicious (26-60): Some warning signs, proceed with caution
+- dangerous (61-100): High risk indicators, avoid transaction`;
+
+      const userPrompt = `Analyze this wallet for potential scam risk:
+
+Address: ${context.address}
+Transaction Value: ${context.transactionValue}
+Existing Reports in Database: ${context.existingReports}
+Has Verified Threats: ${context.hasVerifiedThreats}
+Report Types: ${context.reportTypes.join(", ") || "None"}
+Severities: ${context.severities.join(", ") || "None"}
+
+Provide comprehensive risk analysis.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1500,
+      });
+
+      const aiResult = JSON.parse(response.choices[0]?.message?.content || "{}");
+
+      res.json({
+        success: true,
+        prediction: {
+          walletAddress,
+          riskScore: aiResult.riskScore || 0,
+          riskLevel: aiResult.riskLevel || "safe",
+          factors: aiResult.factors || [],
+          analysis: aiResult.analysis || "Analysis unavailable",
+          analysisAr: aiResult.analysisAr || "",
+          recommendation: aiResult.recommendation || "No recommendation",
+          recommendationAr: aiResult.recommendationAr || "",
+          existingReports: reportCount,
+          hasVerifiedThreats: hasVerifiedReports,
+          analyzedAt: new Date().toISOString(),
+        }
+      });
+    } catch (error) {
+      console.error("AI prediction error:", error);
+      res.status(500).json({ error: "Failed to analyze wallet" });
     }
   });
 

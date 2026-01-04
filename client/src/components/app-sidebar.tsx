@@ -10,7 +10,8 @@ import {
   Gem,
   Radio,
   TrendingDown,
-  Download
+  Download,
+  Brain
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,11 @@ const mainNavItems = [
     title: "Due Diligence",
     url: "/due-diligence",
     icon: Gem,
+  },
+  {
+    title: "AI Prediction",
+    url: "/ai-predict",
+    icon: Brain,
   },
   {
     title: "Live Monitoring",
