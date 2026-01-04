@@ -73,8 +73,8 @@ export default function HybridVerification() {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.verificationId) {
-        setVerification(data);
+      if (data.success && data.verification) {
+        setVerification(data.verification);
         toast({
           title: "Certificate Generated",
           description: "SovereignVault Transaction Integrity Report ready",

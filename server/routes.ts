@@ -975,7 +975,7 @@ Provide:
           },
         };
         
-        return res.json(simulatedResult);
+        return res.json({ success: true, verification: simulatedResult });
       }
 
       const snapshot = await getHybridWalletSnapshot(input.walletAddress, input.network);
