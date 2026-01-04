@@ -11,7 +11,6 @@ export interface RiskInput {
 export interface RiskOutput {
   riskScore: number;
   riskLevel: "safe" | "suspicious" | "danger";
-  riskLevelAr: "آمن" | "مريب" | "خطر";
   historyScore: number;
   associationScore: number;
   walletAgeFactor: number;
@@ -22,7 +21,6 @@ export interface RiskOutput {
     calculation: string;
   };
   recommendation: string;
-  recommendationAr: string;
   confidence: number;
 }
 
@@ -74,25 +72,17 @@ export function calculateMillionDirhamRisk(input: RiskInput): RiskOutput {
   const riskScore = Math.min(Math.max(Math.round(rawScore), 0), 100);
 
   let riskLevel: "safe" | "suspicious" | "danger";
-  let riskLevelAr: "آمن" | "مريب" | "خطر";
   let recommendation: string;
-  let recommendationAr: string;
 
   if (riskScore >= 70) {
     riskLevel = "danger";
-    riskLevelAr = "خطر";
     recommendation = "HIGH RISK - Do not proceed with this transaction. Multiple risk indicators detected.";
-    recommendationAr = "خطر عالي - لا تستمر في هذه الصفقة. تم رصد مؤشرات خطر متعددة.";
   } else if (riskScore >= 40) {
     riskLevel = "suspicious";
-    riskLevelAr = "مريب";
     recommendation = "CAUTION - Additional verification recommended before proceeding.";
-    recommendationAr = "تحذير - يُنصح بتحقق إضافي قبل المتابعة.";
   } else {
     riskLevel = "safe";
-    riskLevelAr = "آمن";
     recommendation = "LOW RISK - Transaction appears safe based on available data.";
-    recommendationAr = "خطر منخفض - تبدو الصفقة آمنة بناءً على البيانات المتاحة.";
   }
 
   const confidence = Math.min(90, 50 + (walletAgeDays / 10) + (transactionCount / 5));
@@ -102,7 +92,6 @@ export function calculateMillionDirhamRisk(input: RiskInput): RiskOutput {
   return {
     riskScore,
     riskLevel,
-    riskLevelAr,
     historyScore,
     associationScore,
     walletAgeFactor: Math.round(walletAgeFactor * 100) / 100,
@@ -113,7 +102,6 @@ export function calculateMillionDirhamRisk(input: RiskInput): RiskOutput {
       calculation: calculationString,
     },
     recommendation,
-    recommendationAr,
     confidence: Math.round(confidence),
   };
 }

@@ -38,7 +38,6 @@ import type { HybridVerificationResult } from "@shared/schema";
 interface EscrowStep {
   id: number;
   title: string;
-  titleAr: string;
   description: string;
   status: "pending" | "in_progress" | "completed" | "failed";
   icon: typeof CheckCircle;
@@ -72,7 +71,6 @@ export default function EscrowPage() {
     {
       id: 1,
       title: "Buyer Deposit",
-      titleAr: "إيداع المشتري",
       description: "Funds deposited to escrow wallet",
       status: "completed",
       icon: Banknote,
@@ -80,7 +78,6 @@ export default function EscrowPage() {
     {
       id: 2,
       title: "Digital Contract Signing",
-      titleAr: "توقيع العقد الرقمي",
       description: "Upload & hash verification",
       status: "pending",
       icon: FileSignature,
@@ -88,7 +85,6 @@ export default function EscrowPage() {
     {
       id: 3,
       title: "Security Clearance",
-      titleAr: "التخليص الأمني",
       description: "Alchemy + AI verification",
       status: "pending",
       icon: Shield,
@@ -96,7 +92,6 @@ export default function EscrowPage() {
     {
       id: 4,
       title: "Funds Release to Seller",
-      titleAr: "إطلاق الأموال للبائع",
       description: "Multi-sig release",
       status: "pending",
       icon: Wallet,
@@ -366,9 +361,6 @@ export default function EscrowPage() {
                   <p className="text-red-200/80 text-sm">
                     This transaction has been temporarily paused for advanced security verification. Please contact support.
                   </p>
-                  <p className="text-red-300/60 text-xs mt-1 font-arabic">
-                    تم إيقاف هذه المعاملة مؤقتًا للتحقق الأمني المتقدم. يرجى الاتصال بالدعم.
-                  </p>
                 </div>
                 <Button variant="outline" className="border-red-400 text-red-400" data-testid="button-contact-support">
                   <Phone className="mr-2 h-4 w-4" />
@@ -383,8 +375,6 @@ export default function EscrowPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-amber-500/20 border border-emerald-500/30">
             <Lock className="h-5 w-5 text-amber-400" />
             <span className="text-amber-400 font-semibold">Smart Multi-Sig Bridge</span>
-            <span className="text-emerald-400/60">|</span>
-            <span className="text-emerald-400 font-arabic">جسر التوقيع المتعدد الذكي</span>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-300 via-amber-400 to-emerald-300 bg-clip-text text-transparent" data-testid="heading-escrow">
             Sovereign Escrow Protocol
@@ -411,7 +401,7 @@ export default function EscrowPage() {
                 <div className="p-2 rounded-lg bg-red-500/20">
                   <AlertOctagon className="h-6 w-6 text-red-400" />
                 </div>
-                Admin Command Center | مركز قيادة المسؤول
+                Admin Command Center
               </CardTitle>
               <CardDescription className="text-red-200/50">
                 Super-Admin Emergency Controls
@@ -526,7 +516,7 @@ export default function EscrowPage() {
                   <div className={`p-2 rounded-lg ${isEscrowLocked ? "bg-red-500/20" : "bg-gradient-to-br from-emerald-500/20 to-amber-500/20"}`}>
                     <Fingerprint className={`h-6 w-6 ${isEscrowLocked ? "text-red-400" : "text-amber-400"}`} />
                   </div>
-                  Transaction Progress | مسار المعاملة
+                  Transaction Progress
                 </CardTitle>
                 <CardDescription className="text-emerald-200/50 mt-2">
                   AED {transactionAmount.toLocaleString()} Escrow Transaction
@@ -566,7 +556,6 @@ export default function EscrowPage() {
                         <p className={`font-semibold ${getStepTextColor(step.status)}`} data-testid={`step-title-${step.id}`}>
                           {step.title}
                         </p>
-                        <p className="text-xs text-emerald-200/40 mt-1">{step.titleAr}</p>
                         <p className="text-xs text-zinc-500 mt-1">{step.description}</p>
                       </div>
                       {index < steps.length - 1 && (
@@ -715,7 +704,7 @@ export default function EscrowPage() {
               <div className={`p-2 rounded-lg ${isEscrowLocked ? "bg-red-500/20" : "bg-gradient-to-br from-amber-500/20 to-emerald-500/20"}`}>
                 <Lock className={`h-6 w-6 ${isEscrowLocked ? "text-red-400" : "text-amber-400"}`} />
               </div>
-              Smart Contract Simulation | محاكاة العقد الذكي
+              Smart Contract Simulation
             </CardTitle>
             <CardDescription className="text-amber-200/50">
               On-chain escrow wallet status and confirmation
@@ -859,9 +848,8 @@ export default function EscrowPage() {
           </CardContent>
         </Card>
 
-        <div className="text-center text-xs text-zinc-600 space-y-1">
+        <div className="text-center text-xs text-zinc-600">
           <p>Powered by UAE7Guard Sovereign Protocol</p>
-          <p className="font-arabic">مدعوم من بروتوكول الحرس الإماراتي السيادي</p>
         </div>
       </div>
     </div>

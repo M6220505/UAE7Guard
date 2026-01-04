@@ -55,7 +55,6 @@ interface SovereignReport {
   riskAssessment: {
     riskScore: number;
     riskLevel: string;
-    riskLevelAr: string;
     formula: string;
     components: {
       historyScore: number;
@@ -65,9 +64,7 @@ interface SovereignReport {
   };
   aiIntelligence?: {
     analysis: string;
-    analysisAr: string;
     recommendation: string;
-    recommendationAr: string;
     riskFactors: string[];
     modelUsed: string;
   };
@@ -78,7 +75,6 @@ interface SovereignReport {
   };
   legalDisclaimer: {
     en: string;
-    ar: string;
   };
   auditTrail: {
     transactionHash: string;
@@ -462,7 +458,7 @@ export default function DoubleLock() {
                         </div>
                       </div>
                       <Badge variant={getRiskBadgeVariant(report.riskAssessment.riskLevel)} className="text-lg px-4 py-1" data-testid="badge-risk-level">
-                        {report.riskAssessment.riskLevel.toUpperCase()} | {report.riskAssessment.riskLevelAr}
+                        {report.riskAssessment.riskLevel.toUpperCase()}
                       </Badge>
                     </div>
 
@@ -526,13 +522,11 @@ export default function DoubleLock() {
                           </h4>
                           <div className="space-y-3">
                             <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20" data-testid="card-ai-analysis">
-                              <p className="text-sm text-zinc-300 mb-2" data-testid="text-ai-analysis">{report.aiIntelligence.analysis}</p>
-                              <p className="text-sm text-zinc-400 text-right" dir="rtl" data-testid="text-ai-analysis-ar">{report.aiIntelligence.analysisAr}</p>
+                              <p className="text-sm text-zinc-300" data-testid="text-ai-analysis">{report.aiIntelligence.analysis}</p>
                             </div>
                             <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20" data-testid="card-ai-recommendation">
                               <p className="text-xs text-blue-400 mb-1">Recommendation</p>
                               <p className="text-sm text-zinc-300" data-testid="text-ai-recommendation">{report.aiIntelligence.recommendation}</p>
-                              <p className="text-sm text-zinc-400 text-right mt-2" dir="rtl" data-testid="text-ai-recommendation-ar">{report.aiIntelligence.recommendationAr}</p>
                             </div>
                             {report.aiIntelligence.riskFactors.length > 0 && (
                               <div className="flex flex-wrap gap-2" data-testid="list-risk-factors">

@@ -45,9 +45,7 @@ interface PredictionResult {
   riskLevel: "safe" | "suspicious" | "dangerous";
   factors: RiskFactor[];
   analysis: string;
-  analysisAr: string;
   recommendation: string;
-  recommendationAr: string;
   existingReports: number;
   hasVerifiedThreats: boolean;
   analyzedAt: string;
@@ -300,11 +298,6 @@ export default function AiPredict() {
               <div>
                 <h4 className="text-sm font-semibold mb-2">AI Analysis</h4>
                 <p className="text-sm text-muted-foreground">{result.analysis}</p>
-                {result.analysisAr && (
-                  <p className="text-sm text-muted-foreground mt-2 text-right" dir="rtl">
-                    {result.analysisAr}
-                  </p>
-                )}
               </div>
 
               <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
@@ -313,11 +306,6 @@ export default function AiPredict() {
                   Recommendation
                 </h4>
                 <p className="text-sm">{result.recommendation}</p>
-                {result.recommendationAr && (
-                  <p className="text-sm mt-1 text-right" dir="rtl">
-                    {result.recommendationAr}
-                  </p>
-                )}
               </div>
 
               <p className="text-xs text-muted-foreground text-center">

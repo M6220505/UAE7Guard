@@ -25,9 +25,7 @@ export interface SovereignReportInput {
   };
   aiAnalysis?: {
     analysis: string;
-    analysisAr: string;
     recommendation: string;
-    recommendationAr: string;
     factors: string[];
     model: string;
   };
@@ -60,7 +58,6 @@ export interface SovereignReport {
   riskAssessment: {
     riskScore: number;
     riskLevel: string;
-    riskLevelAr: string;
     formula: string;
     components: {
       historyScore: number;
@@ -70,9 +67,7 @@ export interface SovereignReport {
   };
   aiIntelligence?: {
     analysis: string;
-    analysisAr: string;
     recommendation: string;
-    recommendationAr: string;
     riskFactors: string[];
     modelUsed: string;
   };
@@ -83,7 +78,6 @@ export interface SovereignReport {
   };
   legalDisclaimer: {
     en: string;
-    ar: string;
   };
   auditTrail: {
     transactionHash: string;
@@ -102,16 +96,6 @@ function generateReportId(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `SVR-${timestamp}-${random}`.toUpperCase();
-}
-
-function getRiskLevelAr(level: string): string {
-  const levels: Record<string, string> = {
-    safe: "آمن",
-    suspicious: "مريب",
-    danger: "خطر",
-    dangerous: "خطر",
-  };
-  return levels[level.toLowerCase()] || "غير محدد";
 }
 
 export function generateSovereignReport(input: SovereignReportInput): SovereignReport {
@@ -166,7 +150,6 @@ export function generateSovereignReport(input: SovereignReportInput): SovereignR
     riskAssessment: {
       riskScore: input.riskAnalysis.riskScore,
       riskLevel: input.riskAnalysis.riskLevel,
-      riskLevelAr: getRiskLevelAr(input.riskAnalysis.riskLevel),
       formula: input.riskAnalysis.formula,
       components: {
         historyScore: input.riskAnalysis.historyScore,
@@ -176,9 +159,7 @@ export function generateSovereignReport(input: SovereignReportInput): SovereignR
     },
     aiIntelligence: input.aiAnalysis ? {
       analysis: input.aiAnalysis.analysis,
-      analysisAr: input.aiAnalysis.analysisAr,
       recommendation: input.aiAnalysis.recommendation,
-      recommendationAr: input.aiAnalysis.recommendationAr,
       riskFactors: input.aiAnalysis.factors,
       modelUsed: input.aiAnalysis.model || AI_MODEL_INFO,
     } : undefined,
@@ -189,7 +170,6 @@ export function generateSovereignReport(input: SovereignReportInput): SovereignR
     },
     legalDisclaimer: {
       en: "This report is generated for informational purposes only and does not constitute legal or financial advice. The risk assessment is based on available blockchain data and AI analysis at the time of generation. UAE7Guard is not liable for any decisions made based on this report. For transactions exceeding AED 500,000, we recommend consulting with licensed legal counsel.",
-      ar: "هذا التقرير مُعَد لأغراض إعلامية فقط ولا يشكل نصيحة قانونية أو مالية. يعتمد تقييم المخاطر على بيانات البلوكتشين المتاحة وتحليل الذكاء الاصطناعي وقت الإنشاء. لا تتحمل UAE7Guard أي مسؤولية عن القرارات المتخذة بناءً على هذا التقرير. للصفقات التي تتجاوز 500,000 درهم، نوصي بالتشاور مع مستشار قانوني مرخص.",
     },
     auditTrail: {
       transactionHash: encryptedAudit.transactionHash,
@@ -229,7 +209,7 @@ export function formatReportForDisplay(report: SovereignReport): string {
     "",
     "─── RISK ASSESSMENT ───",
     `Risk Score: ${report.riskAssessment.riskScore}/100`,
-    `Risk Level: ${report.riskAssessment.riskLevel.toUpperCase()} | ${report.riskAssessment.riskLevelAr}`,
+    `Risk Level: ${report.riskAssessment.riskLevel.toUpperCase()}`,
     `Formula: ${report.riskAssessment.formula}`,
     "",
     "─── THREAT DATABASE ───",

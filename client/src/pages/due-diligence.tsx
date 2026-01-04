@@ -101,7 +101,7 @@ function calculateRiskScore(
   transactionValue: number = 500000
 ): RiskResult {
   // ═══════════════════════════════════════════════════════════════
-  // R_live: المخاطر اللحظية (Real-time Portfolio Risk)
+  // R_live: Real-time Portfolio Risk
   // Based on current wallet activity patterns and recent interactions
   // ═══════════════════════════════════════════════════════════════
   
@@ -126,7 +126,7 @@ function calculateRiskScore(
   const rLive = Math.min(Math.round(recentActivityScore), 100);
   
   // ═══════════════════════════════════════════════════════════════
-  // R_hist: المخاطر التاريخية (Historical Risk)
+  // R_hist: Historical Risk
   // Based on wallet's complete transaction history and age
   // ═══════════════════════════════════════════════════════════════
   
@@ -154,7 +154,7 @@ function calculateRiskScore(
   const rHist = Math.round((walletAgeScore * 0.4) + (transactionVolumeScore * 0.3) + (historicalReliability * 0.3));
   
   // ═══════════════════════════════════════════════════════════════
-  // R_leg: التوافق القانوني (Legal Compliance Risk)
+  // R_leg: Legal Compliance Risk
   // Based on local sanction lists, VARA, ADGM compliance
   // ═══════════════════════════════════════════════════════════════
   
@@ -174,7 +174,7 @@ function calculateRiskScore(
   const rLeg = Math.min(Math.round(blacklistScore * 0.7 + regulatoryRisk + fatfFactor), 100);
   
   // ═══════════════════════════════════════════════════════════════
-  // Liquidity_Ratio: نسبة السيولة
+  // Liquidity_Ratio
   // Based on transaction value and market depth
   // ═══════════════════════════════════════════════════════════════
   
@@ -287,22 +287,22 @@ function FormulaDisplay({ result }: { result: RiskResult }) {
         <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20 text-center">
           <p className="text-blue-400 text-xs mb-1">R<sub>live</sub></p>
           <p className="text-xl font-bold text-blue-300">{result.rLive}</p>
-          <p className="text-blue-400/60 text-xs">المخاطر اللحظية</p>
+          <p className="text-blue-400/60 text-xs">Real-time Risk</p>
         </div>
         <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20 text-center">
           <p className="text-purple-400 text-xs mb-1">R<sub>hist</sub></p>
           <p className="text-xl font-bold text-purple-300">{result.rHist}</p>
-          <p className="text-purple-400/60 text-xs">المخاطر التاريخية</p>
+          <p className="text-purple-400/60 text-xs">Historical Risk</p>
         </div>
         <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/20 text-center">
           <p className="text-green-400 text-xs mb-1">R<sub>leg</sub></p>
           <p className="text-xl font-bold text-green-300">{result.rLeg}</p>
-          <p className="text-green-400/60 text-xs">التوافق القانوني</p>
+          <p className="text-green-400/60 text-xs">Legal Compliance</p>
         </div>
         <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-500/20 text-center">
           <p className="text-orange-400 text-xs mb-1">√Liquidity</p>
           <p className="text-xl font-bold text-orange-300">{result.formulaBreakdown.denominator}</p>
-          <p className="text-orange-400/60 text-xs">نسبة السيولة</p>
+          <p className="text-orange-400/60 text-xs">Liquidity Ratio</p>
         </div>
       </div>
       
@@ -327,8 +327,7 @@ function FormulaDisplay({ result }: { result: RiskResult }) {
 function RiskBreakdown({ result }: { result: RiskResult }) {
   const factors = [
     { 
-      label: "R_live (المخاطر اللحظية)", 
-      labelEn: "Real-time Portfolio Risk",
+      label: "R_live - Real-time Portfolio Risk", 
       score: result.rLive, 
       weight: "50%",
       icon: Loader2,
@@ -337,8 +336,7 @@ function RiskBreakdown({ result }: { result: RiskResult }) {
       description: "Current wallet activity patterns and recent interactions"
     },
     { 
-      label: "R_hist (المخاطر التاريخية)", 
-      labelEn: "Historical Risk",
+      label: "R_hist - Historical Risk", 
       score: result.rHist, 
       weight: "30%",
       icon: Clock,
@@ -347,8 +345,7 @@ function RiskBreakdown({ result }: { result: RiskResult }) {
       description: "Wallet's complete transaction history and age"
     },
     { 
-      label: "R_leg (التوافق القانوني)", 
-      labelEn: "Legal Compliance",
+      label: "R_leg - Legal Compliance", 
       score: result.rLeg, 
       weight: "20%",
       icon: Scale,
@@ -393,25 +390,21 @@ function TermsAgreement({ onAccept }: { onAccept: () => void }) {
     {
       icon: ScrollText,
       title: "Nature of Service",
-      titleAr: "طبيعة الخدمة",
       content: "The user acknowledges that UAE7Guard is a technical advisory tool that relies on analyzing publicly available data on the Blockchain. This platform does not provide financial or legal advice, and does not replace the necessity of conducting formal Due Diligence through authorized entities in the UAE such as VARA or ADGM."
     },
     {
       icon: FileWarning,
       title: "Limitation of Liability",
-      titleAr: "حدود المسؤولية",
       content: "To the maximum extent permitted by UAE law, the Developer (Mohammed Ali) or UAE7Guard platform shall not be liable for any financial losses, direct or indirect, resulting from using this tool in making investment or commercial decisions. Specifically for transactions exceeding AED 1,000,000, the responsibility for final verification of parties' identities and fund legitimacy lies solely with the user."
     },
     {
       icon: Scale,
       title: "Data Accuracy",
-      titleAr: "دقة البيانات",
       content: "Due to the volatile and decentralized nature of digital assets, the platform does not guarantee 100% data accuracy. Risk Scores are probabilistic estimates based on software algorithms and may not reflect the actual hidden risks."
     },
     {
       icon: Gavel,
       title: "UAE Compliance",
-      titleAr: "الامتثال لقوانين الإمارات",
       content: "The use of this platform and any disputes arising therefrom are subject to the laws of the United Arab Emirates. The courts of Dubai/Abu Dhabi (or ADGM/DIFC courts as applicable) shall have jurisdiction over any disputes."
     }
   ];
@@ -454,7 +447,6 @@ function TermsAgreement({ onAccept }: { onAccept: () => void }) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-amber-100 font-semibold">{index + 1}. {term.title}</h3>
-                          <span className="text-amber-400/60 text-sm">({term.titleAr})</span>
                         </div>
                         <p className="text-amber-200/70 text-sm leading-relaxed">
                           {term.content}

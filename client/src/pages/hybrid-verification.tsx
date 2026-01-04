@@ -131,7 +131,7 @@ export default function HybridVerification() {
             <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
               <FileText className="h-8 w-8 text-cyan-400" />
             </div>
-            SovereignVault | التقرير السيادي
+            SovereignVault
           </h1>
           <p className="text-zinc-400" data-testid="text-page-description">
             Transaction Integrity Report for High-Value Transactions (AED 10,000+)
@@ -143,7 +143,7 @@ export default function HybridVerification() {
             <CardHeader className="border-b border-cyan-500/10">
               <CardTitle className="text-cyan-100 flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-cyan-500" />
-                Transaction Details | تفاصيل المعاملة
+                Transaction Details
               </CardTitle>
               <CardDescription className="text-cyan-200/50">
                 Enter transaction information for sovereign verification
@@ -157,7 +157,7 @@ export default function HybridVerification() {
                     name="assetType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Asset Type | نوع الأصل</FormLabel>
+                        <FormLabel className="text-cyan-200">Asset Type</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="bg-zinc-800/50 border-zinc-700" data-testid="select-asset-type">
@@ -189,7 +189,7 @@ export default function HybridVerification() {
                     name="transactionAmountAED"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Nominal Value (AED) | القيمة الاسمية</FormLabel>
+                        <FormLabel className="text-cyan-200">Nominal Value (AED)</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -209,7 +209,7 @@ export default function HybridVerification() {
                     name="walletAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Source Wallet | محفظة المصدر</FormLabel>
+                        <FormLabel className="text-cyan-200">Source Wallet</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -228,7 +228,7 @@ export default function HybridVerification() {
                     name="destinationWallet"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Destination Wallet (Optional) | محفظة الوجهة</FormLabel>
+                        <FormLabel className="text-cyan-200">Destination Wallet (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -247,7 +247,7 @@ export default function HybridVerification() {
                     name="network"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-cyan-200">Network | الشبكة</FormLabel>
+                        <FormLabel className="text-cyan-200">Network</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="bg-zinc-800/50 border-zinc-700" data-testid="select-network">
@@ -509,9 +509,6 @@ export default function HybridVerification() {
                           <p className="text-zinc-300 text-sm leading-relaxed" data-testid="text-ai-verdict">
                             {verification.aiInsight.verdict || `The transaction pattern aligns with ${verification.aiInsight.riskLevel === "safe" ? "institutional-grade" : verification.aiInsight.riskLevel === "suspicious" ? "moderate-risk" : "high-risk"} movement. AI analysis indicates a ${(100 - verification.aiInsight.riskScore).toFixed(1)}% probability of legitimate intent based on historical velocity and peer-group benchmarking.`}
                           </p>
-                          <p className="text-zinc-400 text-sm mt-2 leading-relaxed" dir="rtl" data-testid="text-ai-verdict-ar">
-                            {verification.aiInsight.verdictAr}
-                          </p>
                         </div>
 
                         <div className={`p-5 rounded-lg border-2 text-center ${
@@ -553,9 +550,6 @@ export default function HybridVerification() {
                           <p className="text-sm font-medium text-cyan-200 mb-1">Recommendation:</p>
                           <p className="text-zinc-300 text-sm" data-testid="text-recommendation">
                             {verification.aiInsight.recommendation}
-                          </p>
-                          <p className="text-zinc-400 text-sm mt-1" dir="rtl" data-testid="text-recommendation-ar">
-                            {verification.aiInsight.recommendationAr}
                           </p>
                         </div>
                       </div>

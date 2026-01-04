@@ -369,11 +369,8 @@ export interface AIInsight {
   liquidityRisk: string;
   largeAmountAnalysis: string;
   recommendation: string;
-  recommendationAr: string;
   analysis: string;
-  analysisAr: string;
   verdict: string;
-  verdictAr: string;
 }
 
 export interface HybridVerificationResult {
@@ -397,15 +394,15 @@ export interface HybridVerificationResult {
 
 export const hybridVerificationInputSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
-    message: "Invalid wallet address format | تنسيق عنوان المحفظة غير صالح",
+    message: "Invalid wallet address format",
   }),
   destinationWallet: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
-    message: "Invalid destination wallet format | تنسيق محفظة الوجهة غير صالح",
+    message: "Invalid destination wallet format",
   }).optional(),
   assetType: z.enum(["digital_asset", "real_estate_escrow", "investment_fund", "trade_settlement"]).default("digital_asset"),
   network: z.string().default("ethereum"),
   transactionAmountAED: z.coerce.number().min(10000, {
-    message: "Minimum amount is 10,000 AED | الحد الأدنى 10,000 درهم",
+    message: "Minimum amount is 10,000 AED",
   }),
   simulationScenario: z.enum(["layering_high_value", "clean_institutional", "mixer_interaction"]).optional(),
 });
@@ -414,9 +411,9 @@ export type SimulationScenario = "layering_high_value" | "clean_institutional" |
 
 export type AssetType = "digital_asset" | "real_estate_escrow" | "investment_fund" | "trade_settlement";
 
-export const assetTypeLabels: Record<AssetType, { en: string; ar: string }> = {
-  digital_asset: { en: "High-Value Digital Asset", ar: "أصول رقمية عالية القيمة" },
-  real_estate_escrow: { en: "Real Estate Escrow", ar: "ضمان عقاري" },
-  investment_fund: { en: "Investment Fund Transfer", ar: "تحويل صندوق استثماري" },
-  trade_settlement: { en: "Trade Settlement", ar: "تسوية تجارية" },
+export const assetTypeLabels: Record<AssetType, { label: string }> = {
+  digital_asset: { label: "High-Value Digital Asset" },
+  real_estate_escrow: { label: "Real Estate Escrow" },
+  investment_fund: { label: "Investment Fund Transfer" },
+  trade_settlement: { label: "Trade Settlement" },
 };

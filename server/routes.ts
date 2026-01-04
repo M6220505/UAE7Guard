@@ -463,9 +463,7 @@ Respond in JSON format with these fields:
   "riskLevel": "<safe|suspicious|dangerous>",
   "factors": [{"name": "string", "impact": "positive|negative|neutral", "description": "string"}],
   "analysis": "Detailed analysis in English",
-  "analysisAr": "Detailed analysis in Arabic",
-  "recommendation": "Clear action recommendation",
-  "recommendationAr": "Clear action recommendation in Arabic"
+  "recommendation": "Clear action recommendation"
 }
 
 Risk Level Guidelines:
@@ -504,9 +502,7 @@ Provide comprehensive risk analysis.`;
           riskLevel: aiResult.riskLevel || "safe",
           factors: aiResult.factors || [],
           analysis: aiResult.analysis || "Analysis unavailable",
-          analysisAr: aiResult.analysisAr || "",
           recommendation: aiResult.recommendation || "No recommendation",
-          recommendationAr: aiResult.recommendationAr || "",
           existingReports: reportCount,
           hasVerifiedThreats: hasVerifiedReports,
           analyzedAt: new Date().toISOString(),
@@ -558,7 +554,7 @@ Provide comprehensive risk analysis.`;
     }
   });
 
-  // ===== ENCRYPTED AUDIT LOGS (القبو المشفر) =====
+  // ===== ENCRYPTED AUDIT LOGS =====
   const MIN_AUDIT_VALUE_AED = 50000;
 
   app.get("/api/audit/status", async (_req, res) => {
@@ -566,8 +562,8 @@ Provide comprehensive risk analysis.`;
       configured: isEncryptionConfigured(),
       minValueAED: MIN_AUDIT_VALUE_AED,
       message: isEncryptionConfigured() 
-        ? "Encryption vault active | القبو المشفر نشط"
-        : "ENCRYPTION_KEY required | مفتاح التشفير مطلوب"
+        ? "Encryption vault active"
+        : "ENCRYPTION_KEY required"
     });
   });
 
@@ -576,7 +572,6 @@ Provide comprehensive risk analysis.`;
       if (!isEncryptionConfigured()) {
         return res.status(503).json({ 
           error: "Encryption not configured",
-          errorAr: "التشفير غير مفعّل",
           message: "ENCRYPTION_KEY environment variable is required"
         });
       }
@@ -620,7 +615,7 @@ Provide comprehensive risk analysis.`;
 
       res.status(201).json({
         success: true,
-        message: "Audit log encrypted and stored | تم تشفير وحفظ السجل",
+        message: "Audit log encrypted and stored",
         log: {
           id: savedLog.id,
           transactionHash: savedLog.transactionHash,
@@ -632,14 +627,12 @@ Provide comprehensive risk analysis.`;
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           error: "Invalid audit data", 
-          errorAr: "بيانات التدقيق غير صالحة",
           details: error.errors 
         });
       }
       console.error("Audit log error:", error);
       res.status(500).json({ 
-        error: "Failed to create audit log",
-        errorAr: "فشل في إنشاء سجل التدقيق"
+        error: "Failed to create audit log"
       });
     }
   });
@@ -696,8 +689,7 @@ Provide comprehensive risk analysis.`;
     try {
       if (!isEncryptionConfigured()) {
         return res.status(503).json({ 
-          error: "Encryption not configured",
-          errorAr: "التشفير غير مفعّل"
+          error: "Encryption not configured"
         });
       }
 
@@ -706,8 +698,7 @@ Provide comprehensive risk analysis.`;
       
       if (!log) {
         return res.status(404).json({ 
-          error: "Audit log not found",
-          errorAr: "السجل غير موجود"
+          error: "Audit log not found"
         });
       }
 
@@ -715,8 +706,7 @@ Provide comprehensive risk analysis.`;
       
       if (!decryptedData) {
         return res.status(500).json({ 
-          error: "Failed to decrypt log",
-          errorAr: "فشل في فك تشفير السجل"
+          error: "Failed to decrypt log"
         });
       }
 
@@ -733,8 +723,7 @@ Provide comprehensive risk analysis.`;
     } catch (error) {
       console.error("Decrypt audit log error:", error);
       res.status(500).json({ 
-        error: "Failed to decrypt audit log",
-        errorAr: "فشل في فك تشفير السجل"
+        error: "Failed to decrypt audit log"
       });
     }
   });
@@ -744,8 +733,7 @@ Provide comprehensive risk analysis.`;
     try {
       if (!isEncryptionConfigured()) {
         return res.status(503).json({ 
-          error: "Encryption vault not configured",
-          errorAr: "القبو المشفر غير مفعّل"
+          error: "Encryption vault not configured"
         });
       }
 
@@ -816,9 +804,7 @@ Risk Score: ${riskResult.riskScore}/100
 Provide:
 {
   "analysis": "Brief English analysis (2-3 sentences)",
-  "analysisAr": "Arabic translation",
   "recommendation": "English recommendation",
-  "recommendationAr": "Arabic translation",
   "factors": ["risk factor 1", "risk factor 2"]
 }`;
 
@@ -832,9 +818,7 @@ Provide:
           const aiResult = JSON.parse(response.choices[0]?.message?.content || "{}");
           aiAnalysis = {
             analysis: aiResult.analysis || "",
-            analysisAr: aiResult.analysisAr || "",
             recommendation: aiResult.recommendation || "",
-            recommendationAr: aiResult.recommendationAr || "",
             factors: aiResult.factors || [],
             model: "GPT-4o (Replit AI Integrations)",
           };
@@ -914,14 +898,12 @@ Provide:
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           error: "Invalid report request",
-          errorAr: "طلب تقرير غير صالح",
           details: error.errors 
         });
       }
       console.error("Sovereign report error:", error);
       res.status(500).json({ 
-        error: "Failed to generate sovereign report",
-        errorAr: "فشل في إنشاء التقرير السيادي"
+        error: "Failed to generate sovereign report"
       });
     }
   });
@@ -932,7 +914,6 @@ Provide:
       if (!isAlchemyConfigured()) {
         return res.status(503).json({ 
           error: "Blockchain service not configured",
-          errorAr: "خدمة البلوكتشين غير مفعّلة",
           message: "ALCHEMY_API_KEY is required"
         });
       }
@@ -941,8 +922,7 @@ Provide:
       
       if (input.transactionAmountAED < 10000) {
         return res.status(400).json({ 
-          error: "Transaction amount must be at least 10,000 AED for hybrid verification",
-          errorAr: "يجب أن يكون مبلغ المعاملة 10,000 درهم على الأقل للتحقق الهجين"
+          error: "Transaction amount must be at least 10,000 AED for hybrid verification"
         });
       }
 
@@ -989,11 +969,8 @@ Provide:
             liquidityRisk: "HIGH - Wallet exhibits abnormal liquidity cycling with 45.2 ETH balance following rapid inbound/outbound flows. Funds originated from unverified exchange with no KYC attestation.",
             largeAmountAnalysis: "CRITICAL ALERT: 5,000,000 AED transaction from 2-day-old wallet with layering indicators. Funds traced to unverified exchange 48 hours prior. Pattern matches sophisticated money laundering typology.",
             recommendation: "DO NOT PROCEED. Transaction exhibits classic layering characteristics. Recommend immediate escalation to UAE FIU and transaction suspension pending enhanced due diligence.",
-            recommendationAr: "لا تتابع. تُظهر المعاملة خصائص الطبقات الكلاسيكية. يوصى بالتصعيد الفوري إلى وحدة الاستخبارات المالية الإماراتية وتعليق المعاملة بانتظار العناية الواجبة المعززة.",
             analysis: "Sovereign Intelligence Engine has identified HIGH-RISK layering patterns. The wallet received 15.5 ETH from an unverified exchange exactly 48 hours ago, followed by rapid dispersion to multiple intermediate addresses. This pattern is consistent with money laundering placement and layering stages.",
-            analysisAr: "حدد محرك الاستخبارات السيادية أنماط طبقات عالية الخطورة. استلمت المحفظة 15.5 إيثريوم من بورصة غير موثقة قبل 48 ساعة بالضبط، تلاها تشتت سريع إلى عناوين وسيطة متعددة. يتوافق هذا النمط مع مراحل الإيداع والطبقات في غسيل الأموال.",
             verdict: "Transaction exhibits 87% probability of illicit layering activity based on temporal velocity analysis, exchange provenance verification failure, and multi-hop dispersion patterns inconsistent with legitimate institutional flows.",
-            verdictAr: "تُظهر المعاملة احتمالية 87% لنشاط طبقات غير مشروع بناءً على تحليل السرعة الزمنية، وفشل التحقق من مصدر البورصة، وأنماط التشتت متعددة القفزات غير المتوافقة مع التدفقات المؤسسية المشروعة.",
           },
           sanctionCheckPassed: true,
           mixerInteractionDetected: false,
@@ -1026,11 +1003,8 @@ Provide:
         liquidityRisk: "Unable to analyze",
         largeAmountAnalysis: "Unable to analyze",
         recommendation: "AI analysis unavailable",
-        recommendationAr: "تحليل الذكاء الاصطناعي غير متوفر",
         analysis: "AI analysis unavailable",
-        analysisAr: "تحليل الذكاء الاصطناعي غير متوفر",
         verdict: "Transaction pattern analysis pending.",
-        verdictAr: "تحليل نمط المعاملة قيد الانتظار.",
       };
 
       try {
@@ -1074,11 +1048,8 @@ Return ONLY valid JSON with this structure:
   "liquidityRisk": "English analysis of liquidity risk",
   "largeAmountAnalysis": "English analysis for large transaction",
   "analysis": "Brief English analysis (2-3 sentences)",
-  "analysisAr": "نفس التحليل بالعربية",
   "verdict": "One sentence English verdict about transaction legitimacy probability",
-  "verdictAr": "الحكم بالعربية",
-  "recommendation": "English recommendation",
-  "recommendationAr": "التوصية بالعربية"
+  "recommendation": "English recommendation"
 }`;
 
         const response = await openai.chat.completions.create({
@@ -1097,11 +1068,8 @@ Return ONLY valid JSON with this structure:
           liquidityRisk: aiResult.liquidityRisk || "Unable to analyze",
           largeAmountAnalysis: aiResult.largeAmountAnalysis || "Unable to analyze",
           recommendation: aiResult.recommendation || "",
-          recommendationAr: aiResult.recommendationAr || "",
           analysis: aiResult.analysis || "",
-          analysisAr: aiResult.analysisAr || "",
           verdict: aiResult.verdict || "Transaction pattern analysis complete.",
-          verdictAr: aiResult.verdictAr || "اكتمل تحليل نمط المعاملة.",
         };
       } catch (aiError) {
         console.log("AI analysis failed:", aiError);
@@ -1148,14 +1116,12 @@ Return ONLY valid JSON with this structure:
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           error: "Invalid verification request",
-          errorAr: "طلب تحقق غير صالح",
           details: error.errors 
         });
       }
       console.error("Hybrid verification error:", error);
       res.status(500).json({ 
-        error: "Failed to perform hybrid verification",
-        errorAr: "فشل في إجراء التحقق الهجين"
+        error: "Failed to perform hybrid verification"
       });
     }
   });

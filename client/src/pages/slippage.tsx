@@ -163,7 +163,6 @@ export default function SlippagePage() {
       borderColor: "border-green-500/30",
       icon: CheckCircle,
       title: "Safe to Proceed",
-      titleAr: "آمن للمتابعة",
     },
     caution: {
       color: "text-yellow-400",
@@ -171,7 +170,6 @@ export default function SlippagePage() {
       borderColor: "border-yellow-500/30",
       icon: AlertTriangle,
       title: "Proceed with Caution",
-      titleAr: "تابع بحذر",
     },
     avoid: {
       color: "text-red-400",
@@ -179,7 +177,6 @@ export default function SlippagePage() {
       borderColor: "border-red-500/30",
       icon: XCircle,
       title: "High Risk - Consider Alternatives",
-      titleAr: "خطورة عالية - فكر في البدائل",
     },
   };
 
@@ -333,7 +330,6 @@ export default function SlippagePage() {
                       <h3 className={`text-xl font-bold ${recommendationConfig[result.recommendation].color}`}>
                         {recommendationConfig[result.recommendation].title}
                       </h3>
-                      <p className="text-purple-200/60">{recommendationConfig[result.recommendation].titleAr}</p>
                     </div>
                   </div>
                 </CardContent>
