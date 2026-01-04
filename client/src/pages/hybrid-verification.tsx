@@ -448,16 +448,9 @@ export default function HybridVerification() {
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-cyan-300 flex items-center gap-2" data-testid="heading-section-3">
                         <span className="text-cyan-500">3.</span> AI BEHAVIORAL ANALYSIS
-                        <Badge variant="outline" className="ml-2 text-xs">GPT-4o</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Sovereign Intelligence Engine</Badge>
                       </h3>
                       <div className="pl-5 space-y-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-zinc-400">Risk Assessment:</span>
-                          <Badge variant={getRiskBadgeVariant(verification.aiInsight.riskLevel)} data-testid="badge-risk-level">
-                            {verification.aiInsight.riskLevel.toUpperCase()} ({verification.aiInsight.riskScore}/100)
-                          </Badge>
-                        </div>
-                        
                         {verification.aiInsight.fraudPatterns.length > 0 && (
                           <div>
                             <span className="text-zinc-400 text-sm">Detected Patterns:</span>
@@ -472,11 +465,47 @@ export default function HybridVerification() {
                         )}
 
                         <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                          <p className="text-zinc-300 text-sm leading-relaxed" data-testid="text-ai-analysis">
-                            {verification.aiInsight.analysis}
+                          <p className="text-amber-300 font-semibold text-sm mb-2">VERDICT:</p>
+                          <p className="text-zinc-300 text-sm leading-relaxed" data-testid="text-ai-verdict">
+                            The transaction pattern aligns with {verification.aiInsight.riskLevel === "safe" ? "institutional-grade" : verification.aiInsight.riskLevel === "suspicious" ? "moderate-risk" : "high-risk"} movement. AI analysis indicates a {(100 - verification.aiInsight.riskScore).toFixed(1)}% probability of legitimate intent based on historical velocity and peer-group benchmarking.
                           </p>
-                          <p className="text-zinc-400 text-sm mt-2 leading-relaxed" dir="rtl" data-testid="text-ai-analysis-ar">
+                          <p className="text-zinc-400 text-sm mt-2 leading-relaxed" dir="rtl" data-testid="text-ai-verdict-ar">
                             {verification.aiInsight.analysisAr}
+                          </p>
+                        </div>
+
+                        <div className={`p-5 rounded-lg border-2 text-center ${
+                          verification.aiInsight.riskLevel === "safe" 
+                            ? "bg-emerald-500/10 border-emerald-500/40" 
+                            : verification.aiInsight.riskLevel === "suspicious"
+                            ? "bg-amber-500/10 border-amber-500/40"
+                            : "bg-red-500/10 border-red-500/40"
+                        }`}>
+                          <p className="text-zinc-400 text-xs uppercase tracking-wider mb-2">Final Risk Score</p>
+                          <p className={`text-4xl font-bold ${
+                            verification.aiInsight.riskLevel === "safe" 
+                              ? "text-emerald-400" 
+                              : verification.aiInsight.riskLevel === "suspicious"
+                              ? "text-amber-400"
+                              : "text-red-400"
+                          }`} data-testid="text-final-risk-score">
+                            [ {verification.aiInsight.riskScore} / 100 ] - {verification.aiInsight.riskLevel === "safe" ? "LOW RISK" : verification.aiInsight.riskLevel === "suspicious" ? "MEDIUM RISK" : "HIGH RISK"}
+                          </p>
+                          <p className={`text-sm font-semibold mt-2 ${
+                            verification.aiInsight.riskLevel === "safe" 
+                              ? "text-emerald-300" 
+                              : verification.aiInsight.riskLevel === "suspicious"
+                              ? "text-amber-300"
+                              : "text-red-300"
+                          }`} data-testid="text-execution-status">
+                            Status: {verification.aiInsight.riskLevel === "safe" ? "RECOMMENDED FOR EXECUTION" : verification.aiInsight.riskLevel === "suspicious" ? "PROCEED WITH CAUTION" : "NOT RECOMMENDED"}
+                          </p>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
+                          <p className="text-xs text-zinc-500 font-mono italic text-center mb-2">Risk Index Formula:</p>
+                          <p className="text-sm text-cyan-300 font-mono text-center" data-testid="text-risk-formula">
+                            Risk_Index = (Forensic_Weight × 0.6) + (AI_Confidence × 0.4) / Network_Stability
                           </p>
                         </div>
 
@@ -494,18 +523,37 @@ export default function HybridVerification() {
 
                     <Separator className="bg-zinc-700" />
 
-                    <div className="text-center pt-4 border-t border-zinc-700">
-                      <div className="flex justify-center gap-6 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1">
-                          <Database className="h-3 w-3" />
-                          <span data-testid="text-source-blockchain">{verification.sources.blockchain}</span>
+                    <div className="text-center py-6" data-testid="section-digital-seal">
+                      <div className="inline-block p-6 rounded-lg border-2 border-dashed border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5">
+                        <div className="flex justify-center mb-3">
+                          <div className="p-3 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30">
+                            <Shield className="h-8 w-8 text-cyan-400" />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Brain className="h-3 w-3" />
-                          <span data-testid="text-source-ai">{verification.sources.ai}</span>
+                        <p className="text-cyan-300 font-semibold text-sm tracking-wider" data-testid="text-seal-title">
+                          [DIGITAL SEAL OF SOVEREIGNVAULT]
+                        </p>
+                        <p className="text-zinc-400 text-sm mt-2" data-testid="text-verifier">
+                          Verified by Mohamed Ali | Dubai, United Arab Emirates
+                        </p>
+                        <div className="flex justify-center gap-6 text-xs text-zinc-500 mt-4">
+                          <div className="flex items-center gap-1">
+                            <Database className="h-3 w-3" />
+                            <span data-testid="text-source-blockchain">{verification.sources.blockchain}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Brain className="h-3 w-3" />
+                            <span data-testid="text-source-ai">{verification.sources.ai}</span>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-zinc-600 text-xs mt-3" data-testid="text-verification-id">
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/30" data-testid="section-disclaimer">
+                      <p className="text-zinc-500 text-xs leading-relaxed" data-testid="text-disclaimer">
+                        <span className="font-semibold text-zinc-400">Disclaimer:</span> This report is a technical assessment based on point-in-time blockchain data and AI modeling. It does not constitute legal or financial advice. SovereignVault assumes no liability for external market volatility or post-verification wallet compromises.
+                      </p>
+                      <p className="text-zinc-600 text-xs mt-3 text-center font-mono" data-testid="text-verification-id">
                         Internal Reference: {verification.verificationId}
                       </p>
                     </div>
