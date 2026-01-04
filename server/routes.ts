@@ -939,6 +939,8 @@ Provide:
         recommendationAr: "تحليل الذكاء الاصطناعي غير متوفر",
         analysis: "AI analysis unavailable",
         analysisAr: "تحليل الذكاء الاصطناعي غير متوفر",
+        verdict: "Transaction pattern analysis pending.",
+        verdictAr: "تحليل نمط المعاملة قيد الانتظار.",
       };
 
       try {
@@ -983,6 +985,8 @@ Return ONLY valid JSON with this structure:
   "largeAmountAnalysis": "English analysis for large transaction",
   "analysis": "Brief English analysis (2-3 sentences)",
   "analysisAr": "نفس التحليل بالعربية",
+  "verdict": "One sentence English verdict about transaction legitimacy probability",
+  "verdictAr": "الحكم بالعربية",
   "recommendation": "English recommendation",
   "recommendationAr": "التوصية بالعربية"
 }`;
@@ -1006,6 +1010,8 @@ Return ONLY valid JSON with this structure:
           recommendationAr: aiResult.recommendationAr || "",
           analysis: aiResult.analysis || "",
           analysisAr: aiResult.analysisAr || "",
+          verdict: aiResult.verdict || "Transaction pattern analysis complete.",
+          verdictAr: aiResult.verdictAr || "اكتمل تحليل نمط المعاملة.",
         };
       } catch (aiError) {
         console.log("AI analysis failed:", aiError);

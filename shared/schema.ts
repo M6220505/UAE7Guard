@@ -372,6 +372,8 @@ export interface AIInsight {
   recommendationAr: string;
   analysis: string;
   analysisAr: string;
+  verdict: string;
+  verdictAr: string;
 }
 
 export interface HybridVerificationResult {

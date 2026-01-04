@@ -467,10 +467,10 @@ export default function HybridVerification() {
                         <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
                           <p className="text-amber-300 font-semibold text-sm mb-2">VERDICT:</p>
                           <p className="text-zinc-300 text-sm leading-relaxed" data-testid="text-ai-verdict">
-                            The transaction pattern aligns with {verification.aiInsight.riskLevel === "safe" ? "institutional-grade" : verification.aiInsight.riskLevel === "suspicious" ? "moderate-risk" : "high-risk"} movement. AI analysis indicates a {(100 - verification.aiInsight.riskScore).toFixed(1)}% probability of legitimate intent based on historical velocity and peer-group benchmarking.
+                            {verification.aiInsight.verdict || `The transaction pattern aligns with ${verification.aiInsight.riskLevel === "safe" ? "institutional-grade" : verification.aiInsight.riskLevel === "suspicious" ? "moderate-risk" : "high-risk"} movement. AI analysis indicates a ${(100 - verification.aiInsight.riskScore).toFixed(1)}% probability of legitimate intent based on historical velocity and peer-group benchmarking.`}
                           </p>
                           <p className="text-zinc-400 text-sm mt-2 leading-relaxed" dir="rtl" data-testid="text-ai-verdict-ar">
-                            {verification.aiInsight.analysisAr}
+                            {verification.aiInsight.verdictAr}
                           </p>
                         </div>
 
