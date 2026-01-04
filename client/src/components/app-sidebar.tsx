@@ -11,7 +11,8 @@ import {
   Radio,
   TrendingDown,
   Download,
-  Brain
+  Brain,
+  Fingerprint
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,11 @@ const mainNavItems = [
     title: "AI Prediction",
     url: "/ai-predict",
     icon: Brain,
+  },
+  {
+    title: "Double-Lock",
+    url: "/double-lock",
+    icon: Fingerprint,
   },
   {
     title: "Live Monitoring",
