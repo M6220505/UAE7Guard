@@ -128,6 +128,35 @@ export async function registerRoutes(
     }
   });
 
+  // ===== ESCROW ADMIN AUTHENTICATION =====
+  app.post("/api/admin/escrow/authenticate", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const adminSecret = process.env.SESSION_SECRET;
+      
+      if (!adminSecret) {
+        console.error("SESSION_SECRET not configured - admin authentication disabled");
+        return res.status(503).json({ success: false, error: "Admin authentication not configured" });
+      }
+      
+      if (!code || typeof code !== "string") {
+        return res.status(400).json({ success: false, error: "Invalid code" });
+      }
+      
+      if (code === adminSecret) {
+        res.json({ 
+          success: true, 
+          message: "Admin access granted",
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(401).json({ success: false, error: "Access denied" });
+      }
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Authentication failed" });
+    }
+  });
+
   // ===== LEADERBOARD =====
   app.get("/api/leaderboard", async (req, res) => {
     try {

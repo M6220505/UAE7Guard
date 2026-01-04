@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -19,7 +19,13 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
-  Fingerprint
+  Fingerprint,
+  ShieldAlert,
+  AlertOctagon,
+  Phone,
+  Ban,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +44,8 @@ interface EscrowStep {
   icon: typeof CheckCircle;
 }
 
+type TransactionStatus = "ACTIVE" | "UNDER REGULATORY INVESTIGATION" | "COMPLETED" | "CANCELLED";
+
 const ESCROW_WALLET_ADDRESS = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
 const TRANSACTION_HASH = "0x8f7d...3a2b...9c4e";
 
@@ -48,6 +56,17 @@ export default function EscrowPage() {
   const [securityResult, setSecurityResult] = useState<HybridVerificationResult | null>(null);
   const [walletAddress, setWalletAddress] = useState("");
   const [transactionAmount] = useState(10000);
+  
+  const [isEscrowLocked, setIsEscrowLocked] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState<TransactionStatus>("ACTIVE");
+  const [lockdownTimestamp, setLockdownTimestamp] = useState<Date | null>(null);
+  const [lastRiskReport, setLastRiskReport] = useState<HybridVerificationResult | null>(null);
+  
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  
+  const [releaseCountdown, setReleaseCountdown] = useState<number | null>(null);
   
   const [steps, setSteps] = useState<EscrowStep[]>([
     {
@@ -90,7 +109,63 @@ export default function EscrowPage() {
     ));
   };
 
+  const triggerEmergencyLockdown = (autoTriggered: boolean = false) => {
+    setIsEscrowLocked(true);
+    setTransactionStatus("UNDER REGULATORY INVESTIGATION");
+    setLockdownTimestamp(new Date());
+    setLastRiskReport(securityResult);
+    setReleaseCountdown(null);
+    
+    toast({
+      title: autoTriggered ? "AUTO-LOCKDOWN ACTIVATED" : "EMERGENCY LOCKDOWN ACTIVATED",
+      description: autoTriggered 
+        ? "Critical threat detected (Risk Score > 90). Transaction frozen." 
+        : "Transaction frozen. Status: Under Regulatory Investigation.",
+      variant: "destructive",
+    });
+  };
+
+  const unlockTransaction = () => {
+    setIsEscrowLocked(false);
+    setTransactionStatus("ACTIVE");
+    setLockdownTimestamp(null);
+    
+    toast({
+      title: "Transaction Unlocked",
+      description: "Escrow transaction has been restored to active status.",
+    });
+  };
+
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  
+  const handleAdminAuth = async () => {
+    setIsAuthenticating(true);
+    try {
+      const response = await apiRequest("POST", "/api/admin/escrow/authenticate", { code: adminCode });
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsAdminAuthenticated(true);
+        setAdminCode("");
+        toast({
+          title: "Admin Access Granted",
+          description: "Welcome to the Command Center.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Access Denied",
+        description: "Invalid admin code.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isEscrowLocked) return;
+    
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -125,8 +200,16 @@ export default function EscrowPage() {
     onSuccess: (data) => {
       if (data.success && data.verification) {
         setSecurityResult(data.verification);
+        setLastRiskReport(data.verification);
         const rawScore = data.verification.aiInsight?.riskScore;
         const riskScore = typeof rawScore === "number" && Number.isFinite(rawScore) ? rawScore : 100;
+        
+        if (riskScore > 90) {
+          triggerEmergencyLockdown(true);
+          updateStepStatus(3, "failed");
+          return;
+        }
+        
         if (riskScore < 20) {
           updateStepStatus(3, "completed");
           toast({
@@ -161,6 +244,8 @@ export default function EscrowPage() {
   });
 
   const runSecurityClearance = () => {
+    if (isEscrowLocked) return;
+    
     if (steps[1].status !== "completed") {
       toast({
         title: "Contract Required",
@@ -173,12 +258,48 @@ export default function EscrowPage() {
     securityMutation.mutate();
   };
 
-  const releaseFunds = () => {
-    updateStepStatus(4, "completed");
-    toast({
-      title: "Funds Released",
-      description: "Transaction completed successfully via Multi-Sig Bridge",
-    });
+  const initiateRelease = () => {
+    if (isEscrowLocked) return;
+    
+    setReleaseCountdown(10);
+  };
+
+  useEffect(() => {
+    if (releaseCountdown === null || releaseCountdown < 0) return;
+    
+    if (isEscrowLocked) {
+      setReleaseCountdown(null);
+      return;
+    }
+    
+    if (releaseCountdown === 0) {
+      const currentRiskScore = getRiskScore();
+      if (currentRiskScore > 90 || isEscrowLocked) {
+        triggerEmergencyLockdown(true);
+        setReleaseCountdown(null);
+        return;
+      }
+      
+      updateStepStatus(4, "completed");
+      setTransactionStatus("COMPLETED");
+      toast({
+        title: "Funds Released",
+        description: "Transaction completed successfully via Multi-Sig Bridge",
+      });
+      setReleaseCountdown(null);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setReleaseCountdown(releaseCountdown - 1);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [releaseCountdown, isEscrowLocked]);
+  
+  const cancelRelease = () => {
+    if (isEscrowLocked) return;
+    setReleaseCountdown(null);
   };
 
   const copyToClipboard = (text: string) => {
@@ -191,11 +312,14 @@ export default function EscrowPage() {
     return typeof rawScore === "number" && Number.isFinite(rawScore) ? rawScore : 100;
   };
 
-  const canReleaseFunds = securityResult && 
+  const canReleaseFunds = !isEscrowLocked && 
+    securityResult && 
     getRiskScore() < 20 && 
-    steps[2].status === "completed";
+    steps[2].status === "completed" &&
+    transactionStatus === "ACTIVE";
 
   const getStepColor = (status: EscrowStep["status"]) => {
+    if (isEscrowLocked) return "bg-red-900 border-red-700";
     switch (status) {
       case "completed": return "bg-emerald-500 border-emerald-400";
       case "in_progress": return "bg-amber-500 border-amber-400 animate-pulse";
@@ -205,6 +329,7 @@ export default function EscrowPage() {
   };
 
   const getStepTextColor = (status: EscrowStep["status"]) => {
+    if (isEscrowLocked) return "text-red-400";
     switch (status) {
       case "completed": return "text-emerald-400";
       case "in_progress": return "text-amber-400";
@@ -213,9 +338,47 @@ export default function EscrowPage() {
     }
   };
 
+  const getStatusBadge = () => {
+    switch (transactionStatus) {
+      case "UNDER REGULATORY INVESTIGATION":
+        return <Badge variant="destructive" className="px-4 py-2 animate-pulse">UNDER REGULATORY INVESTIGATION</Badge>;
+      case "COMPLETED":
+        return <Badge className="bg-emerald-500 px-4 py-2">COMPLETED</Badge>;
+      case "CANCELLED":
+        return <Badge variant="secondary" className="px-4 py-2">CANCELLED</Badge>;
+      default:
+        return <Badge variant="outline" className="border-amber-500/50 text-amber-400 px-4 py-2">ACTIVE</Badge>;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-emerald-950/20 to-zinc-950 -m-6 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
+        {isEscrowLocked && (
+          <Card className="bg-gradient-to-r from-red-950/90 to-red-900/80 border-2 border-red-500 animate-pulse" data-testid="card-lockdown-notice">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-red-500/30">
+                  <ShieldAlert className="h-8 w-8 text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-red-100">Transaction Paused</h3>
+                  <p className="text-red-200/80 text-sm">
+                    This transaction has been temporarily paused for advanced security verification. Please contact support.
+                  </p>
+                  <p className="text-red-300/60 text-xs mt-1 font-arabic">
+                    تم إيقاف هذه المعاملة مؤقتًا للتحقق الأمني المتقدم. يرجى الاتصال بالدعم.
+                  </p>
+                </div>
+                <Button variant="outline" className="border-red-400 text-red-400" data-testid="button-contact-support">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Contact Support
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-amber-500/20 border border-emerald-500/30">
             <Lock className="h-5 w-5 text-amber-400" />
@@ -229,15 +392,139 @@ export default function EscrowPage() {
           <p className="text-emerald-200/60 max-w-2xl mx-auto">
             Institutional-grade escrow for high-value transactions with multi-signature security and AI-powered risk assessment
           </p>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-zinc-600 hover:text-zinc-400"
+            onClick={() => setShowAdminPanel(!showAdminPanel)}
+            data-testid="button-toggle-admin"
+          >
+            {showAdminPanel ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
         </div>
 
-        <Card className="bg-gradient-to-br from-zinc-900/95 via-emerald-950/30 to-zinc-900/95 border-2 border-emerald-500/30 backdrop-blur-sm shadow-2xl shadow-emerald-500/10" data-testid="card-progress-tracker">
-          <CardHeader className="border-b border-emerald-500/20 pb-6">
-            <div className="flex items-center justify-between">
+        {showAdminPanel && (
+          <Card className="bg-gradient-to-br from-red-950/50 to-zinc-900/95 border-2 border-red-500/50" data-testid="card-admin-panel">
+            <CardHeader className="border-b border-red-500/30">
+              <CardTitle className="text-xl text-red-100 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-500/20">
+                  <AlertOctagon className="h-6 w-6 text-red-400" />
+                </div>
+                Admin Command Center | مركز قيادة المسؤول
+              </CardTitle>
+              <CardDescription className="text-red-200/50">
+                Super-Admin Emergency Controls
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              {!isAdminAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="password"
+                    placeholder="Enter admin code..."
+                    value={adminCode}
+                    onChange={(e) => setAdminCode(e.target.value)}
+                    className="bg-zinc-800/50 border-red-500/30 max-w-xs"
+                    data-testid="input-admin-code"
+                  />
+                  <Button 
+                    onClick={handleAdminAuth} 
+                    variant="destructive" 
+                    disabled={isAuthenticating}
+                    data-testid="button-admin-auth"
+                  >
+                    {isAuthenticating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Authenticating...
+                      </>
+                    ) : (
+                      "Authenticate"
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-red-300">Emergency Controls</h4>
+                      <Button
+                        size="lg"
+                        variant="destructive"
+                        className="w-full h-16 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 border-2 border-red-400"
+                        onClick={() => triggerEmergencyLockdown(false)}
+                        disabled={isEscrowLocked}
+                        data-testid="button-emergency-lockdown"
+                      >
+                        <Ban className="mr-3 h-6 w-6" />
+                        EMERGENCY LOCKDOWN
+                      </Button>
+                      
+                      {isEscrowLocked && (
+                        <Button
+                          size="lg"
+                          className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600"
+                          onClick={unlockTransaction}
+                          data-testid="button-unlock-transaction"
+                        >
+                          <CheckCircle className="mr-2 h-5 w-5" />
+                          Unlock Transaction
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-red-300">Current Status</h4>
+                      <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400 text-sm">Lockdown Status:</span>
+                          <Badge variant={isEscrowLocked ? "destructive" : "outline"} className={isEscrowLocked ? "" : "text-emerald-400 border-emerald-500"}>
+                            {isEscrowLocked ? "LOCKED" : "NORMAL"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400 text-sm">Transaction Status:</span>
+                          <span className="text-sm text-white">{transactionStatus}</span>
+                        </div>
+                        {lockdownTimestamp && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-sm">Locked At:</span>
+                            <span className="text-xs text-red-300">{lockdownTimestamp.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {lastRiskReport && (
+                    <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700">
+                      <h4 className="text-sm font-semibold text-amber-400 mb-3">Last Captured AI Risk Report</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-zinc-500">Risk Score:</span>
+                          <span className="ml-2 text-white font-bold">{lastRiskReport.aiInsight?.riskScore || "N/A"}/100</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-500">Analysis:</span>
+                          <span className="ml-2 text-zinc-300 text-xs">{lastRiskReport.aiInsight?.analysis?.slice(0, 100)}...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className={`bg-gradient-to-br from-zinc-900/95 via-emerald-950/30 to-zinc-900/95 border-2 ${isEscrowLocked ? "border-red-500/50" : "border-emerald-500/30"} backdrop-blur-sm shadow-2xl shadow-emerald-500/10`} data-testid="card-progress-tracker">
+          <CardHeader className={`border-b ${isEscrowLocked ? "border-red-500/20" : "border-emerald-500/20"} pb-6`}>
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <CardTitle className="text-2xl text-emerald-100 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-amber-500/20">
-                    <Fingerprint className="h-6 w-6 text-amber-400" />
+                  <div className={`p-2 rounded-lg ${isEscrowLocked ? "bg-red-500/20" : "bg-gradient-to-br from-emerald-500/20 to-amber-500/20"}`}>
+                    <Fingerprint className={`h-6 w-6 ${isEscrowLocked ? "text-red-400" : "text-amber-400"}`} />
                   </div>
                   Transaction Progress | مسار المعاملة
                 </CardTitle>
@@ -245,16 +532,14 @@ export default function EscrowPage() {
                   AED {transactionAmount.toLocaleString()} Escrow Transaction
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-amber-500/50 text-amber-400 px-4 py-2">
-                ACTIVE
-              </Badge>
+              {getStatusBadge()}
             </div>
           </CardHeader>
           <CardContent className="pt-8">
             <div className="relative">
-              <div className="absolute top-8 left-8 right-8 h-1 bg-zinc-800 rounded-full">
+              <div className={`absolute top-8 left-8 right-8 h-1 ${isEscrowLocked ? "bg-red-900" : "bg-zinc-800"} rounded-full`}>
                 <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-amber-500 rounded-full transition-all duration-500"
+                  className={`h-full ${isEscrowLocked ? "bg-red-500" : "bg-gradient-to-r from-emerald-500 to-amber-500"} rounded-full transition-all duration-500`}
                   style={{ width: `${(steps.filter(s => s.status === "completed").length / steps.length) * 100}%` }}
                 />
               </div>
@@ -265,7 +550,9 @@ export default function EscrowPage() {
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-3 w-1/4" data-testid={`step-${step.id}`}>
                       <div className={`h-16 w-16 rounded-full flex items-center justify-center border-4 ${getStepColor(step.status)} transition-all duration-300`}>
-                        {step.status === "completed" ? (
+                        {isEscrowLocked ? (
+                          <Ban className="h-8 w-8 text-red-300" />
+                        ) : step.status === "completed" ? (
                           <CheckCircle2 className="h-8 w-8 text-white" />
                         ) : step.status === "in_progress" ? (
                           <Loader2 className="h-8 w-8 text-white animate-spin" />
@@ -294,7 +581,7 @@ export default function EscrowPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-gradient-to-br from-zinc-900/95 to-emerald-950/20 border border-emerald-500/20" data-testid="card-contract-signing">
+          <Card className={`bg-gradient-to-br from-zinc-900/95 to-emerald-950/20 border ${isEscrowLocked ? "border-red-500/30 opacity-60" : "border-emerald-500/20"}`} data-testid="card-contract-signing">
             <CardHeader className="border-b border-emerald-500/10">
               <CardTitle className="text-lg text-emerald-100 flex items-center gap-2">
                 <FileSignature className="h-5 w-5 text-amber-400" />
@@ -305,9 +592,9 @@ export default function EscrowPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              <div className="border-2 border-dashed border-emerald-500/30 rounded-lg p-6 text-center hover:border-amber-500/50 transition-colors">
-                <Upload className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
-                <label className="cursor-pointer">
+              <div className={`border-2 border-dashed ${isEscrowLocked ? "border-red-500/30" : "border-emerald-500/30 hover:border-amber-500/50"} rounded-lg p-6 text-center transition-colors`}>
+                <Upload className={`h-10 w-10 ${isEscrowLocked ? "text-red-400" : "text-emerald-400"} mx-auto mb-3`} />
+                <label className={isEscrowLocked ? "cursor-not-allowed" : "cursor-pointer"}>
                   <span className="text-emerald-200">Drop contract file or </span>
                   <span className="text-amber-400 underline">browse</span>
                   <input 
@@ -315,6 +602,7 @@ export default function EscrowPage() {
                     className="hidden" 
                     onChange={handleFileUpload}
                     accept=".pdf,.doc,.docx"
+                    disabled={isEscrowLocked}
                     data-testid="input-contract-file"
                   />
                 </label>
@@ -346,7 +634,7 @@ export default function EscrowPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-zinc-900/95 to-emerald-950/20 border border-emerald-500/20" data-testid="card-security-clearance">
+          <Card className={`bg-gradient-to-br from-zinc-900/95 to-emerald-950/20 border ${isEscrowLocked ? "border-red-500/30 opacity-60" : "border-emerald-500/20"}`} data-testid="card-security-clearance">
             <CardHeader className="border-b border-emerald-500/10">
               <CardTitle className="text-lg text-emerald-100 flex items-center gap-2">
                 <Shield className="h-5 w-5 text-amber-400" />
@@ -364,13 +652,14 @@ export default function EscrowPage() {
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
                   className="bg-zinc-800/50 border-zinc-700 font-mono text-sm"
+                  disabled={isEscrowLocked}
                   data-testid="input-wallet-address"
                 />
               </div>
 
               <Button
                 onClick={runSecurityClearance}
-                disabled={securityMutation.isPending || steps[1].status !== "completed"}
+                disabled={securityMutation.isPending || steps[1].status !== "completed" || isEscrowLocked}
                 className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600"
                 data-testid="button-security-check"
               >
@@ -389,22 +678,30 @@ export default function EscrowPage() {
 
               {securityResult && (
                 <div className={`p-4 rounded-lg border ${
-                  (securityResult.aiInsight?.riskScore || 100) < 20 
-                    ? "bg-emerald-500/10 border-emerald-500/30" 
-                    : "bg-red-500/10 border-red-500/30"
+                  getRiskScore() > 90 
+                    ? "bg-red-900/50 border-red-500"
+                    : getRiskScore() < 20 
+                      ? "bg-emerald-500/10 border-emerald-500/30" 
+                      : "bg-red-500/10 border-red-500/30"
                 }`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-zinc-400">Risk Score</span>
                     <span className={`text-2xl font-bold ${
-                      (securityResult.aiInsight?.riskScore || 100) < 20 ? "text-emerald-400" : "text-red-400"
+                      getRiskScore() > 90 
+                        ? "text-red-300 animate-pulse"
+                        : getRiskScore() < 20 
+                          ? "text-emerald-400" 
+                          : "text-red-400"
                     }`} data-testid="text-risk-score">
                       {securityResult.aiInsight?.riskScore || 0}/100
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500">
-                    {(securityResult.aiInsight?.riskScore || 100) < 20 
-                      ? "Clearance approved - funds release authorized" 
-                      : "Risk threshold exceeded (>20) - release blocked"}
+                    {getRiskScore() > 90
+                      ? "CRITICAL THREAT - Auto-lockdown triggered"
+                      : getRiskScore() < 20 
+                        ? "Clearance approved - funds release authorized" 
+                        : "Risk threshold exceeded (>20) - release blocked"}
                   </p>
                 </div>
               )}
@@ -412,11 +709,11 @@ export default function EscrowPage() {
           </Card>
         </div>
 
-        <Card className="bg-gradient-to-br from-zinc-900/95 via-amber-950/10 to-zinc-900/95 border-2 border-amber-500/30" data-testid="card-smart-contract">
-          <CardHeader className="border-b border-amber-500/20">
+        <Card className={`bg-gradient-to-br from-zinc-900/95 via-amber-950/10 to-zinc-900/95 border-2 ${isEscrowLocked ? "border-red-500/50" : "border-amber-500/30"}`} data-testid="card-smart-contract">
+          <CardHeader className={`border-b ${isEscrowLocked ? "border-red-500/20" : "border-amber-500/20"}`}>
             <CardTitle className="text-xl text-amber-100 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-emerald-500/20">
-                <Lock className="h-6 w-6 text-amber-400" />
+              <div className={`p-2 rounded-lg ${isEscrowLocked ? "bg-red-500/20" : "bg-gradient-to-br from-amber-500/20 to-emerald-500/20"}`}>
+                <Lock className={`h-6 w-6 ${isEscrowLocked ? "text-red-400" : "text-amber-400"}`} />
               </div>
               Smart Contract Simulation | محاكاة العقد الذكي
             </CardTitle>
@@ -460,16 +757,16 @@ export default function EscrowPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="p-5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                  <p className="text-xs text-emerald-400 mb-2 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    On-Chain Confirmation
+                <div className={`p-5 rounded-lg ${isEscrowLocked ? "bg-red-500/10 border-red-500/30" : "bg-emerald-500/10 border-emerald-500/30"} border`}>
+                  <p className={`text-xs ${isEscrowLocked ? "text-red-400" : "text-emerald-400"} mb-2 flex items-center gap-2`}>
+                    {isEscrowLocked ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                    {isEscrowLocked ? "Transaction Frozen" : "On-Chain Confirmation"}
                   </p>
                   <p className="font-mono text-sm text-zinc-300" data-testid="text-tx-hash">
                     {TRANSACTION_HASH}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <Badge variant="outline" className={`${isEscrowLocked ? "border-red-500/50 text-red-400" : "border-emerald-500/50 text-emerald-400"}`}>
                       12 Confirmations
                     </Badge>
                     <Badge variant="outline" className="border-zinc-600 text-zinc-400">
@@ -489,43 +786,69 @@ export default function EscrowPage() {
               </div>
             </div>
 
-            <Separator className="my-6 bg-amber-500/20" />
+            <Separator className={`my-6 ${isEscrowLocked ? "bg-red-500/20" : "bg-amber-500/20"}`} />
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="space-y-1">
                 <p className="text-sm text-zinc-400">Step 4: Release Funds to Seller</p>
                 <p className="text-xs text-zinc-600">
-                  {canReleaseFunds 
-                    ? "All conditions met - ready for release" 
-                    : "Requires Risk Score < 20/100 from Security Clearance"}
+                  {isEscrowLocked 
+                    ? "Transaction locked - awaiting admin intervention"
+                    : canReleaseFunds 
+                      ? "All conditions met - ready for release" 
+                      : "Requires Risk Score < 20/100 from Security Clearance"}
                 </p>
               </div>
-              <Button
-                size="lg"
-                disabled={!canReleaseFunds || steps[3].status === "completed"}
-                onClick={releaseFunds}
-                className={`px-8 ${
-                  canReleaseFunds 
-                    ? "bg-gradient-to-r from-amber-500 to-emerald-500 text-black font-bold" 
-                    : "bg-zinc-700 text-zinc-400"
-                }`}
-                data-testid="button-release-funds"
-              >
-                {steps[3].status === "completed" ? (
-                  <>
-                    <CheckCircle className="mr-2 h-5 w-5" />
-                    Funds Released
-                  </>
-                ) : (
-                  <>
-                    <Banknote className="mr-2 h-5 w-5" />
-                    Release Funds
-                  </>
-                )}
-              </Button>
+              
+              {releaseCountdown !== null && releaseCountdown > 0 && !isEscrowLocked ? (
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-amber-400">{releaseCountdown}s</p>
+                    <p className="text-xs text-zinc-500">Final security check</p>
+                  </div>
+                  <Button
+                    size="lg"
+                    variant="destructive"
+                    onClick={cancelRelease}
+                    disabled={isEscrowLocked}
+                    data-testid="button-cancel-release"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  disabled={!canReleaseFunds || steps[3].status === "completed" || isEscrowLocked}
+                  onClick={initiateRelease}
+                  className={`px-8 ${
+                    canReleaseFunds && !isEscrowLocked
+                      ? "bg-gradient-to-r from-amber-500 to-emerald-500 text-black font-bold" 
+                      : "bg-zinc-700 text-zinc-400"
+                  }`}
+                  data-testid="button-release-funds"
+                >
+                  {steps[3].status === "completed" ? (
+                    <>
+                      <CheckCircle className="mr-2 h-5 w-5" />
+                      Funds Released
+                    </>
+                  ) : isEscrowLocked ? (
+                    <>
+                      <Ban className="mr-2 h-5 w-5" />
+                      Locked
+                    </>
+                  ) : (
+                    <>
+                      <Banknote className="mr-2 h-5 w-5" />
+                      Release Funds
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
-            {!canReleaseFunds && steps[2].status !== "completed" && (
+            {!canReleaseFunds && steps[2].status !== "completed" && !isEscrowLocked && (
               <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
                 <p className="text-sm text-amber-300 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
