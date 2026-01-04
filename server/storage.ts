@@ -1,12 +1,13 @@
 import { 
   users, userReputation, scamReports, alerts, watchlist, securityLogs,
-  liveMonitoring, escrowTransactions, slippageCalculations,
+  liveMonitoring, escrowTransactions, slippageCalculations, encryptedAuditLogs,
   type User, type InsertUser, type UserReputation, type ScamReport, 
   type Alert, type InsertAlert, type Watchlist, type InsertWatchlist,
   type SecurityLog, type InsertSecurityLog, type InsertScamReport,
   type LiveMonitoring, type InsertLiveMonitoring,
   type EscrowTransaction, type InsertEscrowTransaction,
-  type SlippageCalculation, type InsertSlippageCalculation
+  type SlippageCalculation, type InsertSlippageCalculation,
+  type EncryptedAuditLog, type InsertEncryptedAuditLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -67,6 +68,11 @@ export interface IStorage {
   // Slippage
   getSlippageCalculations(userId: string): Promise<SlippageCalculation[]>;
   createSlippageCalculation(data: InsertSlippageCalculation): Promise<SlippageCalculation>;
+
+  // Encrypted Audit Logs
+  getAuditLogs(): Promise<EncryptedAuditLog[]>;
+  getAuditLogsByAddress(address: string): Promise<EncryptedAuditLog[]>;
+  createAuditLog(data: InsertEncryptedAuditLog): Promise<EncryptedAuditLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -331,6 +337,26 @@ export class DatabaseStorage implements IStorage {
 
   async createSlippageCalculation(data: InsertSlippageCalculation): Promise<SlippageCalculation> {
     const [item] = await db.insert(slippageCalculations).values(data).returning();
+    return item;
+  }
+
+  // Encrypted Audit Logs
+  async getAuditLogs(): Promise<EncryptedAuditLog[]> {
+    return await db.select().from(encryptedAuditLogs)
+      .orderBy(desc(encryptedAuditLogs.createdAt));
+  }
+
+  async getAuditLogsByAddress(address: string): Promise<EncryptedAuditLog[]> {
+    return await db.select().from(encryptedAuditLogs)
+      .where(eq(encryptedAuditLogs.walletAddress, address.toLowerCase()))
+      .orderBy(desc(encryptedAuditLogs.createdAt));
+  }
+
+  async createAuditLog(data: InsertEncryptedAuditLog): Promise<EncryptedAuditLog> {
+    const [item] = await db.insert(encryptedAuditLogs).values({
+      ...data,
+      walletAddress: data.walletAddress.toLowerCase(),
+    }).returning();
     return item;
   }
 }

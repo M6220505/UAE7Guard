@@ -264,6 +264,31 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+// Encrypted Audit Logs - Legal-grade transaction documentation (AES-256)
+export const encryptedAuditLogs = pgTable("encrypted_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionHash: text("transaction_hash").notNull(),
+  walletAddress: text("wallet_address").notNull(),
+  transactionValueAED: text("transaction_value_aed").notNull(),
+  riskScore: integer("risk_score").notNull(),
+  riskLevel: text("risk_level").notNull(),
+  encryptedData: text("encrypted_data").notNull(),
+  encryptionIV: text("encryption_iv").notNull(),
+  dataHash: text("data_hash").notNull(),
+  timestampUtc: timestamp("timestamp_utc").defaultNow().notNull(),
+  blockNumber: text("block_number"),
+  network: text("network").default("ethereum").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("audit_logs_wallet_idx").on(table.walletAddress),
+  index("audit_logs_timestamp_idx").on(table.timestampUtc),
+]);
+
+export const insertEncryptedAuditLogSchema = createInsertSchema(encryptedAuditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // AI Scam Predictions table
 export const aiPredictions = pgTable("ai_predictions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -309,3 +334,5 @@ export type InsertLiveMonitoring = z.infer<typeof insertLiveMonitoringSchema>;
 export type InsertMonitoringAlert = z.infer<typeof insertMonitoringAlertSchema>;
 export type InsertEscrowTransaction = z.infer<typeof insertEscrowTransactionSchema>;
 export type InsertSlippageCalculation = z.infer<typeof insertSlippageCalculationSchema>;
+export type EncryptedAuditLog = typeof encryptedAuditLogs.$inferSelect;
+export type InsertEncryptedAuditLog = z.infer<typeof insertEncryptedAuditLogSchema>;

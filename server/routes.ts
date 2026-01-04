@@ -6,6 +6,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured } from "./alchemy";
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
+import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -523,6 +524,187 @@ Provide comprehensive risk analysis.`;
       }
       console.error("Risk calculation error:", error);
       res.status(500).json({ error: "Failed to calculate risk" });
+    }
+  });
+
+  // ===== ENCRYPTED AUDIT LOGS (القبو المشفر) =====
+  const MIN_AUDIT_VALUE_AED = 50000;
+
+  app.get("/api/audit/status", async (_req, res) => {
+    res.json({ 
+      configured: isEncryptionConfigured(),
+      minValueAED: MIN_AUDIT_VALUE_AED,
+      message: isEncryptionConfigured() 
+        ? "Encryption vault active | القبو المشفر نشط"
+        : "ENCRYPTION_KEY required | مفتاح التشفير مطلوب"
+    });
+  });
+
+  app.post("/api/audit/log", async (req, res) => {
+    try {
+      if (!isEncryptionConfigured()) {
+        return res.status(503).json({ 
+          error: "Encryption not configured",
+          errorAr: "التشفير غير مفعّل",
+          message: "ENCRYPTION_KEY environment variable is required"
+        });
+      }
+
+      const auditSchema = z.object({
+        walletAddress: z.string().min(10),
+        transactionValueAED: z.number().min(MIN_AUDIT_VALUE_AED),
+        riskScore: z.number().min(0).max(100),
+        riskLevel: z.string(),
+        analysisDetails: z.object({
+          historyScore: z.number(),
+          associationScore: z.number(),
+          walletAgeDays: z.number(),
+          formula: z.string(),
+        }),
+        blockchainData: z.object({
+          balance: z.string(),
+          transactionCount: z.number(),
+          isSmartContract: z.boolean(),
+          network: z.string(),
+        }).optional(),
+        analyst: z.string().optional(),
+      });
+
+      const data = auditSchema.parse(req.body) as AuditLogData;
+      
+      const encryptedLog = createEncryptedAuditLog(data);
+      
+      const savedLog = await storage.createAuditLog({
+        transactionHash: encryptedLog.transactionHash,
+        walletAddress: data.walletAddress,
+        transactionValueAED: data.transactionValueAED.toString(),
+        riskScore: data.riskScore,
+        riskLevel: data.riskLevel,
+        encryptedData: encryptedLog.encryptedData,
+        encryptionIV: encryptedLog.encryptionIV,
+        dataHash: encryptedLog.dataHash,
+        timestampUtc: encryptedLog.timestampUtc,
+        network: data.blockchainData?.network || "ethereum",
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Audit log encrypted and stored | تم تشفير وحفظ السجل",
+        log: {
+          id: savedLog.id,
+          transactionHash: savedLog.transactionHash,
+          dataHash: savedLog.dataHash,
+          timestamp: savedLog.timestampUtc,
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid audit data", 
+          errorAr: "بيانات التدقيق غير صالحة",
+          details: error.errors 
+        });
+      }
+      console.error("Audit log error:", error);
+      res.status(500).json({ 
+        error: "Failed to create audit log",
+        errorAr: "فشل في إنشاء سجل التدقيق"
+      });
+    }
+  });
+
+  app.get("/api/audit/logs", async (_req, res) => {
+    try {
+      const logs = await storage.getAuditLogs();
+      res.json({
+        success: true,
+        count: logs.length,
+        logs: logs.map(log => ({
+          id: log.id,
+          transactionHash: log.transactionHash,
+          walletAddress: log.walletAddress,
+          transactionValueAED: log.transactionValueAED,
+          riskScore: log.riskScore,
+          riskLevel: log.riskLevel,
+          dataHash: log.dataHash,
+          timestamp: log.timestampUtc,
+          network: log.network,
+        }))
+      });
+    } catch (error) {
+      console.error("Fetch audit logs error:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.get("/api/audit/logs/:address", async (req, res) => {
+    try {
+      const logs = await storage.getAuditLogsByAddress(req.params.address);
+      res.json({
+        success: true,
+        count: logs.length,
+        logs: logs.map(log => ({
+          id: log.id,
+          transactionHash: log.transactionHash,
+          walletAddress: log.walletAddress,
+          transactionValueAED: log.transactionValueAED,
+          riskScore: log.riskScore,
+          riskLevel: log.riskLevel,
+          dataHash: log.dataHash,
+          timestamp: log.timestampUtc,
+          network: log.network,
+        }))
+      });
+    } catch (error) {
+      console.error("Fetch audit logs error:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.get("/api/audit/decrypt/:id", async (req, res) => {
+    try {
+      if (!isEncryptionConfigured()) {
+        return res.status(503).json({ 
+          error: "Encryption not configured",
+          errorAr: "التشفير غير مفعّل"
+        });
+      }
+
+      const logs = await storage.getAuditLogs();
+      const log = logs.find(l => l.id === req.params.id);
+      
+      if (!log) {
+        return res.status(404).json({ 
+          error: "Audit log not found",
+          errorAr: "السجل غير موجود"
+        });
+      }
+
+      const decryptedData = decryptAuditLog(log.encryptedData, log.encryptionIV);
+      
+      if (!decryptedData) {
+        return res.status(500).json({ 
+          error: "Failed to decrypt log",
+          errorAr: "فشل في فك تشفير السجل"
+        });
+      }
+
+      res.json({
+        success: true,
+        log: {
+          id: log.id,
+          transactionHash: log.transactionHash,
+          dataHash: log.dataHash,
+          timestamp: log.timestampUtc,
+          decryptedData,
+        }
+      });
+    } catch (error) {
+      console.error("Decrypt audit log error:", error);
+      res.status(500).json({ 
+        error: "Failed to decrypt audit log",
+        errorAr: "فشل في فك تشفير السجل"
+      });
     }
   });
 
