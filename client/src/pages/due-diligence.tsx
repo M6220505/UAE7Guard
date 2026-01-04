@@ -393,13 +393,13 @@ function TermsAgreement({ onAccept }: { onAccept: () => void }) {
       icon: ScrollText,
       title: "Nature of Service",
       titleAr: "طبيعة الخدمة",
-      content: "The user acknowledges that DubaiVerified is a technical advisory tool that relies on analyzing publicly available data on the Blockchain. This platform does not provide financial or legal advice, and does not replace the necessity of conducting formal Due Diligence through authorized entities in the UAE such as VARA or ADGM."
+      content: "The user acknowledges that UAE7Guard is a technical advisory tool that relies on analyzing publicly available data on the Blockchain. This platform does not provide financial or legal advice, and does not replace the necessity of conducting formal Due Diligence through authorized entities in the UAE such as VARA or ADGM."
     },
     {
       icon: FileWarning,
       title: "Limitation of Liability",
       titleAr: "حدود المسؤولية",
-      content: "To the maximum extent permitted by UAE law, the Developer (Mohammed Ali) or DubaiVerified platform shall not be liable for any financial losses, direct or indirect, resulting from using this tool in making investment or commercial decisions. Specifically for transactions exceeding AED 1,000,000, the responsibility for final verification of parties' identities and fund legitimacy lies solely with the user."
+      content: "To the maximum extent permitted by UAE law, the Developer (Mohammed Ali) or UAE7Guard platform shall not be liable for any financial losses, direct or indirect, resulting from using this tool in making investment or commercial decisions. Specifically for transactions exceeding AED 1,000,000, the responsibility for final verification of parties' identities and fund legitimacy lies solely with the user."
     },
     {
       icon: Scale,
@@ -490,7 +490,7 @@ function TermsAgreement({ onAccept }: { onAccept: () => void }) {
                   htmlFor="terms-agreement" 
                   className="text-amber-200/80 text-sm cursor-pointer leading-relaxed"
                 >
-                  I have read, understood, and agree to the above terms and conditions. I acknowledge that DubaiVerified is an advisory tool and does not replace formal Due Diligence through authorized UAE entities.
+                  I have read, understood, and agree to the above terms and conditions. I acknowledge that UAE7Guard is an advisory tool and does not replace formal Due Diligence through authorized UAE entities.
                 </label>
               </div>
 

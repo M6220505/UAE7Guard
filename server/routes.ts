@@ -53,7 +53,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       
@@ -90,7 +90,7 @@ export async function registerRoutes(
         admin = await storage.createUser({
           username: "admin",
           password: "admin-password",
-          email: "admin@dubaiverified.com"
+          email: "admin@uae7guard.com"
         });
       }
       
@@ -136,7 +136,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       
@@ -218,7 +218,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       
@@ -280,7 +280,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       
@@ -328,7 +328,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       
@@ -367,7 +367,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           username: "demo-user",
           password: "demo-password",
-          email: "demo@dubaiverified.com"
+          email: "demo@uae7guard.com"
         });
       }
       

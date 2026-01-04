@@ -32,11 +32,11 @@ export function IOSInstallPrompt() {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center border border-amber-500/30">
-              <span className="text-amber-500 font-bold text-lg">DV</span>
+              <span className="text-amber-500 font-bold text-lg">U7</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <h3 className="font-semibold text-foreground">Install DubaiVerified</h3>
+                <h3 className="font-semibold text-foreground">Install UAE7Guard</h3>
                 <Button
                   variant="ghost"
                   size="icon"

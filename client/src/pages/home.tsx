@@ -173,7 +173,7 @@ export default function Home() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            <span className="font-semibold">DubaiVerified</span>
+            <span className="font-semibold">UAE7Guard</span>
           </div>
           <p className="text-sm text-muted-foreground">
             PDPL Compliant. UAE Federal Decree-Law No. 45 of 2021.

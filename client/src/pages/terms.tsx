@@ -131,7 +131,7 @@ export default function Terms() {
         </Card>
 
         <div className="text-center text-sm text-muted-foreground pt-6 border-t">
-          <p>For legal inquiries, contact: legal@dubaiverified.com</p>
+          <p>For legal inquiries, contact: legal@uae7guard.com</p>
           <p className="mt-2">Last updated: January 2026</p>
         </div>
       </div>

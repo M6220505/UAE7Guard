@@ -346,7 +346,7 @@ export default function Export() {
 
     if (dataToExport.length === 0) return;
 
-    const filename = `dubaiverified_scam_reports_${new Date().toISOString().split("T")[0]}`;
+    const filename = `uae7guard_scam_reports_${new Date().toISOString().split("T")[0]}`;
     
     if (exportFormat === "csv") {
       exportToCSV(dataToExport, filename);
@@ -373,7 +373,7 @@ export default function Export() {
 
     if (dataToExport.length === 0) return;
 
-    const filename = `dubaiverified_watchlist_${new Date().toISOString().split("T")[0]}`;
+    const filename = `uae7guard_watchlist_${new Date().toISOString().split("T")[0]}`;
     
     if (exportFormat === "csv") {
       exportToCSV(dataToExport, filename);
@@ -423,7 +423,7 @@ export default function Export() {
     };
 
     const blob = new Blob([JSON.stringify(fullExport, null, 2)], { type: "application/json" });
-    downloadBlob(blob, `dubaiverified_full_export_${new Date().toISOString().split("T")[0]}.json`);
+    downloadBlob(blob, `uae7guard_full_export_${new Date().toISOString().split("T")[0]}.json`);
 
     toast({
       title: "Full Export Complete",
