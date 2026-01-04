@@ -407,7 +407,10 @@ export const hybridVerificationInputSchema = z.object({
   transactionAmountAED: z.coerce.number().min(10000, {
     message: "Minimum amount is 10,000 AED | الحد الأدنى 10,000 درهم",
   }),
+  simulationScenario: z.enum(["layering_high_value", "clean_institutional", "mixer_interaction"]).optional(),
 });
+
+export type SimulationScenario = "layering_high_value" | "clean_institutional" | "mixer_interaction";
 
 export type AssetType = "digital_asset" | "real_estate_escrow" | "investment_fund" | "trade_settlement";
 

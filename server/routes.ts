@@ -917,6 +917,67 @@ Provide:
         });
       }
 
+      // Handle simulation scenarios with mock data
+      if (input.simulationScenario === "layering_high_value") {
+        const now = new Date();
+        const year = now.getFullYear();
+        const randomHex = Math.random().toString(16).substr(2, 4).toUpperCase();
+        const certificateId = `SV-${year}-${randomHex}-UAE`;
+        
+        const simulatedResult: HybridVerificationResult = {
+          verificationId: `HYB-SIM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+          certificateId,
+          walletAddress: input.walletAddress,
+          destinationWallet: input.destinationWallet,
+          assetType: input.assetType || "digital_asset",
+          transactionAmountAED: 5000000,
+          thresholdMet: true,
+          onChainFacts: {
+            balance: "45.2 ETH",
+            balanceInEth: "45.2",
+            transactionCount: 847,
+            walletAgeDays: 2,
+            isContract: false,
+            network: "ethereum",
+            recentTransactions: [
+              { hash: "0x7a1b...simulation1", from: "0x9f8e...unverified_exchange", to: input.walletAddress, value: "15.5 ETH", asset: "ETH", category: "external", blockNum: "19847621" },
+              { hash: "0x3c2d...simulation2", from: input.walletAddress, to: "0x4a5b...layering_hop1", value: "5.2 ETH", asset: "ETH", category: "external", blockNum: "19847890" },
+              { hash: "0x6e7f...simulation3", from: input.walletAddress, to: "0x8c9d...layering_hop2", value: "4.8 ETH", asset: "ETH", category: "external", blockNum: "19848102" },
+              { hash: "0x2b3c...simulation4", from: input.walletAddress, to: "0x1f2e...layering_hop3", value: "3.1 ETH", asset: "ETH", category: "external", blockNum: "19848456" },
+              { hash: "0x9d0e...simulation5", from: "0x5g6h...layering_return", to: input.walletAddress, value: "12.8 ETH", asset: "ETH", category: "external", blockNum: "19848789" },
+            ],
+          },
+          aiInsight: {
+            riskLevel: "dangerous",
+            riskScore: 87,
+            fraudPatterns: [
+              "LAYERING DETECTED: Rapid multi-hop transfers within 48-hour window",
+              "UNVERIFIED EXCHANGE ORIGIN: Initial funds received from unlicensed exchange",
+              "VELOCITY ANOMALY: 847 transactions in 2-day wallet lifespan",
+              "CHAIN-HOPPING: Funds dispersed to 3+ intermediate wallets before partial return",
+              "TEMPORAL CLUSTERING: 85% of activity concentrated in 6-hour windows",
+            ],
+            liquidityRisk: "HIGH - Wallet exhibits abnormal liquidity cycling with 45.2 ETH balance following rapid inbound/outbound flows. Funds originated from unverified exchange with no KYC attestation.",
+            largeAmountAnalysis: "CRITICAL ALERT: 5,000,000 AED transaction from 2-day-old wallet with layering indicators. Funds traced to unverified exchange 48 hours prior. Pattern matches sophisticated money laundering typology.",
+            recommendation: "DO NOT PROCEED. Transaction exhibits classic layering characteristics. Recommend immediate escalation to UAE FIU and transaction suspension pending enhanced due diligence.",
+            recommendationAr: "لا تتابع. تُظهر المعاملة خصائص الطبقات الكلاسيكية. يوصى بالتصعيد الفوري إلى وحدة الاستخبارات المالية الإماراتية وتعليق المعاملة بانتظار العناية الواجبة المعززة.",
+            analysis: "Sovereign Intelligence Engine has identified HIGH-RISK layering patterns. The wallet received 15.5 ETH from an unverified exchange exactly 48 hours ago, followed by rapid dispersion to multiple intermediate addresses. This pattern is consistent with money laundering placement and layering stages.",
+            analysisAr: "حدد محرك الاستخبارات السيادية أنماط طبقات عالية الخطورة. استلمت المحفظة 15.5 إيثريوم من بورصة غير موثقة قبل 48 ساعة بالضبط، تلاها تشتت سريع إلى عناوين وسيطة متعددة. يتوافق هذا النمط مع مراحل الإيداع والطبقات في غسيل الأموال.",
+            verdict: "Transaction exhibits 87% probability of illicit layering activity based on temporal velocity analysis, exchange provenance verification failure, and multi-hop dispersion patterns inconsistent with legitimate institutional flows.",
+            verdictAr: "تُظهر المعاملة احتمالية 87% لنشاط طبقات غير مشروع بناءً على تحليل السرعة الزمنية، وفشل التحقق من مصدر البورصة، وأنماط التشتت متعددة القفزات غير المتوافقة مع التدفقات المؤسسية المشروعة.",
+          },
+          sanctionCheckPassed: true,
+          mixerInteractionDetected: false,
+          verificationTimestamp: new Date().toISOString(),
+          sources: {
+            blockchain: "Simulation Mode - Layering Scenario",
+            ai: "Sovereign Intelligence Engine (Simulated)",
+          },
+        };
+        
+        return res.json(simulatedResult);
+      }
+
       const snapshot = await getHybridWalletSnapshot(input.walletAddress, input.network);
 
       const onChainFacts: OnChainFacts = {
