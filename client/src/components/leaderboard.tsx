@@ -18,10 +18,16 @@ const rankConfig = {
   Novice: { icon: Medal, color: "text-gray-500", bg: "bg-gray-500/20", badge: "bg-gray-500/20 text-gray-600 dark:text-gray-400" },
 };
 
-export function Leaderboard() {
+interface LeaderboardProps {
+  compact?: boolean;
+}
+
+export function Leaderboard({ compact = false }: LeaderboardProps) {
   const { data: leaderboard, isLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboard"],
   });
+  
+  const displayCount = compact ? 5 : 10;
 
   if (isLoading) {
     return (
@@ -74,6 +80,42 @@ export function Leaderboard() {
 
   const maxScore = Math.max(...leaderboard.map(e => e.trustScore), 100);
 
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        {leaderboard.slice(0, displayCount).map((entry, index) => {
+          const config = rankConfig[entry.rank as keyof typeof rankConfig] || rankConfig.Novice;
+          const RankIcon = config.icon;
+          
+          return (
+            <div
+              key={entry.id}
+              className="flex items-center gap-3 rounded-md p-2 hover-elevate"
+              data-testid={`leaderboard-entry-${index}`}
+            >
+              <div className="flex h-6 w-6 items-center justify-center text-sm font-bold text-muted-foreground">
+                {index + 1}
+              </div>
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className={config.bg}>
+                  <RankIcon className={`h-3 w-3 ${config.color}`} />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-sm truncate block">
+                  {entry.user?.username || "Anonymous"}
+                </span>
+              </div>
+              <Badge className={`${config.badge} text-xs`}>
+                {entry.trustScore}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -84,7 +126,7 @@ export function Leaderboard() {
         <CardDescription>Top investigators protecting the network</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {leaderboard.slice(0, 10).map((entry, index) => {
+        {leaderboard.slice(0, displayCount).map((entry, index) => {
           const config = rankConfig[entry.rank as keyof typeof rankConfig] || rankConfig.Novice;
           const RankIcon = config.icon;
           
