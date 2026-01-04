@@ -125,7 +125,8 @@ export default function EscrowPage() {
     onSuccess: (data) => {
       if (data.success && data.verification) {
         setSecurityResult(data.verification);
-        const riskScore = data.verification.aiInsight?.riskScore || 0;
+        const rawScore = data.verification.aiInsight?.riskScore;
+        const riskScore = typeof rawScore === "number" && Number.isFinite(rawScore) ? rawScore : 100;
         if (riskScore < 20) {
           updateStepStatus(3, "completed");
           toast({
@@ -140,6 +141,13 @@ export default function EscrowPage() {
             variant: "destructive",
           });
         }
+      } else {
+        updateStepStatus(3, "failed");
+        toast({
+          title: "Security Check Failed",
+          description: "Invalid response from security engine",
+          variant: "destructive",
+        });
       }
     },
     onError: () => {
@@ -178,8 +186,13 @@ export default function EscrowPage() {
     toast({ title: "Copied", description: "Address copied to clipboard" });
   };
 
+  const getRiskScore = (): number => {
+    const rawScore = securityResult?.aiInsight?.riskScore;
+    return typeof rawScore === "number" && Number.isFinite(rawScore) ? rawScore : 100;
+  };
+
   const canReleaseFunds = securityResult && 
-    (securityResult.aiInsight?.riskScore || 100) < 20 && 
+    getRiskScore() < 20 && 
     steps[2].status === "completed";
 
   const getStepColor = (status: EscrowStep["status"]) => {
