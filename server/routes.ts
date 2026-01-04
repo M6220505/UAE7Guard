@@ -9,6 +9,7 @@ import { hybridVerificationInputSchema, type HybridVerificationResult, type OnCh
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
+import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -19,6 +20,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup Replit Auth (MUST be before other routes)
+  await setupAuth(app);
+  registerAuthRoutes(app);
   
   // ===== THREAT LOOKUP =====
   app.get("/api/threats/:address", async (req, res) => {
@@ -54,23 +58,18 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/reports", async (req, res) => {
+  app.post("/api/reports", isAuthenticated, async (req: any, res) => {
     try {
       const data = insertScamReportSchema.parse(req.body);
+      const userId = req.user?.claims?.sub;
       
-      // Ensure demo user exists
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
       const report = await storage.createReport({
         ...data,
-        reporterId: user.id
+        reporterId: userId
       });
       res.status(201).json(report);
     } catch (error) {
@@ -81,8 +80,8 @@ export async function registerRoutes(
     }
   });
 
-  // ===== ADMIN ROUTES =====
-  app.get("/api/admin/pending-reports", async (req, res) => {
+  // ===== ADMIN ROUTES (Protected - Admin Role Required) =====
+  app.get("/api/admin/pending-reports", isAdmin, async (req, res) => {
     try {
       const reports = await storage.getPendingReports();
       res.json(reports);
@@ -91,21 +90,16 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/reports/:id/verify", async (req, res) => {
+  app.post("/api/admin/reports/:id/verify", isAdmin, async (req: any, res) => {
     try {
       const reportId = req.params.id;
+      const adminId = req.user?.claims?.sub;
       
-      // Create admin user if needed
-      let admin = await storage.getUserByUsername("admin");
-      if (!admin) {
-        admin = await storage.createUser({
-          username: "admin",
-          password: "admin-password",
-          email: "admin@uae7guard.com"
-        });
+      if (!adminId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
-      const report = await storage.verifyReport(reportId, admin.id);
+      const report = await storage.verifyReport(reportId, adminId);
       if (!report) {
         return res.status(404).json({ error: "Report not found" });
       }
@@ -115,7 +109,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/reports/:id/reject", async (req, res) => {
+  app.post("/api/admin/reports/:id/reject", isAdmin, async (req, res) => {
     try {
       const reportId = req.params.id;
       const report = await storage.rejectReport(reportId);
@@ -168,19 +162,14 @@ export async function registerRoutes(
   });
 
   // ===== USER REPUTATION =====
-  app.get("/api/user/reputation", async (req, res) => {
+  app.get("/api/user/reputation", isAuthenticated, async (req: any, res) => {
     try {
-      // For demo, get demo user's reputation
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
-      const reputation = await storage.getReputation(user.id);
+      const reputation = await storage.getReputation(userId);
       res.json(reputation || { trustScore: 0, rank: "Novice", verifiedReports: 0 });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch reputation" });
@@ -188,20 +177,20 @@ export async function registerRoutes(
   });
 
   // ===== ALERTS =====
-  app.get("/api/alerts", async (req, res) => {
+  app.get("/api/alerts", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const alerts = await storage.getAlerts(user.id);
+      const alerts = await storage.getAlerts(userId);
       res.json(alerts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch alerts" });
     }
   });
 
-  app.patch("/api/alerts/:id", async (req, res) => {
+  app.patch("/api/alerts/:id", isAuthenticated, async (req, res) => {
     try {
       const alertId = req.params.id;
       const alert = await storage.markAlertRead(alertId);
@@ -215,22 +204,29 @@ export async function registerRoutes(
   });
 
   // ===== WATCHLIST =====
-  app.get("/api/watchlist", async (req, res) => {
+  app.get("/api/watchlist", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const watchlist = await storage.getWatchlist(user.id);
+      const watchlist = await storage.getWatchlist(userId);
       res.json(watchlist);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch watchlist" });
     }
   });
 
-  app.post("/api/watchlist", async (req, res) => {
+  app.post("/api/watchlist", isAuthenticated, async (req: any, res) => {
     try {
-      const data = insertWatchlistSchema.parse(req.body);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const data = insertWatchlistSchema.parse({
+        ...req.body,
+        userId
+      });
       const item = await storage.addToWatchlist(data);
       res.status(201).json(item);
     } catch (error) {
@@ -241,7 +237,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/watchlist/:id", async (req, res) => {
+  app.delete("/api/watchlist/:id", isAuthenticated, async (req, res) => {
     try {
       await storage.removeFromWatchlist(req.params.id);
       res.status(204).send();
@@ -251,20 +247,16 @@ export async function registerRoutes(
   });
 
   // ===== SECURITY LOGS =====
-  app.post("/api/security-logs", async (req, res) => {
+  app.post("/api/security-logs", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
       const data = insertSecurityLogSchema.parse({
         ...req.body,
-        userId: user.id
+        userId
       });
       const log = await storage.createSecurityLog(data);
       res.status(201).json(log);
@@ -276,13 +268,13 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/security-logs", async (req, res) => {
+  app.get("/api/security-logs", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const logs = await storage.getSecurityLogs(user.id);
+      const logs = await storage.getSecurityLogs(userId);
       res.json(logs);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch security logs" });
@@ -300,33 +292,29 @@ export async function registerRoutes(
   });
 
   // ===== LIVE MONITORING =====
-  app.get("/api/live-monitoring", async (req, res) => {
+  app.get("/api/live-monitoring", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const items = await storage.getLiveMonitoring(user.id);
+      const items = await storage.getLiveMonitoring(userId);
       res.json(items);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch monitored wallets" });
     }
   });
 
-  app.post("/api/live-monitoring", async (req, res) => {
+  app.post("/api/live-monitoring", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
       const data = insertLiveMonitoringSchema.parse({
         ...req.body,
-        userId: user.id
+        userId
       });
       const item = await storage.createLiveMonitoring(data);
       res.status(201).json(item);
@@ -338,7 +326,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/live-monitoring/:id", async (req, res) => {
+  app.delete("/api/live-monitoring/:id", isAuthenticated, async (req, res) => {
     try {
       await storage.deleteLiveMonitoring(req.params.id);
       res.status(204).send();
@@ -348,33 +336,29 @@ export async function registerRoutes(
   });
 
   // ===== ESCROW =====
-  app.get("/api/escrow", async (req, res) => {
+  app.get("/api/escrow", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const items = await storage.getEscrowTransactions(user.id);
+      const items = await storage.getEscrowTransactions(userId);
       res.json(items);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch escrow transactions" });
     }
   });
 
-  app.post("/api/escrow", async (req, res) => {
+  app.post("/api/escrow", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
       const data = insertEscrowTransactionSchema.parse({
         ...req.body,
-        buyerId: user.id
+        buyerId: userId
       });
       const item = await storage.createEscrowTransaction(data);
       res.status(201).json(item);
@@ -387,33 +371,29 @@ export async function registerRoutes(
   });
 
   // ===== SLIPPAGE CALCULATIONS =====
-  app.get("/api/slippage", async (req, res) => {
+  app.get("/api/slippage", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        return res.json([]);
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      const items = await storage.getSlippageCalculations(user.id);
+      const items = await storage.getSlippageCalculations(userId);
       res.json(items);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch slippage calculations" });
     }
   });
 
-  app.post("/api/slippage", async (req, res) => {
+  app.post("/api/slippage", isAuthenticated, async (req: any, res) => {
     try {
-      let user = await storage.getUserByUsername("demo-user");
-      if (!user) {
-        user = await storage.createUser({
-          username: "demo-user",
-          password: "demo-password",
-          email: "demo@uae7guard.com"
-        });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
       const data = insertSlippageCalculationSchema.parse({
         ...req.body,
-        userId: user.id
+        userId
       });
       const item = await storage.createSlippageCalculation(data);
       res.status(201).json(item);
@@ -567,7 +547,7 @@ Provide comprehensive risk analysis.`;
     });
   });
 
-  app.post("/api/audit/log", async (req, res) => {
+  app.post("/api/audit/log", isAuthenticated, async (req, res) => {
     try {
       if (!isEncryptionConfigured()) {
         return res.status(503).json({ 
@@ -637,7 +617,7 @@ Provide comprehensive risk analysis.`;
     }
   });
 
-  app.get("/api/audit/logs", async (_req, res) => {
+  app.get("/api/audit/logs", isAuthenticated, async (_req, res) => {
     try {
       const logs = await storage.getAuditLogs();
       res.json({
@@ -909,7 +889,7 @@ Provide:
   });
 
   // ===== HYBRID VERIFICATION (10,000+ AED) =====
-  app.post("/api/hybrid-verification", async (req, res) => {
+  app.post("/api/hybrid-verification", isAuthenticated, async (req: any, res) => {
     try {
       if (!isAlchemyConfigured()) {
         return res.status(503).json({ 

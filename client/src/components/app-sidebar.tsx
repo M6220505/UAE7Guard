@@ -12,7 +12,9 @@ import {
   TrendingDown,
   Download,
   Brain,
-  Fingerprint
+  Fingerprint,
+  BarChart3,
+  Code
 } from "lucide-react";
 import {
   Sidebar,
@@ -82,6 +84,16 @@ const mainNavItems = [
     title: "Export",
     url: "/export",
     icon: Download,
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "API Docs",
+    url: "/api-docs",
+    icon: Code,
   },
 ];
 

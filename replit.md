@@ -54,6 +54,8 @@ shared/           # Shared code between client/server
 - **Alert System**: Real-time notifications for watchlist addresses
 - **Emergency SOP**: Step-by-step crisis response protocol with audit logging
 - **Admin Panel**: Human-in-the-loop verification for threat reports
+- **Analytics Dashboard**: Real-time platform statistics with threat type and severity breakdowns
+- **API Documentation**: Comprehensive endpoint reference for integration
 
 ### Design System
 - **Typography**: Inter for UI, JetBrains Mono for crypto addresses/code
@@ -85,4 +87,44 @@ shared/           # Shared code between client/server
 
 ### Environment Variables Required
 - `DATABASE_URL`: PostgreSQL connection string (required)
+- `SESSION_SECRET`: Session encryption secret for Replit Auth (required)
 - `ENCRYPTION_KEY`: AES-256 encryption key for sensitive data (recommended for production)
+- `ALCHEMY_API_KEY`: Alchemy API key for blockchain data (optional, enables hybrid verification)
+
+## Authentication & Authorization
+
+### Replit Auth Integration
+- **OAuth Provider**: Replit OIDC (supports Google, GitHub, X, Apple login)
+- **Session Storage**: PostgreSQL via connect-pg-simple
+- **Session Duration**: 7 days with automatic token refresh
+
+### Protected Endpoints
+All user-specific endpoints require authentication:
+- `/api/reports` (POST) - Submit scam reports
+- `/api/watchlist` - Manage watchlist
+- `/api/alerts` - View and manage alerts
+- `/api/security-logs` - Security audit logs
+- `/api/live-monitoring` - Wallet monitoring
+- `/api/escrow` - Escrow transactions
+- `/api/slippage` - Slippage calculations
+- `/api/hybrid-verification` - High-value verification
+- `/api/audit/*` - Encrypted audit logs
+
+### Admin-Only Endpoints (role === "admin")
+- `/api/admin/pending-reports` - View pending reports
+- `/api/admin/reports/:id/verify` - Verify reports
+- `/api/admin/reports/:id/reject` - Reject reports
+
+### Public Endpoints
+- `/api/threats/:address` - Threat lookup
+- `/api/reports` (GET) - View all reports
+- `/api/stats` - Platform statistics
+- `/api/leaderboard` - Investigator leaderboard
+
+## Recent Changes
+- Added Replit Auth integration with OAuth support
+- Implemented role-based authorization (isAdmin middleware)
+- Created Analytics Dashboard page (/analytics)
+- Created API Documentation page (/api-docs)
+- Protected all sensitive endpoints with authentication
+- Removed demo user fallbacks for proper session-based auth
