@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
+import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured } from "./alchemy";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -481,6 +482,105 @@ Provide comprehensive risk analysis.`;
     } catch (error) {
       console.error("AI prediction error:", error);
       res.status(500).json({ error: "Failed to analyze wallet" });
+    }
+  });
+
+  // ===== BLOCKCHAIN DATA (ALCHEMY) =====
+  app.get("/api/blockchain/status", async (_req, res) => {
+    res.json({ configured: isAlchemyConfigured() });
+  });
+
+  app.get("/api/blockchain/wallet/:address", async (req, res) => {
+    try {
+      if (!isAlchemyConfigured()) {
+        return res.status(503).json({ 
+          error: "Blockchain service not configured",
+          message: "ALCHEMY_API_KEY is not set"
+        });
+      }
+
+      const { address } = req.params;
+      const network = (req.query.network as string) || "ethereum";
+
+      if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        return res.status(400).json({ 
+          error: "Invalid wallet address",
+          message: "Please provide a valid Ethereum address (0x...)"
+        });
+      }
+
+      const walletData = await getFullWalletData(address, network);
+      res.json(walletData);
+    } catch (error) {
+      console.error("Blockchain data error:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch blockchain data",
+        message: "Network may be slow or address not found"
+      });
+    }
+  });
+
+  app.get("/api/blockchain/balance/:address", async (req, res) => {
+    try {
+      if (!isAlchemyConfigured()) {
+        return res.status(503).json({ error: "Blockchain service not configured" });
+      }
+
+      const { address } = req.params;
+      const network = (req.query.network as string) || "ethereum";
+
+      if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        return res.status(400).json({ error: "Invalid wallet address" });
+      }
+
+      const balance = await getWalletBalance(address, network);
+      res.json(balance);
+    } catch (error) {
+      console.error("Balance fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch balance" });
+    }
+  });
+
+  app.get("/api/blockchain/transactions/:address", async (req, res) => {
+    try {
+      if (!isAlchemyConfigured()) {
+        return res.status(503).json({ error: "Blockchain service not configured" });
+      }
+
+      const { address } = req.params;
+      const network = (req.query.network as string) || "ethereum";
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        return res.status(400).json({ error: "Invalid wallet address" });
+      }
+
+      const transactions = await getRecentTransactions(address, network, limit);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Transactions fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  app.get("/api/blockchain/contract/:address", async (req, res) => {
+    try {
+      if (!isAlchemyConfigured()) {
+        return res.status(503).json({ error: "Blockchain service not configured" });
+      }
+
+      const { address } = req.params;
+      const network = (req.query.network as string) || "ethereum";
+
+      if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        return res.status(400).json({ error: "Invalid wallet address" });
+      }
+
+      const contractInfo = await checkIfContract(address, network);
+      res.json(contractInfo);
+    } catch (error) {
+      console.error("Contract check error:", error);
+      res.status(500).json({ error: "Failed to check contract status" });
     }
   });
 
