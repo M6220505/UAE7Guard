@@ -336,3 +336,60 @@ export type InsertEscrowTransaction = z.infer<typeof insertEscrowTransactionSche
 export type InsertSlippageCalculation = z.infer<typeof insertSlippageCalculationSchema>;
 export type EncryptedAuditLog = typeof encryptedAuditLogs.$inferSelect;
 export type InsertEncryptedAuditLog = z.infer<typeof insertEncryptedAuditLogSchema>;
+
+// Hybrid Verification Types (for 10,000+ AED transactions)
+export interface HybridVerificationInput {
+  walletAddress: string;
+  network: string;
+  transactionAmountAED: number;
+}
+
+export interface OnChainFacts {
+  balance: string;
+  balanceInEth: string;
+  transactionCount: number;
+  recentTransactions: Array<{
+    hash: string;
+    from: string;
+    to: string | null;
+    value: string;
+    asset: string;
+    category: string;
+    blockNum: string;
+  }>;
+  walletAgeDays: number;
+  isContract: boolean;
+  network: string;
+}
+
+export interface AIInsight {
+  riskLevel: "safe" | "suspicious" | "dangerous";
+  riskScore: number;
+  fraudPatterns: string[];
+  liquidityRisk: string;
+  largeAmountAnalysis: string;
+  recommendation: string;
+  recommendationAr: string;
+  analysis: string;
+  analysisAr: string;
+}
+
+export interface HybridVerificationResult {
+  verificationId: string;
+  walletAddress: string;
+  transactionAmountAED: number;
+  thresholdMet: boolean;
+  onChainFacts: OnChainFacts;
+  aiInsight: AIInsight;
+  verificationTimestamp: string;
+  sources: {
+    blockchain: string;
+    ai: string;
+  };
+}
+
+export const hybridVerificationInputSchema = z.object({
+  walletAddress: z.string().min(42).max(42),
+  network: z.string().default("ethereum"),
+  transactionAmountAED: z.number().min(10000),
+});

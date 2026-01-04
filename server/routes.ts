@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
-import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured } from "./alchemy";
+import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured, getHybridWalletSnapshot } from "./alchemy";
+import { hybridVerificationInputSchema, type HybridVerificationResult, type OnChainFacts, type AIInsight } from "@shared/schema";
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
@@ -894,6 +895,157 @@ Provide:
         errorAr: "فشل في إنشاء التقرير السيادي"
       });
     }
+  });
+
+  // ===== HYBRID VERIFICATION (10,000+ AED) =====
+  app.post("/api/hybrid-verification", async (req, res) => {
+    try {
+      if (!isAlchemyConfigured()) {
+        return res.status(503).json({ 
+          error: "Blockchain service not configured",
+          errorAr: "خدمة البلوكتشين غير مفعّلة",
+          message: "ALCHEMY_API_KEY is required"
+        });
+      }
+
+      const input = hybridVerificationInputSchema.parse(req.body);
+      
+      if (input.transactionAmountAED < 10000) {
+        return res.status(400).json({ 
+          error: "Transaction amount must be at least 10,000 AED for hybrid verification",
+          errorAr: "يجب أن يكون مبلغ المعاملة 10,000 درهم على الأقل للتحقق الهجين"
+        });
+      }
+
+      const snapshot = await getHybridWalletSnapshot(input.walletAddress, input.network);
+
+      const onChainFacts: OnChainFacts = {
+        balance: snapshot.balance.balance,
+        balanceInEth: snapshot.balance.balanceInEth,
+        transactionCount: snapshot.transactionCount,
+        recentTransactions: snapshot.transactions,
+        walletAgeDays: snapshot.walletAgeDays,
+        isContract: snapshot.isContract,
+        network: snapshot.network,
+      };
+
+      let aiInsight: AIInsight = {
+        riskLevel: "safe",
+        riskScore: 0,
+        fraudPatterns: [],
+        liquidityRisk: "Unable to analyze",
+        largeAmountAnalysis: "Unable to analyze",
+        recommendation: "AI analysis unavailable",
+        recommendationAr: "تحليل الذكاء الاصطناعي غير متوفر",
+        analysis: "AI analysis unavailable",
+        analysisAr: "تحليل الذكاء الاصطناعي غير متوفر",
+      };
+
+      try {
+        const alchemyDataJson = JSON.stringify({
+          walletAddress: input.walletAddress,
+          balance: onChainFacts.balanceInEth + " ETH",
+          transactionCount: onChainFacts.transactionCount,
+          walletAgeDays: onChainFacts.walletAgeDays,
+          isSmartContract: onChainFacts.isContract,
+          transactionAmountAED: input.transactionAmountAED,
+          recentTransactions: onChainFacts.recentTransactions.slice(0, 10).map(tx => ({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            asset: tx.asset,
+          })),
+        }, null, 2);
+
+        const aiPrompt = `You are a cryptocurrency fraud detection expert. Analyze the following wallet data in JSON format and identify risks.
+
+WALLET DATA:
+${alchemyDataJson}
+
+Transaction Amount: AED ${input.transactionAmountAED.toLocaleString()}
+
+Analyze for:
+1. FRAUD PATTERNS: Look for known scam indicators (rug pulls, pump-and-dump, phishing wallet patterns, mixer usage)
+2. LIQUIDITY RISK: Assess if the wallet has enough balance/history to support this transaction
+3. LARGE AMOUNT ANALYSIS: For amounts 10,000+ AED, flag any unusual activity patterns
+
+Return ONLY valid JSON with this structure:
+{
+  "riskLevel": "safe" | "suspicious" | "dangerous",
+  "riskScore": 0-100,
+  "fraudPatterns": ["pattern1", "pattern2"],
+  "liquidityRisk": "English analysis of liquidity risk",
+  "largeAmountAnalysis": "English analysis for large transaction",
+  "analysis": "Brief English analysis (2-3 sentences)",
+  "analysisAr": "نفس التحليل بالعربية",
+  "recommendation": "English recommendation",
+  "recommendationAr": "التوصية بالعربية"
+}`;
+
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: aiPrompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 800,
+        });
+
+        const aiResult = JSON.parse(response.choices[0]?.message?.content || "{}");
+        
+        aiInsight = {
+          riskLevel: aiResult.riskLevel || "safe",
+          riskScore: aiResult.riskScore || 0,
+          fraudPatterns: aiResult.fraudPatterns || [],
+          liquidityRisk: aiResult.liquidityRisk || "Unable to analyze",
+          largeAmountAnalysis: aiResult.largeAmountAnalysis || "Unable to analyze",
+          recommendation: aiResult.recommendation || "",
+          recommendationAr: aiResult.recommendationAr || "",
+          analysis: aiResult.analysis || "",
+          analysisAr: aiResult.analysisAr || "",
+        };
+      } catch (aiError) {
+        console.log("AI analysis failed:", aiError);
+      }
+
+      const verificationResult: HybridVerificationResult = {
+        verificationId: `HYB-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        walletAddress: input.walletAddress,
+        transactionAmountAED: input.transactionAmountAED,
+        thresholdMet: input.transactionAmountAED >= 10000,
+        onChainFacts,
+        aiInsight,
+        verificationTimestamp: new Date().toISOString(),
+        sources: {
+          blockchain: "Alchemy Ethereum Node",
+          ai: "GPT-4o (Replit AI Integrations)",
+        },
+      };
+
+      res.json({
+        success: true,
+        verification: verificationResult,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid verification request",
+          errorAr: "طلب تحقق غير صالح",
+          details: error.errors 
+        });
+      }
+      console.error("Hybrid verification error:", error);
+      res.status(500).json({ 
+        error: "Failed to perform hybrid verification",
+        errorAr: "فشل في إجراء التحقق الهجين"
+      });
+    }
+  });
+
+  app.get("/api/hybrid-verification/status", async (_req, res) => {
+    res.json({ 
+      configured: isAlchemyConfigured(),
+      minAmountAED: 10000,
+    });
   });
 
   // ===== BLOCKCHAIN DATA (ALCHEMY) =====

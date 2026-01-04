@@ -171,3 +171,62 @@ export async function getFullWalletData(
 export function isAlchemyConfigured(): boolean {
   return !!alchemyApiKey;
 }
+
+export interface HybridWalletSnapshot {
+  balance: WalletBalance;
+  transactions: TransactionInfo[];
+  transactionCount: number;
+  walletAgeDays: number;
+  isContract: boolean;
+  network: string;
+  firstTransactionBlock: string | null;
+}
+
+export async function getHybridWalletSnapshot(
+  address: string,
+  networkName: string = "ethereum"
+): Promise<HybridWalletSnapshot> {
+  const network = networkMap[networkName] || Network.ETH_MAINNET;
+  const alchemy = getAlchemyClient(network);
+  
+  const [balance, transactions, contractInfo] = await Promise.all([
+    getWalletBalance(address, networkName),
+    getRecentTransactions(address, networkName, 20),
+    checkIfContract(address, networkName),
+  ]);
+
+  let walletAgeDays = 0;
+  let firstTransactionBlock: string | null = null;
+  
+  try {
+    const allTransfers = await alchemy.core.getAssetTransfers({
+      toAddress: address,
+      category: [AssetTransfersCategory.EXTERNAL],
+      order: SortingOrder.ASCENDING,
+      maxCount: 1,
+    });
+    
+    if (allTransfers.transfers.length > 0) {
+      firstTransactionBlock = allTransfers.transfers[0].blockNum;
+      const blockNumber = parseInt(firstTransactionBlock, 16);
+      const block = await alchemy.core.getBlock(blockNumber);
+      if (block && block.timestamp) {
+        const firstTxDate = new Date(block.timestamp * 1000);
+        const now = new Date();
+        walletAgeDays = Math.floor((now.getTime() - firstTxDate.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    }
+  } catch (error) {
+    console.log("Could not determine wallet age:", error);
+  }
+
+  return {
+    balance,
+    transactions,
+    transactionCount: transactions.length,
+    walletAgeDays,
+    isContract: contractInfo.isContract,
+    network: networkName,
+    firstTransactionBlock,
+  };
+}
