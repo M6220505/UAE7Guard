@@ -958,12 +958,16 @@ Provide:
           })),
         }, null, 2);
 
+        const formattedAmount = Number.isFinite(input.transactionAmountAED) 
+          ? input.transactionAmountAED.toLocaleString() 
+          : String(input.transactionAmountAED);
+        
         const aiPrompt = `You are a cryptocurrency fraud detection expert. Analyze the following wallet data in JSON format and identify risks.
 
 WALLET DATA:
 ${alchemyDataJson}
 
-Transaction Amount: AED ${input.transactionAmountAED.toLocaleString()}
+Transaction Amount: AED ${formattedAmount}
 
 Analyze for:
 1. FRAUD PATTERNS: Look for known scam indicators (rug pulls, pump-and-dump, phishing wallet patterns, mixer usage)

@@ -54,6 +54,11 @@ const mainNavItems = [
     icon: Fingerprint,
   },
   {
+    title: "Hybrid Verify",
+    url: "/hybrid-verification",
+    icon: Shield,
+  },
+  {
     title: "Live Monitoring",
     url: "/live-monitoring",
     icon: Radio,

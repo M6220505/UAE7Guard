@@ -389,7 +389,11 @@ export interface HybridVerificationResult {
 }
 
 export const hybridVerificationInputSchema = z.object({
-  walletAddress: z.string().min(42).max(42),
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
+    message: "Invalid wallet address format | تنسيق عنوان المحفظة غير صالح",
+  }),
   network: z.string().default("ethereum"),
-  transactionAmountAED: z.number().min(10000),
+  transactionAmountAED: z.coerce.number().min(10000, {
+    message: "Minimum amount is 10,000 AED | الحد الأدنى 10,000 درهم",
+  }),
 });
