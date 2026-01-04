@@ -5,6 +5,7 @@ import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, inser
 import { z } from "zod";
 import OpenAI from "openai";
 import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured } from "./alchemy";
+import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -482,6 +483,46 @@ Provide comprehensive risk analysis.`;
     } catch (error) {
       console.error("AI prediction error:", error);
       res.status(500).json({ error: "Failed to analyze wallet" });
+    }
+  });
+
+  // ===== MILLION DIRHAM RISK ENGINE =====
+  app.post("/api/risk/calculate", async (req, res) => {
+    try {
+      const riskInputSchema = z.object({
+        walletAddress: z.string().min(10),
+        walletAgeDays: z.number().min(1),
+        transactionCount: z.number().min(0),
+        blacklistAssociations: z.number().min(0),
+        isDirectlyBlacklisted: z.boolean(),
+        transactionValue: z.number().optional(),
+        isSmartContract: z.boolean().optional(),
+      });
+
+      const input = riskInputSchema.parse(req.body);
+      
+      const reports = await storage.getReportsByAddress(input.walletAddress);
+      const verifiedReports = reports.filter(r => r.status === 'verified');
+      
+      const riskInput: RiskInput = {
+        ...input,
+        blacklistAssociations: input.blacklistAssociations + verifiedReports.length,
+        isDirectlyBlacklisted: input.isDirectlyBlacklisted || verifiedReports.length > 0,
+      };
+
+      const result = calculateMillionDirhamRisk(riskInput);
+      
+      res.json({
+        success: true,
+        ...result,
+        verifiedThreatCount: verifiedReports.length,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input data", details: error.errors });
+      }
+      console.error("Risk calculation error:", error);
+      res.status(500).json({ error: "Failed to calculate risk" });
     }
   });
 

@@ -558,10 +558,9 @@ export default function DueDiligence() {
     setAnalyzing(true);
     setResult(null);
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const walletAgeDays = parseInt(data.walletAge) || 0;
+    const walletAgeDays = parseInt(data.walletAge) || 1;
     const transactionCount = parseInt(data.transactionHistory) || 0;
+    const txValue = parseFloat(data.transactionValue.replace(/,/g, '')) || 500000;
 
     const blacklistedAddresses = verifiedReports?.filter(r => r.status === 'verified').map(r => r.scammerAddress.toLowerCase()) || [];
     const isDirectlyBlacklisted = blacklistedAddresses.includes(data.walletAddress.toLowerCase());
@@ -575,18 +574,57 @@ export default function DueDiligence() {
       blacklistAssociations = Math.min(matchingPrefixes.length, 2);
     }
 
-    // Parse transaction value for liquidity ratio calculation
-    const txValue = parseFloat(data.transactionValue.replace(/,/g, '')) || 500000;
-    
-    const riskResult = calculateRiskScore(
-      walletAgeDays,
-      transactionCount,
-      blacklistAssociations,
-      isDirectlyBlacklisted,
-      txValue
-    );
+    try {
+      const response = await fetch('/api/risk/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: data.walletAddress,
+          walletAgeDays,
+          transactionCount,
+          blacklistAssociations,
+          isDirectlyBlacklisted,
+          transactionValue: txValue,
+          isSmartContract: blockchainData?.contractInfo?.isContract || false,
+        }),
+      });
 
-    setResult(riskResult);
+      if (response.ok) {
+        const apiResult = await response.json();
+        const riskResult = calculateRiskScore(
+          walletAgeDays,
+          transactionCount,
+          blacklistAssociations + (apiResult.verifiedThreatCount || 0),
+          isDirectlyBlacklisted || apiResult.verifiedThreatCount > 0,
+          txValue
+        );
+        
+        setResult({
+          ...riskResult,
+          riskIndex: apiResult.riskScore,
+          finalScore: apiResult.riskScore,
+        });
+      } else {
+        const riskResult = calculateRiskScore(
+          walletAgeDays,
+          transactionCount,
+          blacklistAssociations,
+          isDirectlyBlacklisted,
+          txValue
+        );
+        setResult(riskResult);
+      }
+    } catch {
+      const riskResult = calculateRiskScore(
+        walletAgeDays,
+        transactionCount,
+        blacklistAssociations,
+        isDirectlyBlacklisted,
+        txValue
+      );
+      setResult(riskResult);
+    }
+
     setAnalyzedAddress(data.walletAddress);
     setAnalyzing(false);
   };
