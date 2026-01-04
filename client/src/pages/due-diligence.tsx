@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import type { ScamReport } from "@shared/schema";
+import { BlockchainData } from "@/components/blockchain-data";
 
 const assetTypes = [
   { value: "real_estate", label: "Real Estate", icon: Building2 },
@@ -521,11 +522,18 @@ function TermsAgreement({ onAccept }: { onAccept: () => void }) {
   );
 }
 
+interface BlockchainWalletData {
+  balance: { balanceInEth: string };
+  transactions: { hash: string }[];
+  contractInfo: { isContract: boolean };
+}
+
 export default function DueDiligence() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<RiskResult | null>(null);
   const [analyzedAddress, setAnalyzedAddress] = useState("");
+  const [blockchainData, setBlockchainData] = useState<BlockchainWalletData | null>(null);
 
   const { data: verifiedReports } = useQuery<ScamReport[]>({
     queryKey: ["/api/reports"],
@@ -666,6 +674,13 @@ export default function DueDiligence() {
                       </FormItem>
                     )}
                   />
+
+                  {form.watch("walletAddress") && /^0x[a-fA-F0-9]{40}$/.test(form.watch("walletAddress")) && (
+                    <BlockchainData 
+                      address={form.watch("walletAddress")} 
+                      onDataLoaded={(data) => setBlockchainData(data)}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
