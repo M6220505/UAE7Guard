@@ -14,6 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { LogIn, LogOut, User } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import Dashboard from "@/pages/dashboard";
 import Reports from "@/pages/reports";
 import LeaderboardPage from "@/pages/leaderboard-page";
@@ -42,7 +44,7 @@ function UserNav() {
   if (!isAuthenticated) {
     return (
       <Button variant="outline" size="sm" asChild data-testid="button-login">
-        <a href="/api/login">
+        <a href="/login">
           <LogIn className="h-4 w-4 mr-2" />
           Sign In
         </a>
@@ -118,6 +120,14 @@ function Router() {
   // Home page has its own layout
   if (location === "/") {
     return <Home />;
+  }
+  
+  // Auth pages have their own layout
+  if (location === "/login") {
+    return <Login />;
+  }
+  if (location === "/signup") {
+    return <Signup />;
   }
 
   // All other pages use dashboard layout
