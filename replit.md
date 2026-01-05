@@ -93,10 +93,21 @@ shared/           # Shared code between client/server
 
 ## Authentication & Authorization
 
-### Replit Auth Integration
-- **OAuth Provider**: Replit OIDC (supports Google, GitHub, X, Apple login)
+### Custom Email/Password Authentication
+- **Method**: Email and password registration/login
+- **Password Hashing**: bcryptjs with 12 salt rounds
 - **Session Storage**: PostgreSQL via connect-pg-simple
-- **Session Duration**: 7 days with automatic token refresh
+- **Session Duration**: 7 days
+
+### Auth Endpoints
+- `POST /api/auth/signup` - Create account with {email, password, firstName, lastName}
+- `POST /api/auth/login` - Login with {email, password}
+- `GET /api/auth/user` - Get current authenticated user
+- `POST /api/logout` - Destroy session and logout
+
+### Frontend Pages
+- `/login` - Login page with email/password form
+- `/signup` - Registration page with name, email, password fields
 
 ### Protected Endpoints
 All user-specific endpoints require authentication:
@@ -122,7 +133,9 @@ All user-specific endpoints require authentication:
 - `/api/leaderboard` - Investigator leaderboard
 
 ## Recent Changes
-- Added Replit Auth integration with OAuth support
+- Replaced Replit OAuth with custom email/password authentication
+- Added login (/login) and signup (/signup) pages
+- Password hashing with bcryptjs
 - Implemented role-based authorization (isAdmin middleware)
 - Created Analytics Dashboard page (/analytics)
 - Created API Documentation page (/api-docs)
