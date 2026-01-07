@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import About from "@/pages/about";
@@ -23,22 +23,28 @@ import FAQ from "@/pages/faq";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import Dashboard from "@/pages/dashboard";
-import Reports from "@/pages/reports";
 import Admin from "@/pages/admin";
-import Analytics from "@/pages/analytics";
 import Leaderboard from "@/pages/leaderboard-page";
-import AiPredict from "@/pages/ai-predict";
-import HybridVerification from "@/pages/hybrid-verification";
-import LiveMonitoring from "@/pages/live-monitoring";
-import DueDiligence from "@/pages/due-diligence";
-import Escrow from "@/pages/escrow";
-import DoubleLock from "@/pages/double-lock";
-import Slippage from "@/pages/slippage";
 import ApiDocs from "@/pages/api-docs";
-import ExportPage from "@/pages/export";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import Verification from "@/pages/verification";
+import Protection from "@/pages/protection";
+import ReportsAnalytics from "@/pages/reports-analytics";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
+
+const legacyRedirects: Record<string, string> = {
+  "/due-diligence": "/verification?tab=due-diligence",
+  "/ai-predict": "/verification?tab=ai-predict",
+  "/hybrid-verification": "/verification?tab=hybrid-verify",
+  "/double-lock": "/verification?tab=double-lock",
+  "/live-monitoring": "/protection?tab=live-monitoring",
+  "/escrow": "/protection?tab=escrow",
+  "/slippage": "/protection?tab=slippage",
+  "/reports": "/reports-analytics?tab=reports",
+  "/analytics": "/reports-analytics?tab=analytics",
+  "/export": "/reports-analytics?tab=export",
+};
 
 function UserNav() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -150,6 +156,10 @@ function Router() {
     return <Home />;
   }
 
+  if (legacyRedirects[location]) {
+    return <Redirect to={legacyRedirects[location]} />;
+  }
+
   const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup"];
   
   if (simplePages.includes(location)) {
@@ -170,10 +180,8 @@ function Router() {
   }
 
   const sidebarPages = [
-    "/dashboard", "/reports", "/admin", "/analytics", "/leaderboard",
-    "/ai-predict", "/hybrid-verification", "/live-monitoring", 
-    "/due-diligence", "/escrow", "/double-lock", "/slippage",
-    "/api-docs", "/export"
+    "/dashboard", "/admin", "/leaderboard", "/api-docs",
+    "/verification", "/protection", "/reports-analytics"
   ];
   
   if (sidebarPages.some(page => location.startsWith(page))) {
@@ -181,19 +189,12 @@ function Router() {
       <SidebarLayout>
         <Switch>
           <Route path="/dashboard" component={Dashboard} />
-          <Route path="/reports" component={Reports} />
           <Route path="/admin" component={Admin} />
-          <Route path="/analytics" component={Analytics} />
           <Route path="/leaderboard" component={Leaderboard} />
-          <Route path="/ai-predict" component={AiPredict} />
-          <Route path="/hybrid-verification" component={HybridVerification} />
-          <Route path="/live-monitoring" component={LiveMonitoring} />
-          <Route path="/due-diligence" component={DueDiligence} />
-          <Route path="/escrow" component={Escrow} />
-          <Route path="/double-lock" component={DoubleLock} />
-          <Route path="/slippage" component={Slippage} />
           <Route path="/api-docs" component={ApiDocs} />
-          <Route path="/export" component={ExportPage} />
+          <Route path="/verification" component={Verification} />
+          <Route path="/protection" component={Protection} />
+          <Route path="/reports-analytics" component={ReportsAnalytics} />
         </Switch>
       </SidebarLayout>
     );

@@ -7,14 +7,8 @@ import {
   ShieldCheck,
   Scale,
   Lock,
-  Gem,
-  Radio,
-  TrendingDown,
-  Download,
-  Brain,
-  Fingerprint,
-  BarChart3,
-  Code
+  Code,
+  BarChart3
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,59 +30,27 @@ const mainNavItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Reports",
-    url: "/reports",
-    icon: FileText,
-  },
-  {
-    title: "Due Diligence",
-    url: "/due-diligence",
-    icon: Gem,
-  },
-  {
-    title: "AI Prediction",
-    url: "/ai-predict",
-    icon: Brain,
-  },
-  {
-    title: "Double-Lock",
-    url: "/double-lock",
-    icon: Fingerprint,
-  },
-  {
-    title: "Hybrid Verify",
-    url: "/hybrid-verification",
+    title: "Verification",
+    url: "/verification",
     icon: Shield,
+    description: "Due Diligence, AI Predict, Hybrid Verify, Double-Lock",
   },
   {
-    title: "Live Monitoring",
-    url: "/live-monitoring",
-    icon: Radio,
-  },
-  {
-    title: "Escrow",
-    url: "/escrow",
+    title: "Protection",
+    url: "/protection",
     icon: Lock,
+    description: "Live Monitoring, Escrow, Slippage",
   },
   {
-    title: "Price Slippage",
-    url: "/slippage",
-    icon: TrendingDown,
+    title: "Reports & Analytics",
+    url: "/reports-analytics",
+    icon: BarChart3,
+    description: "Reports, Analytics, Export",
   },
   {
     title: "Leaderboard",
     url: "/leaderboard",
     icon: Trophy,
-  },
-  {
-    title: "Export",
-    url: "/export",
-    icon: Download,
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
   },
   {
     title: "API Docs",
@@ -99,7 +61,7 @@ const mainNavItems = [
 
 const adminNavItems = [
   {
-    title: "Verification",
+    title: "Admin Panel",
     url: "/admin",
     icon: ShieldCheck,
   },
@@ -130,7 +92,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location === item.url}
-                    data-testid={`nav-${item.title.toLowerCase()}`}
+                    data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     <Link href={item.url}>
                       <item.icon className="h-4 w-4" />
@@ -152,7 +114,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location === item.url}
-                    data-testid={`nav-${item.title.toLowerCase()}`}
+                    data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     <Link href={item.url}>
                       <item.icon className="h-4 w-4" />
