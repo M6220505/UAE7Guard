@@ -112,13 +112,12 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <Button 
-              data-testid="button-start-check"
-              onClick={scrollToCheckTool}
-            >
-              {t.startCheck}
-              <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
-            </Button>
+            <Link href="/dashboard">
+              <Button data-testid="button-enter-platform">
+                {language === "en" ? "Enter Platform" : "ادخل البلاتفورم"}
+                <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
