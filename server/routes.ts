@@ -292,12 +292,9 @@ export async function registerRoutes(
   });
 
   // ===== LIVE MONITORING =====
-  app.get("/api/live-monitoring", isAuthenticated, async (req: any, res) => {
+  app.get("/api/live-monitoring", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
+      const userId = req.user?.claims?.sub || "demo-user";
       const items = await storage.getLiveMonitoring(userId);
       res.json(items);
     } catch (error) {
@@ -305,12 +302,9 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/live-monitoring", isAuthenticated, async (req: any, res) => {
+  app.post("/api/live-monitoring", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
+      const userId = req.user?.claims?.sub || "demo-user";
       
       const data = insertLiveMonitoringSchema.parse({
         ...req.body,
@@ -326,7 +320,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/live-monitoring/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/live-monitoring/:id", async (req, res) => {
     try {
       await storage.deleteLiveMonitoring(req.params.id);
       res.status(204).send();
