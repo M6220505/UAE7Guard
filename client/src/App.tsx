@@ -22,6 +22,22 @@ import LearningCenter from "@/pages/learning-center";
 import FAQ from "@/pages/faq";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
+import Dashboard from "@/pages/dashboard";
+import Reports from "@/pages/reports";
+import Admin from "@/pages/admin";
+import Analytics from "@/pages/analytics";
+import Leaderboard from "@/pages/leaderboard-page";
+import AiPredict from "@/pages/ai-predict";
+import HybridVerification from "@/pages/hybrid-verification";
+import LiveMonitoring from "@/pages/live-monitoring";
+import DueDiligence from "@/pages/due-diligence";
+import Escrow from "@/pages/escrow";
+import DoubleLock from "@/pages/double-lock";
+import Slippage from "@/pages/slippage";
+import ApiDocs from "@/pages/api-docs";
+import ExportPage from "@/pages/export";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 
 function UserNav() {
@@ -97,6 +113,36 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SidebarLayout({ children }: { children: React.ReactNode }) {
+  const { isRTL } = useLanguage();
+  
+  const style = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "3rem",
+  };
+  
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className={`flex h-screen w-full ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+        <AppSidebar />
+        <SidebarInset className="flex flex-col flex-1">
+          <header className="flex h-14 items-center justify-between gap-4 border-b px-4">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <ThemeToggle />
+              <UserNav />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-4">
+            {children}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+}
+
 function Router() {
   const [location] = useLocation();
   
@@ -104,7 +150,7 @@ function Router() {
     return <Home />;
   }
 
-  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms"];
+  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup"];
   
   if (simplePages.includes(location)) {
     return (
@@ -116,8 +162,40 @@ function Router() {
           <Route path="/faq" component={FAQ} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
+          <Route path="/login" component={Login} />
+          <Route path="/signup" component={Signup} />
         </Switch>
       </SimpleLayout>
+    );
+  }
+
+  const sidebarPages = [
+    "/dashboard", "/reports", "/admin", "/analytics", "/leaderboard",
+    "/ai-predict", "/hybrid-verification", "/live-monitoring", 
+    "/due-diligence", "/escrow", "/double-lock", "/slippage",
+    "/api-docs", "/export"
+  ];
+  
+  if (sidebarPages.some(page => location.startsWith(page))) {
+    return (
+      <SidebarLayout>
+        <Switch>
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/analytics" component={Analytics} />
+          <Route path="/leaderboard" component={Leaderboard} />
+          <Route path="/ai-predict" component={AiPredict} />
+          <Route path="/hybrid-verification" component={HybridVerification} />
+          <Route path="/live-monitoring" component={LiveMonitoring} />
+          <Route path="/due-diligence" component={DueDiligence} />
+          <Route path="/escrow" component={Escrow} />
+          <Route path="/double-lock" component={DoubleLock} />
+          <Route path="/slippage" component={Slippage} />
+          <Route path="/api-docs" component={ApiDocs} />
+          <Route path="/export" component={ExportPage} />
+        </Switch>
+      </SidebarLayout>
     );
   }
 
