@@ -67,6 +67,31 @@ shared/           # Shared code between client/server
 - `/privacy` - Privacy policy (PDPL compliant)
 - `/terms` - Terms of service with educational disclaimers
 
+### Enterprise Pages (Sidebar Navigation)
+- `/dashboard` - Main dashboard with overview and stats
+- `/verification` - Unified verification tools with tabs:
+  - Due Diligence, AI Predict, Hybrid Verify, Double-Lock
+- `/protection` - Trading protection with tabs:
+  - Live Monitoring, Escrow, Slippage
+- `/reports-analytics` - Reports and analytics with tabs:
+  - Reports, Analytics, Export
+- `/leaderboard` - Investigator leaderboard
+- `/api-docs` - API documentation
+- `/admin` - Admin panel (admin role only)
+
+### Legacy Route Redirects
+Old routes redirect to new consolidated pages with correct tab:
+- `/due-diligence` → `/verification?tab=due-diligence`
+- `/ai-predict` → `/verification?tab=ai-predict`
+- `/hybrid-verification` → `/verification?tab=hybrid-verify`
+- `/double-lock` → `/verification?tab=double-lock`
+- `/live-monitoring` → `/protection?tab=live-monitoring`
+- `/escrow` → `/protection?tab=escrow`
+- `/slippage` → `/protection?tab=slippage`
+- `/reports` → `/reports-analytics?tab=reports`
+- `/analytics` → `/reports-analytics?tab=analytics`
+- `/export` → `/reports-analytics?tab=export`
+
 ### Design System
 - **Typography**: Inter for UI, JetBrains Mono for crypto addresses/code
 - **Theme**: Dark mode default with light mode support via CSS variables
