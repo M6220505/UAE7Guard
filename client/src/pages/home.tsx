@@ -11,6 +11,27 @@ import { useLanguage } from "@/contexts/language-context";
 export default function Home() {
   const { t, language, isRTL } = useLanguage();
 
+  const scrollToCheckTool = () => {
+    const input = document.getElementById('wallet-address-input');
+    const section = document.getElementById('check-tool');
+    
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Focus input after scroll animation
+    setTimeout(() => {
+      if (input) {
+        input.focus();
+        // Add highlight effect
+        input.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+        setTimeout(() => {
+          input.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+        }, 2000);
+      }
+    }, 500);
+  };
+
   const navItems = [
     { href: "/about", label: t.aboutUs },
     { href: "/learning-center", label: t.learningCenter },
@@ -90,12 +111,13 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <a href="#check-tool">
-              <Button data-testid="button-start-check">
-                {t.startCheck}
-                <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
-              </Button>
-            </a>
+            <Button 
+              data-testid="button-start-check"
+              onClick={scrollToCheckTool}
+            >
+              {t.startCheck}
+              <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
+            </Button>
           </div>
         </div>
       </header>
@@ -238,12 +260,10 @@ export default function Home() {
               {t.ctaSubtitle}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="#check-tool">
-                <Button size="lg" data-testid="button-try-now">
+              <Button size="lg" data-testid="button-try-now" onClick={scrollToCheckTool}>
                   {t.tryNow}
                   <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
                 </Button>
-              </Link>
               <Link href="/learning-center">
                 <Button size="lg" variant="outline" data-testid="button-learn-more">
                   {t.learnMore}
