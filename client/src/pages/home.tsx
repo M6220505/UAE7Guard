@@ -37,6 +37,7 @@ export default function Home() {
     { href: "/learning-center", label: t.learningCenter },
     { href: "/faq", label: t.faq },
     { href: "/contact", label: t.contactUs },
+    { href: "/dashboard", label: language === "en" ? "Platform" : "البلاتفورم" },
   ];
 
   const features = language === "en" ? [
