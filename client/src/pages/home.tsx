@@ -90,12 +90,12 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <Link href="#check-tool">
+            <a href="#check-tool">
               <Button data-testid="button-start-check">
                 {t.startCheck}
                 <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </header>
