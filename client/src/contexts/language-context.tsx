@@ -67,7 +67,7 @@ const translations: Record<Language, Translations> = {
     // Home page
     startCheck: "Start Check",
     heroTitle: "Protect Yourself from Crypto Scams",
-    heroSubtitle: "Free tool to verify wallet addresses against known scam reports. Check before you send.",
+    heroSubtitle: "Verify wallet addresses against known scam reports. Check before you send.",
     checkWalletAddress: "Check Wallet Address",
     checkWalletPlaceholder: "Enter wallet address to check...",
     checkButton: "Check",
@@ -94,7 +94,7 @@ const translations: Record<Language, Translations> = {
     
     // CTA
     ctaTitle: "Check an Address Now",
-    ctaSubtitle: "Quick, free, and confidential. Your search is not stored.",
+    ctaSubtitle: "Quick and confidential. Your search is not stored.",
     tryNow: "Try Now",
     learnMore: "Learn More",
     
@@ -116,7 +116,7 @@ const translations: Record<Language, Translations> = {
     // Home page
     startCheck: "ابدأ الفحص",
     heroTitle: "احمِ نفسك من عمليات الاحتيال في العملات الرقمية",
-    heroSubtitle: "أداة مجانية للتحقق من عناوين المحافظ مقابل تقارير الاحتيال المعروفة. تحقق قبل الإرسال.",
+    heroSubtitle: "أداة للتحقق من عناوين المحافظ مقابل تقارير الاحتيال المعروفة. تحقق قبل الإرسال.",
     checkWalletAddress: "فحص عنوان محفظة",
     checkWalletPlaceholder: "أدخل عنوان المحفظة للتحقق...",
     checkButton: "فحص",
@@ -143,7 +143,7 @@ const translations: Record<Language, Translations> = {
     
     // CTA
     ctaTitle: "افحص عنوانًا الآن",
-    ctaSubtitle: "سريع ومجاني وسري. لا يتم تخزين بحثك.",
+    ctaSubtitle: "سريع وسري. لا يتم تخزين بحثك.",
     tryNow: "جرب الآن",
     learnMore: "اعرف المزيد",
     

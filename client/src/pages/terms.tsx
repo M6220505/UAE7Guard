@@ -15,7 +15,7 @@ export default function Terms() {
           icon: Shield,
           title: "What This Service Provides",
           items: [
-            "Free wallet address checking against our scam database",
+            "Wallet address checking against our scam database",
             "Educational content about cryptocurrency scams",
             "A way to report suspicious addresses",
             "Information to help you make safer decisions",
@@ -66,7 +66,7 @@ export default function Terms() {
           icon: Shield,
           title: "ما تقدمه هذه الخدمة",
           items: [
-            "فحص مجاني لعناوين المحافظ مقابل قاعدة بيانات الاحتيال لدينا",
+            "فحص عناوين المحافظ مقابل قاعدة بيانات الاحتيال لدينا",
             "محتوى تعليمي حول عمليات الاحتيال في العملات الرقمية",
             "طريقة للإبلاغ عن العناوين المشبوهة",
             "معلومات لمساعدتك على اتخاذ قرارات أكثر أمانًا",

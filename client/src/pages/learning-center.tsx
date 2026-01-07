@@ -64,7 +64,7 @@ export default function LearningCenter() {
         {
           icon: LinkIcon,
           title: "Fake Airdrops",
-          description: "Scammers promise free tokens that require you to connect your wallet or send a small amount first, then drain your wallet.",
+          description: "Scammers promise tokens that require you to connect your wallet or send a small amount first, then drain your wallet.",
           warning: "Legitimate airdrops never require you to send money or connect your main wallet.",
           prevention: [
             "Never connect your main wallet to unknown websites",
@@ -111,7 +111,7 @@ export default function LearningCenter() {
         "Only use well-known, reputable exchanges and services",
       ],
       checkTool: "Use Our Check Tool",
-      checkToolDesc: "Before sending funds to any address, use our free tool to check if it has been reported for scam activity.",
+      checkToolDesc: "Before sending funds to any address, use our tool to check if it has been reported for scam activity.",
     },
     ar: {
       title: "مركز التعلم",
@@ -161,7 +161,7 @@ export default function LearningCenter() {
         {
           icon: LinkIcon,
           title: "الإنزالات الجوية المزيفة",
-          description: "يعد المحتالون برموز مجانية تتطلب منك ربط محفظتك أو إرسال مبلغ صغير أولاً، ثم يستنزفون محفظتك.",
+          description: "يعد المحتالون برموز تتطلب منك ربط محفظتك أو إرسال مبلغ صغير أولاً، ثم يستنزفون محفظتك.",
           warning: "الإنزالات الجوية الشرعية لا تتطلب منك أبدًا إرسال أموال أو ربط محفظتك الرئيسية.",
           prevention: [
             "لا تربط محفظتك الرئيسية أبدًا بمواقع غير معروفة",
@@ -208,7 +208,7 @@ export default function LearningCenter() {
         "استخدم فقط البورصات والخدمات المعروفة والموثوقة",
       ],
       checkTool: "استخدم أداة الفحص الخاصة بنا",
-      checkToolDesc: "قبل إرسال الأموال إلى أي عنوان، استخدم أداتنا المجانية للتحقق مما إذا كان قد تم الإبلاغ عنه لنشاط احتيالي.",
+      checkToolDesc: "قبل إرسال الأموال إلى أي عنوان، استخدم أداتنا للتحقق مما إذا كان قد تم الإبلاغ عنه لنشاط احتيالي.",
     },
   };
 

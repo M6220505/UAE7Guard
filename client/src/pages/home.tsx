@@ -21,7 +21,7 @@ export default function Home() {
   const features = language === "en" ? [
     {
       icon: Eye,
-      title: "Free & Easy",
+      title: "Easy to Use",
       description: "Just paste any wallet address and get instant results. No signup required.",
     },
     {
@@ -42,7 +42,7 @@ export default function Home() {
   ] : [
     {
       icon: Eye,
-      title: "مجاني وسهل",
+      title: "سهل الاستخدام",
       description: "فقط الصق أي عنوان محفظة واحصل على نتائج فورية. لا حاجة للتسجيل.",
     },
     {
@@ -106,7 +106,7 @@ export default function Home() {
           <div className="container relative mx-auto px-4 text-center">
             <Badge className="mb-6" variant="secondary">
               <Shield className="mr-1 h-3 w-3" />
-              {language === "en" ? "Free Crypto Safety Tool" : "أداة سلامة العملات الرقمية المجانية"}
+              {language === "en" ? "Crypto Safety Tool" : "أداة سلامة العملات الرقمية"}
             </Badge>
             <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
               {t.heroTitle}

@@ -10,7 +10,7 @@ export default function About() {
       title: "About UAE7Guard",
       subtitle: "Protecting the UAE community from cryptocurrency scams",
       missionTitle: "Our Mission",
-      missionText: "UAE7Guard is a free public service designed to help everyday users verify cryptocurrency wallet addresses before making transactions. Our goal is to reduce financial losses from scams by providing easy access to threat intelligence.",
+      missionText: "UAE7Guard is a public service designed to help everyday users verify cryptocurrency wallet addresses before making transactions. Our goal is to reduce financial losses from scams by providing easy access to threat intelligence.",
       howItWorks: "How It Works",
       howItWorksText: "We maintain a database of wallet addresses that have been reported as involved in fraudulent activity. When you check an address, we search our verified reports and tell you if there are any known issues.",
       values: [
@@ -44,7 +44,7 @@ export default function About() {
       title: "عن UAE7Guard",
       subtitle: "حماية مجتمع الإمارات من عمليات الاحتيال في العملات الرقمية",
       missionTitle: "مهمتنا",
-      missionText: "UAE7Guard هي خدمة عامة مجانية مصممة لمساعدة المستخدمين العاديين على التحقق من عناوين محافظ العملات الرقمية قبل إجراء المعاملات. هدفنا هو تقليل الخسائر المالية من عمليات الاحتيال من خلال توفير سهولة الوصول إلى معلومات التهديدات.",
+      missionText: "UAE7Guard هي خدمة عامة مصممة لمساعدة المستخدمين العاديين على التحقق من عناوين محافظ العملات الرقمية قبل إجراء المعاملات. هدفنا هو تقليل الخسائر المالية من عمليات الاحتيال من خلال توفير سهولة الوصول إلى معلومات التهديدات.",
       howItWorks: "كيف يعمل",
       howItWorksText: "نحتفظ بقاعدة بيانات لعناوين المحافظ التي تم الإبلاغ عنها كمتورطة في نشاط احتيالي. عند فحص عنوان، نبحث في تقاريرنا الموثقة ونخبرك إذا كانت هناك أي مشاكل معروفة.",
       values: [

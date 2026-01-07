@@ -78,8 +78,8 @@ export default function FAQ() {
           icon: CheckCircle,
           questions: [
             {
-              q: "Is this service free?",
-              a: "Yes, checking addresses is completely free and always will be. We believe everyone should have access to tools that help protect them from scams.",
+              q: "How do I use this service?",
+              a: "Simply paste a wallet address into the check tool and get instant results. We believe everyone should have access to tools that help protect them from scams.",
             },
             {
               q: "Who runs this service?",
@@ -168,8 +168,8 @@ export default function FAQ() {
           icon: CheckCircle,
           questions: [
             {
-              q: "هل هذه الخدمة مجانية؟",
-              a: "نعم، فحص العناوين مجاني تمامًا وسيبقى كذلك دائمًا. نحن نؤمن بأن الجميع يجب أن يكون لديهم إمكانية الوصول إلى أدوات تساعد في حمايتهم من الاحتيال.",
+              q: "كيف يمكنني استخدام هذه الخدمة؟",
+              a: "فقط الصق عنوان المحفظة في أداة الفحص واحصل على نتائج فورية. نحن نؤمن بأن الجميع يجب أن يكون لديهم إمكانية الوصول إلى أدوات تساعد في حمايتهم من الاحتيال.",
             },
             {
               q: "من يدير هذه الخدمة؟",
