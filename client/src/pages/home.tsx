@@ -274,6 +274,39 @@ export default function Home() {
         </section>
       </main>
 
+      {/* Prominent Legal Disclaimer */}
+      <section className="bg-amber-500/10 border-y border-amber-500/30 py-6">
+        <div className="container mx-auto px-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
+              <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-700 dark:text-amber-300" data-testid="text-disclaimer-title">
+                {language === "en" ? "Legal Disclaimer" : "إخلاء المسؤولية القانونية"}
+              </h3>
+              <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80" data-testid="text-disclaimer-content">
+                {language === "en" 
+                  ? "UAE7Guard is for educational and informational purposes only. This is NOT financial, legal, or investment advice. Always verify information independently and consult qualified professionals before making any financial decisions. We are not responsible for any losses resulting from the use of this information."
+                  : "UAE7Guard للأغراض التعليمية والمعلوماتية فقط. هذه ليست نصيحة مالية أو قانونية أو استثمارية. تحقق دائماً من المعلومات بشكل مستقل واستشر المتخصصين المؤهلين قبل اتخاذ أي قرارات مالية. نحن غير مسؤولين عن أي خسائر ناتجة عن استخدام هذه المعلومات."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href="/privacy">
+                  <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
+                    {t.privacy}
+                  </Button>
+                </Link>
+                <Link href="/terms">
+                  <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
+                    {t.terms}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t py-8">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-2">
