@@ -1,12 +1,16 @@
 {
-  "name": "UAE7Guard - Sovereign Crypto Intelligence",
+  "name": "UAE7Guard - Crypto Safety Tool",
   "short_name": "UAE7Guard",
-  "description": "Enterprise-grade crypto fraud detection and intelligence platform",
+  "description": "Free bilingual crypto fraud detection and wallet verification tool. Check addresses before you send.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
+  "lang": "en",
+  "dir": "auto",
+  "categories": ["finance", "security", "utilities"],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -24,5 +28,23 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Check Wallet",
+      "short_name": "Check",
+      "description": "Verify a wallet address",
+      "url": "/",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Learning Center",
+      "short_name": "Learn",
+      "description": "Learn about crypto scams",
+      "url": "/learning-center",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
