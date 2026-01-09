@@ -11,6 +11,7 @@ import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type 
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
 import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
 import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotificationEmail } from "./email";
+import { getUserIdForRequest } from "./demo-access";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -414,17 +415,18 @@ export async function registerRoutes(
   // ===== LIVE MONITORING =====
   app.get("/api/live-monitoring", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || "demo-user";
+      const userId = await getUserIdForRequest(req);
       const items = await storage.getLiveMonitoring(userId);
       res.json(items);
     } catch (error) {
+      console.error("Live monitoring fetch error:", error);
       res.status(500).json({ error: "Failed to fetch monitored wallets" });
     }
   });
 
   app.post("/api/live-monitoring", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || "demo-user";
+      const userId = await getUserIdForRequest(req);
       
       const data = insertLiveMonitoringSchema.parse({
         ...req.body,
@@ -436,6 +438,7 @@ export async function registerRoutes(
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      console.error("Live monitoring create error:", error);
       res.status(500).json({ error: "Failed to add wallet to monitoring" });
     }
   });
