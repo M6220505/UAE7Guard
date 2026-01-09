@@ -10,6 +10,7 @@ import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
 import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
+import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotificationEmail } from "./email";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -288,6 +289,125 @@ export async function registerRoutes(
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // ===== EMAIL NOTIFICATIONS =====
+  app.post("/api/notifications/threat-alert", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+        walletAddress: z.string().min(10),
+        threatLevel: z.enum(["safe", "suspicious", "dangerous"]),
+        details: z.string()
+      });
+      
+      const data = schema.parse(req.body);
+      const success = await sendThreatAlert({
+        to: data.email,
+        walletAddress: data.walletAddress,
+        threatLevel: data.threatLevel,
+        details: data.details
+      });
+      
+      if (success) {
+        res.json({ success: true, message: "Threat alert sent successfully" });
+      } else {
+        res.status(500).json({ success: false, error: "Failed to send email" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Threat alert error:", error);
+      res.status(500).json({ error: "Failed to send threat alert" });
+    }
+  });
+
+  app.post("/api/notifications/report-status", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+        reportId: z.number(),
+        walletAddress: z.string().min(10),
+        status: z.enum(["pending", "verified", "rejected"])
+      });
+      
+      const data = schema.parse(req.body);
+      const success = await sendReportConfirmation({
+        to: data.email,
+        reportId: data.reportId,
+        walletAddress: data.walletAddress,
+        status: data.status
+      });
+      
+      if (success) {
+        res.json({ success: true, message: "Report status notification sent" });
+      } else {
+        res.status(500).json({ success: false, error: "Failed to send email" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Report status notification error:", error);
+      res.status(500).json({ error: "Failed to send notification" });
+    }
+  });
+
+  app.post("/api/notifications/welcome", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+        firstName: z.string().min(1)
+      });
+      
+      const data = schema.parse(req.body);
+      const success = await sendWelcomeEmail({
+        to: data.email,
+        firstName: data.firstName
+      });
+      
+      if (success) {
+        res.json({ success: true, message: "Welcome email sent successfully" });
+      } else {
+        res.status(500).json({ success: false, error: "Failed to send email" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Welcome email error:", error);
+      res.status(500).json({ error: "Failed to send welcome email" });
+    }
+  });
+
+  app.post("/api/notifications/custom", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+        subject: z.string().min(1),
+        htmlContent: z.string().min(1)
+      });
+      
+      const data = schema.parse(req.body);
+      const success = await sendNotificationEmail(
+        data.email,
+        data.subject,
+        data.htmlContent
+      );
+      
+      if (success) {
+        res.json({ success: true, message: "Custom notification sent" });
+      } else {
+        res.status(500).json({ success: false, error: "Failed to send email" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Custom notification error:", error);
+      res.status(500).json({ error: "Failed to send notification" });
     }
   });
 
