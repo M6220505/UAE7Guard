@@ -7,6 +7,8 @@ import { ThreatSearch } from "@/components/threat-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/contexts/language-context";
+import { AnimatedStats } from "@/components/animated-stats";
+import { DemoWallets } from "@/components/demo-wallets";
 
 export default function Home() {
   const { t, language, isRTL } = useLanguage();
@@ -158,6 +160,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <AnimatedStats />
+
+        <DemoWallets />
 
         <section className="py-20 md:py-28">
           <div className="container mx-auto px-4">
