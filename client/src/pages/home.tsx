@@ -115,10 +115,14 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <Link href="/dashboard">
-              <Button data-testid="button-enter-platform">
-                {language === "en" ? "Enter Platform" : "ادخل البلاتفورم"}
-                <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
+            <Link href="/login">
+              <Button variant="ghost" data-testid="button-login">
+                {language === "en" ? "Login" : "تسجيل الدخول"}
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button data-testid="button-signup">
+                {language === "en" ? "Sign Up" : "إنشاء حساب"}
               </Button>
             </Link>
           </div>
