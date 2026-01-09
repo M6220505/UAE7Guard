@@ -1,6 +1,5 @@
-const CACHE_NAME = 'uae7guard-v2';
-const STATIC_CACHE = 'uae7guard-static-v2';
-const DYNAMIC_CACHE = 'uae7guard-dynamic-v2';
+const STATIC_CACHE = 'uae7guard-static-v3';
+const DYNAMIC_CACHE = 'uae7guard-dynamic-v3';
 
 const STATIC_ASSETS = [
   '/',
@@ -9,11 +8,6 @@ const STATIC_ASSETS = [
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/favicon.png'
-];
-
-const API_CACHE_URLS = [
-  '/api/stats',
-  '/api/leaderboard'
 ];
 
 self.addEventListener('install', (event) => {
@@ -47,8 +41,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  if (request.method !== 'GET') {
+    return;
+  }
+
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirstForAPI(request));
   } else {
     event.respondWith(cacheFirst(request));
   }
@@ -62,7 +60,7 @@ async function cacheFirst(request) {
   
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse.ok && request.method === 'GET') {
       const cache = await caches.open(STATIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
@@ -75,10 +73,10 @@ async function cacheFirst(request) {
   }
 }
 
-async function networkFirst(request) {
+async function networkFirstForAPI(request) {
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse.ok && request.method === 'GET') {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
@@ -88,7 +86,7 @@ async function networkFirst(request) {
     if (cachedResponse) {
       return cachedResponse;
     }
-    return new Response(JSON.stringify({ error: 'Offline' }), {
+    return new Response(JSON.stringify({ error: 'Offline', message: 'Please check your connection' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' }
     });

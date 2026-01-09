@@ -9,6 +9,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/contexts/language-context";
 import { AnimatedStats } from "@/components/animated-stats";
 import { DemoWallets } from "@/components/demo-wallets";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export default function Home() {
   const { t, language, isRTL } = useLanguage();
@@ -338,6 +339,8 @@ export default function Home() {
           </Link>
         </div>
       </footer>
+      
+      <InstallPrompt />
     </div>
   );
 }
