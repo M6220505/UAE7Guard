@@ -70,10 +70,11 @@ export function AnimatedStats() {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  const { data: stats } = useQuery<{
+  const { data: stats, isLoading } = useQuery<{
     totalReports: number;
     verifiedThreats: number;
-    activeInvestigators: number;
+    pendingReports: number;
+    activeUsers: number;
     walletsScanned: number;
   }>({
     queryKey: ["/api/stats"],
@@ -98,21 +99,21 @@ export function AnimatedStats() {
 
   const statItems: StatItem[] = [
     {
-      value: stats?.walletsScanned || 12847,
+      value: stats?.walletsScanned ?? 0,
       label: "Addresses Scanned",
       labelAr: "عنوان تم فحصه",
       icon: Shield,
       color: "bg-blue-500",
     },
     {
-      value: stats?.verifiedThreats || 1542,
+      value: stats?.verifiedThreats ?? 0,
       label: "Threats Detected",
       labelAr: "تهديد مكتشف",
       icon: AlertTriangle,
       color: "bg-red-500",
     },
     {
-      value: stats?.totalReports || 2891,
+      value: stats?.totalReports ?? 0,
       label: "Reports Submitted",
       labelAr: "بلاغ مقدم",
       icon: CheckCircle,
