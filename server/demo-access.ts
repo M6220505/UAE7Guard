@@ -16,10 +16,15 @@ export async function getDemoUserId(): Promise<string> {
     return demoUser.id;
   }
 
+  const demoPassword = process.env.DEMO_USER_PASSWORD;
+  if (!demoPassword) {
+    throw new Error("DEMO_USER_PASSWORD environment variable is required");
+  }
+  
   const newUser = await storage.createUser({
     username: DEMO_USERNAME,
     email: "demo@uae7guard.com",
-    password: "demo-password-secure"
+    password: demoPassword
   });
   
   cachedDemoUserId = newUser.id;
