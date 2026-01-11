@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation, Redirect } from "wouter";
+import { Switch, Route, useLocation, Redirect, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -119,6 +119,53 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { language } = useLanguage();
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center p-4">
+        <div className="text-center max-w-md space-y-4">
+          <h2 className="text-2xl font-bold">
+            {language === "en" ? "Login Required" : "تسجيل الدخول مطلوب"}
+          </h2>
+          <p className="text-muted-foreground">
+            {language === "en" 
+              ? "You need to login to access this feature. Please login or create an account to continue."
+              : "يجب عليك تسجيل الدخول للوصول إلى هذه الميزة. يرجى تسجيل الدخول أو إنشاء حساب للمتابعة."}
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Link href="/login">
+              <Button data-testid="button-login-required">
+                {language === "en" ? "Login" : "تسجيل الدخول"}
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button variant="outline" data-testid="button-signup-required">
+                {language === "en" ? "Create Account" : "إنشاء حساب"}
+              </Button>
+            </Link>
+          </div>
+          <Link href="/" className="block text-sm text-muted-foreground hover:text-foreground">
+            {language === "en" ? "← Back to Home" : "→ العودة للرئيسية"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+}
+
 function SidebarLayout({ children }: { children: React.ReactNode }) {
   const { isRTL } = useLanguage();
   
@@ -186,17 +233,19 @@ function Router() {
   
   if (sidebarPages.some(page => location.startsWith(page))) {
     return (
-      <SidebarLayout>
-        <Switch>
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/leaderboard" component={Leaderboard} />
-          <Route path="/api-docs" component={ApiDocs} />
-          <Route path="/verification" component={Verification} />
-          <Route path="/protection" component={Protection} />
-          <Route path="/reports-analytics" component={ReportsAnalytics} />
-        </Switch>
-      </SidebarLayout>
+      <RequireAuth>
+        <SidebarLayout>
+          <Switch>
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/leaderboard" component={Leaderboard} />
+            <Route path="/api-docs" component={ApiDocs} />
+            <Route path="/verification" component={Verification} />
+            <Route path="/protection" component={Protection} />
+            <Route path="/reports-analytics" component={ReportsAnalytics} />
+          </Switch>
+        </SidebarLayout>
+      </RequireAuth>
     );
   }
 

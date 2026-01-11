@@ -1,8 +1,10 @@
-import { Link } from "wouter";
-import { Shield, Lock, Eye, CheckCircle, FileCheck, ChevronRight, Zap, BookOpen, HelpCircle, Mail, Users } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Shield, Lock, Eye, CheckCircle, FileCheck, ChevronRight, Zap, BookOpen, HelpCircle, Mail, Users, Home as HomeIcon, FileText, LogIn, UserPlus, LayoutDashboard, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThreatSearch } from "@/components/threat-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -10,9 +12,23 @@ import { useLanguage } from "@/contexts/language-context";
 import { AnimatedStats } from "@/components/animated-stats";
 import { DemoWallets } from "@/components/demo-wallets";
 import { InstallPrompt } from "@/components/install-prompt";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Home() {
   const { t, language, isRTL } = useLanguage();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const [location] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const sidebarItems = [
+    { href: "/", label: language === "en" ? "Home" : "الرئيسية", icon: HomeIcon },
+    { href: "/about", label: t.aboutUs, icon: Shield },
+    { href: "/learning-center", label: t.learningCenter, icon: BookOpen },
+    { href: "/faq", label: t.faq, icon: HelpCircle },
+    { href: "/contact", label: t.contactUs, icon: Mail },
+    { href: "/privacy", label: t.privacy, icon: FileText },
+    { href: "/terms", label: t.terms, icon: FileText },
+  ];
 
   const scrollToCheckTool = () => {
     const input = document.getElementById('wallet-address-input');
@@ -94,40 +110,157 @@ export default function Home() {
   ];
 
   return (
-    <div className={`min-h-screen bg-background ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-          <div className="flex items-center gap-2">
-            <Shield className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight">UAE7Guard</span>
-          </div>
-          <nav className="hidden items-center gap-6 md:flex">
-            {navItems.map((item) => (
-              <Link 
-                key={item.href}
-                href={item.href} 
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <ThemeToggle />
-            <Link href="/login">
-              <Button variant="ghost" data-testid="button-login">
-                {language === "en" ? "Login" : "تسجيل الدخول"}
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button data-testid="button-signup">
-                {language === "en" ? "Sign Up" : "إنشاء حساب"}
-              </Button>
-            </Link>
-          </div>
+    <div className={`min-h-screen bg-background flex ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+      <aside className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} z-40 h-screen w-64 border-r bg-background hidden md:block`}>
+        <div className="flex h-16 items-center gap-2 border-b px-4">
+          <Shield className="h-8 w-8 text-primary" />
+          <span className="text-xl font-bold tracking-tight">UAE7Guard</span>
         </div>
-      </header>
+        <nav className="flex flex-col gap-1 p-4">
+          {sidebarItems.map((item) => {
+            const isActive = location === item.href;
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={`w-full justify-start gap-3 ${isActive ? "bg-primary/10" : ""}`}
+                  data-testid={`sidebar-${item.href.replace("/", "") || "home"}`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="absolute bottom-0 left-0 right-0 border-t p-4">
+          {isAuthenticated ? (
+            <div className="space-y-2">
+              <Link href="/dashboard">
+                <Button className="w-full gap-2" data-testid="button-go-to-platform">
+                  <LayoutDashboard className="h-4 w-4" />
+                  {language === "en" ? "Go to Platform" : "الذهاب للمنصة"}
+                </Button>
+              </Link>
+              <Button variant="outline" className="w-full" onClick={() => logout()} data-testid="button-logout">
+                {language === "en" ? "Logout" : "تسجيل الخروج"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Link href="/login">
+                <Button variant="outline" className="w-full gap-2" data-testid="sidebar-button-login">
+                  <LogIn className="h-4 w-4" />
+                  {language === "en" ? "Login" : "تسجيل الدخول"}
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button className="w-full gap-2" data-testid="sidebar-button-signup">
+                  <UserPlus className="h-4 w-4" />
+                  {language === "en" ? "Sign Up" : "إنشاء حساب"}
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <div className={`flex-1 ${isRTL ? "mr-0 md:mr-64" : "ml-0 md:ml-64"}`}>
+        <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+          <div className="flex h-16 items-center justify-between gap-4 px-4">
+            <div className="flex items-center gap-2">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild className="md:hidden">
+                  <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side={isRTL ? "right" : "left"} className="w-72">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Shield className="h-8 w-8 text-primary" />
+                    <span className="text-xl font-bold tracking-tight">UAE7Guard</span>
+                  </div>
+                  <nav className="flex flex-col gap-1">
+                    {sidebarItems.map((item) => {
+                      const isActive = location === item.href;
+                      return (
+                        <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
+                          <Button
+                            variant={isActive ? "secondary" : "ghost"}
+                            className={`w-full justify-start gap-3 ${isActive ? "bg-primary/10" : ""}`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            {item.label}
+                          </Button>
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                  <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                    {isAuthenticated ? (
+                      <>
+                        <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                          <Button className="w-full gap-2">
+                            <LayoutDashboard className="h-4 w-4" />
+                            {language === "en" ? "Go to Platform" : "الذهاب للمنصة"}
+                          </Button>
+                        </Link>
+                        <Button variant="outline" className="w-full" onClick={() => { logout(); setMobileMenuOpen(false); }}>
+                          {language === "en" ? "Logout" : "تسجيل الخروج"}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full gap-2">
+                            <LogIn className="h-4 w-4" />
+                            {language === "en" ? "Login" : "تسجيل الدخول"}
+                          </Button>
+                        </Link>
+                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                          <Button className="w-full gap-2">
+                            <UserPlus className="h-4 w-4" />
+                            {language === "en" ? "Sign Up" : "إنشاء حساب"}
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <div className="flex items-center gap-2 md:hidden">
+                <Shield className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold tracking-tight">UAE7Guard</span>
+              </div>
+            </div>
+            <div className="hidden md:block" />
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <ThemeToggle />
+              {isAuthenticated ? (
+                <Link href="/dashboard">
+                  <Button data-testid="button-enter-platform">
+                    {language === "en" ? "Platform" : "المنصة"}
+                    <ChevronRight className={`h-4 w-4 ${isRTL ? "mr-1 rotate-180" : "ml-1"}`} />
+                  </Button>
+                </Link>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
+                  <Link href="/login">
+                    <Button variant="ghost" data-testid="button-login">
+                      {language === "en" ? "Login" : "تسجيل الدخول"}
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button data-testid="button-signup">
+                      {language === "en" ? "Sign Up" : "إنشاء حساب"}
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
 
       <main>
         <section id="check-tool" className="relative overflow-hidden border-b bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-32">
@@ -345,6 +478,7 @@ export default function Home() {
       </footer>
       
       <InstallPrompt />
+      </div>
     </div>
   );
 }
