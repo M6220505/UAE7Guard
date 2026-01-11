@@ -176,7 +176,26 @@ Located at `client/src/components/language-toggle.tsx`:
 - Icons and chevrons rotate appropriately for RTL
 - Text alignment adjusts automatically
 
+## Navigation Architecture
+
+### Home Page (Public)
+- **Desktop**: Left sidebar with navigation links (About, Learning Center, FAQ, Contact, Privacy, Terms)
+- **Mobile**: Hamburger menu with Sheet (drawer) component containing same navigation
+- **Header**: Language toggle, theme toggle, Login/Sign Up buttons (or Platform button if authenticated)
+
+### Platform Pages (Authenticated)
+- Uses shadcn AppSidebar component for consistent navigation
+- Protected by RequireAuth component in App.tsx
+- Unauthenticated users shown login prompt with links to Login/Signup pages
+- Dashboard, Verification, Protection, Reports-Analytics require authentication
+
 ## Recent Changes
+- Added left sidebar navigation to home page for public pages (desktop)
+- Added mobile navigation drawer using Sheet component
+- Implemented RequireAuth component to protect platform features
+- Login required for: Dashboard, Verification, Protection, Reports-Analytics, Leaderboard, API Docs, Admin
+- Guests can read: Home, About, Learning Center, FAQ, Contact, Privacy, Terms
+- Fixed encryption security (GCM auth tag length enforcement)
 - Transformed from enterprise platform to public tool
 - Added bilingual Arabic/English support with RTL handling
 - Created language context and toggle component
@@ -185,5 +204,4 @@ Located at `client/src/components/language-toggle.tsx`:
 - Updated Privacy and Terms pages with bilingual content
 - Added color-coded result system (green/yellow/red) with accessibility improvements
 - Added ARIA labels to threat search results for screen readers
-- Removed enterprise features from public navigation (Dashboard, Reports, Leaderboard)
 - Added educational disclaimers emphasizing tool is not financial/legal advice
