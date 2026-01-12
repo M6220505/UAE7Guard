@@ -189,12 +189,47 @@ Located at `client/src/components/language-toggle.tsx`:
 - Unauthenticated users shown login prompt with links to Login/Signup pages
 - Dashboard, Verification, Protection, Reports-Analytics require authentication
 
+## Subscription System
+
+### Tiers
+- **Free**: 3 wallet checks/day, basic threat access, community reports viewing
+- **Basic ($4.99/month)**: Unlimited checks, 10 watchlist addresses, email alerts, detailed reports
+- **Pro ($14.99/month)**: Unlimited watchlist, AI predictions, API access, priority support, real-time monitoring
+
+### Stripe Integration
+- **Library**: stripe-replit-sync for managed webhooks and database sync
+- **Key Files**: 
+  - `server/stripeClient.ts` - Stripe SDK initialization
+  - `server/stripeService.ts` - Business logic for subscriptions
+  - `server/webhookHandlers.ts` - Webhook event processing
+  - `server/seed-products.ts` - Script to create Stripe products
+
+### Stripe Endpoints
+- `GET /api/stripe/config` - Get publishable key
+- `GET /api/stripe/products` - List products with prices
+- `GET /api/stripe/subscription` - Get user subscription status (auth required)
+- `POST /api/stripe/checkout` - Create checkout session (auth required)
+- `POST /api/stripe/portal` - Create customer portal session (auth required)
+- `POST /api/stripe/webhook` - Webhook handler (raw body required)
+
+### Frontend Components
+- `/pricing` - Pricing page with tier comparison and checkout
+- `useSubscription` hook (`client/src/hooks/use-subscription.ts`) - Check user tier and limits
+- `FeatureGate` component (`client/src/components/feature-gate.tsx`) - Lock features by tier
+
 ## Recent Changes
+- Integrated Stripe for subscription-based monetization with three tiers
+- Created pricing page with monthly/yearly billing toggle
+- Added subscription fields to users table (stripeCustomerId, subscriptionTier, subscriptionStatus)
+- Implemented webhook handlers for subscription lifecycle events
+- Added useSubscription hook for feature gating
+- Created FeatureGate component for premium feature locking
+- Added pricing link to home page navigation
 - Added left sidebar navigation to home page for public pages (desktop)
 - Added mobile navigation drawer using Sheet component
 - Implemented RequireAuth component to protect platform features
 - Login required for: Dashboard, Verification, Protection, Reports-Analytics, Leaderboard, API Docs, Admin
-- Guests can read: Home, About, Learning Center, FAQ, Contact, Privacy, Terms
+- Guests can read: Home, About, Learning Center, FAQ, Contact, Privacy, Terms, Pricing
 - Fixed encryption security (GCM auth tag length enforcement)
 - Transformed from enterprise platform to public tool
 - Added bilingual Arabic/English support with RTL handling

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Shield, Lock, Eye, CheckCircle, FileCheck, ChevronRight, Zap, BookOpen, HelpCircle, Mail, Users, Home as HomeIcon, FileText, LogIn, UserPlus, LayoutDashboard, Menu } from "lucide-react";
+import { Shield, Lock, Eye, CheckCircle, FileCheck, ChevronRight, Zap, BookOpen, HelpCircle, Mail, Users, Home as HomeIcon, FileText, LogIn, UserPlus, LayoutDashboard, Menu, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ export default function Home() {
     { href: "/", label: language === "en" ? "Home" : "الرئيسية", icon: HomeIcon },
     { href: "/about", label: t.aboutUs, icon: Shield },
     { href: "/learning-center", label: t.learningCenter, icon: BookOpen },
+    { href: "/pricing", label: language === "en" ? "Pricing" : "الأسعار", icon: CreditCard },
     { href: "/faq", label: t.faq, icon: HelpCircle },
     { href: "/contact", label: t.contactUs, icon: Mail },
     { href: "/privacy", label: t.privacy, icon: FileText },
@@ -54,6 +55,7 @@ export default function Home() {
   const navItems = [
     { href: "/about", label: t.aboutUs },
     { href: "/learning-center", label: t.learningCenter },
+    { href: "/pricing", label: language === "en" ? "Pricing" : "الأسعار" },
     { href: "/faq", label: t.faq },
     { href: "/contact", label: t.contactUs },
     { href: "/dashboard", label: language === "en" ? "Platform" : "البلاتفورم" },

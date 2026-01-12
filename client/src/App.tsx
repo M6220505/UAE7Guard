@@ -31,6 +31,7 @@ import Signup from "@/pages/signup";
 import Verification from "@/pages/verification";
 import Protection from "@/pages/protection";
 import ReportsAnalytics from "@/pages/reports-analytics";
+import Pricing from "@/pages/pricing";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 
 const legacyRedirects: Record<string, string> = {
@@ -207,7 +208,7 @@ function Router() {
     return <Redirect to={legacyRedirects[location]} />;
   }
 
-  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup"];
+  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup", "/pricing"];
   
   if (simplePages.includes(location)) {
     return (
@@ -221,6 +222,7 @@ function Router() {
           <Route path="/terms" component={Terms} />
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
+          <Route path="/pricing" component={Pricing} />
         </Switch>
       </SimpleLayout>
     );

@@ -1406,6 +1406,10 @@ Return ONLY valid JSON with this structure:
   });
 
   // Create checkout session
+  const checkoutSchema = z.object({
+    priceId: z.string().min(1).regex(/^price_[a-zA-Z0-9]+$/, "Invalid Stripe price ID format"),
+  });
+
   app.post("/api/stripe/checkout", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -1413,10 +1417,14 @@ Return ONLY valid JSON with this structure:
         return res.status(401).json({ error: "User not authenticated" });
       }
 
-      const { priceId } = req.body;
-      if (!priceId) {
-        return res.status(400).json({ error: "Price ID is required" });
+      const parseResult = checkoutSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid request", 
+          details: parseResult.error.errors.map(e => e.message) 
+        });
       }
+      const { priceId } = parseResult.data;
 
       const user = await storage.getUser(userId);
       if (!user) {
