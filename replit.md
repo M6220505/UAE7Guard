@@ -219,12 +219,14 @@ Located at `client/src/components/language-toggle.tsx`:
 
 ## Recent Changes
 - Integrated Stripe for subscription-based monetization with three tiers
-- Created pricing page with monthly/yearly billing toggle
+- Created pricing page with monthly/yearly billing toggle and dynamic pricing from Stripe API
 - Added subscription fields to users table (stripeCustomerId, subscriptionTier, subscriptionStatus)
 - Implemented webhook handlers for subscription lifecycle events
 - Added useSubscription hook for feature gating
 - Created FeatureGate component for premium feature locking
 - Added pricing link to home page navigation
+- Added Zod validation for Stripe checkout routes
+- Implemented dynamic price ID and amount fetching from /api/stripe/products endpoint
 - Added left sidebar navigation to home page for public pages (desktop)
 - Added mobile navigation drawer using Sheet component
 - Implemented RequireAuth component to protect platform features
