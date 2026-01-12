@@ -25,14 +25,14 @@ workflows:
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npm run build
-      - name: Sync Capacitor
+      - name: Copy Capacitor assets
         script: |
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
-          npx cap sync ios
+          npx cap copy ios
       - name: Install CocoaPods
         script: |
-          cd ios/App && pod install
+          cd ios/App && pod repo update && pod install
       - name: Build iOS App
         script: |
           cd ios/App
