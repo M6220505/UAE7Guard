@@ -14,6 +14,9 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
+// Subscription tier types
+export type SubscriptionTier = "free" | "basic" | "pro";
+
 // Users table (merged with Replit Auth fields)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -24,6 +27,10 @@ export const users = pgTable("users", {
   lastName: text("last_name"),
   profileImageUrl: text("profile_image_url"),
   role: text("role").default("user").notNull(), // user, admin, investigator
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionTier: text("subscription_tier").default("free").notNull(), // free, basic, pro
+  subscriptionStatus: text("subscription_status").default("inactive"), // active, inactive, past_due, canceled
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
