@@ -7,7 +7,8 @@ android {
         applicationId "com.uae7guard.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        // Use versionCode from command line if provided, otherwise default to 1
+        versionCode project.hasProperty('versionCode') ? project.property('versionCode').toInteger() : 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

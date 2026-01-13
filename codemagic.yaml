@@ -1,6 +1,109 @@
 workflows:
-  ios-workflow:
-    name: iOS Build
+  # iOS App Store Release Build
+  ios-release:
+    name: iOS App Store Release
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.uae7guard.app
+      vars:
+        NODE_VERSION: "20"
+        BUNDLE_ID: "com.uae7guard.app"
+        # Set these in Codemagic Team settings > Environment variables:
+        # APPLE_TEAM_ID - Your Apple Developer Team ID
+        # APP_STORE_APPLE_ID - Your app's Apple ID (from App Store Connect)
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Setup Node.js
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          node --version
+      - name: Install npm dependencies
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm install
+      - name: Build web assets
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm run build
+      - name: Copy Capacitor assets
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npx cap copy ios
+      - name: Install CocoaPods
+        script: |
+          cd ios/App && pod repo update && pod install
+      - name: Set up code signing
+        script: |
+          # Fetches provisioning profiles and certificates from App Store Connect integration
+          xcode-project use-profiles
+      - name: Increment build number
+        script: |
+          cd ios/App
+          # APP_STORE_APPLE_ID must be set in Codemagic environment variables
+          if [ -n "$APP_STORE_APPLE_ID" ]; then
+            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          else
+            LATEST_BUILD_NUMBER=0
+          fi
+          agvtool new-version -all $((LATEST_BUILD_NUMBER + 1))
+      - name: Build iOS App
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            -destination "generic/platform=iOS"
+      - name: Create export options plist
+        script: |
+          # Create export options for App Store distribution
+          cat > ios/App/exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>${APPLE_TEAM_ID}</string>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+      - name: Export IPA
+        script: |
+          cd ios/App
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist exportOptions.plist
+    artifacts:
+      - ios/App/build/export/*.ipa
+      - ios/App/build/**/*.xcarchive
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+  # iOS Development Build (no signing)
+  ios-dev:
+    name: iOS Development Build
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
@@ -47,8 +150,62 @@ workflows:
     artifacts:
       - ios/App/build/**/*.xcarchive
 
-  android-workflow:
-    name: Android Build
+  # Android Play Store Release Build
+  android-release:
+    name: Android Play Store Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - uae7guard_keystore
+      groups:
+        - google_play_credentials
+      vars:
+        NODE_VERSION: "20"
+        PACKAGE_NAME: "com.uae7guard.app"
+      java: 17
+    scripts:
+      - name: Setup Node.js
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          node --version
+      - name: Install npm dependencies
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm install
+      - name: Build web assets
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm run build
+      - name: Copy Capacitor assets
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npx cap copy android
+      - name: Build Android Bundle (AAB)
+        script: |
+          # Get latest version from Play Store and increment
+          LATEST_BUILD=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks internal || echo 0)
+          NEW_VERSION_CODE=$((LATEST_BUILD + 1))
+          echo "Building with version code: $NEW_VERSION_CODE"
+          cd android
+          ./gradlew bundleRelease -PversionCode=$NEW_VERSION_CODE
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  # Android Development Build (no signing)
+  android-dev:
+    name: Android Development Build
     max_build_duration: 60
     instance_type: linux_x2
     environment:
@@ -72,16 +229,16 @@ workflows:
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npm run build
-      - name: Sync Capacitor
+      - name: Copy Capacitor assets
         script: |
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
-          npx cap sync android
-      - name: Build Android APK
+          npx cap copy android
+      - name: Build Android APK (Debug)
         script: |
           cd android
           ./gradlew assembleDebug
-      - name: Build Android Bundle (AAB)
+      - name: Build Android Bundle (Release unsigned)
         script: |
           cd android
           ./gradlew bundleRelease
