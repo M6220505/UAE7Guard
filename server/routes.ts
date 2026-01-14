@@ -4,11 +4,12 @@ import { storage } from "./storage";
 import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
-import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured, getHybridWalletSnapshot } from "./alchemy";
+import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured, getHybridWalletSnapshot, getUnifiedWalletData, SUPPORTED_NETWORKS, validateAddress } from "./alchemy";
 import { hybridVerificationInputSchema, type HybridVerificationResult, type OnChainFacts, type AIInsight } from "@shared/schema";
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
-import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput } from "./sovereign-report";
+import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput, type SovereignReport } from "./sovereign-report";
+import { generatePDFReport } from "./pdf-generator";
 import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
 import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotificationEmail } from "./email";
 import { getUserIdForRequest } from "./demo-access";
@@ -28,6 +29,57 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
   
+  // ===== SUPPORTED NETWORKS =====
+  app.get("/api/networks", (_req, res) => {
+    res.json({
+      success: true,
+      networks: SUPPORTED_NETWORKS,
+    });
+  });
+
+  // ===== MULTI-CHAIN WALLET DATA =====
+  app.get("/api/wallet/:network/:address", async (req, res) => {
+    try {
+      const { network, address } = req.params;
+      
+      const networkInfo = SUPPORTED_NETWORKS.find(n => n.id === network);
+      if (!networkInfo) {
+        return res.status(400).json({ 
+          error: "Unsupported network",
+          supportedNetworks: SUPPORTED_NETWORKS.map(n => n.id)
+        });
+      }
+
+      if (!validateAddress(address, network)) {
+        return res.status(400).json({ 
+          error: "Invalid address format for " + networkInfo.name
+        });
+      }
+
+      const walletData = await getUnifiedWalletData(address, network);
+      
+      const reports = await storage.getReportsByAddress(address);
+      const verifiedReports = reports.filter(r => r.status === 'verified');
+      const pendingReports = reports.filter(r => r.status === 'pending');
+
+      const isCrossChain = network !== 'ethereum' && reports.length === 0;
+
+      res.json({
+        success: true,
+        wallet: walletData,
+        threats: {
+          total: reports.length,
+          verified: verifiedReports.length,
+          pending: pendingReports.length,
+          notice: isCrossChain ? "Threat database currently indexes Ethereum addresses. Cross-chain threat mapping is limited." : undefined,
+        },
+      });
+    } catch (error) {
+      console.error("Multi-chain wallet error:", error);
+      res.status(500).json({ error: "Failed to fetch wallet data" });
+    }
+  });
+
   // ===== THREAT LOOKUP =====
   app.get("/api/threats/:address", async (req, res) => {
     try {
@@ -1094,6 +1146,110 @@ Provide:
       res.status(500).json({ 
         error: "Failed to generate sovereign report"
       });
+    }
+  });
+
+  // ===== PDF EXPORT (Rate Limited) =====
+  const pdfRateLimits = new Map<string, { count: number; resetAt: number }>();
+  const PDF_RATE_LIMIT = 10;
+  const PDF_RATE_WINDOW = 60 * 60 * 1000;
+
+  app.post("/api/reports/pdf", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required for PDF export" });
+      }
+
+      const userLimit = pdfRateLimits.get(userId);
+      const now = Date.now();
+      
+      if (userLimit && now < userLimit.resetAt) {
+        if (userLimit.count >= PDF_RATE_LIMIT) {
+          console.log(`PDF rate limit exceeded for user ${userId}`);
+          return res.status(429).json({ 
+            error: "Rate limit exceeded",
+            message: "Maximum 10 PDF exports per hour"
+          });
+        }
+        userLimit.count++;
+      } else {
+        pdfRateLimits.set(userId, { count: 1, resetAt: now + PDF_RATE_WINDOW });
+      }
+
+      const reportSchema = z.object({
+        report: z.object({
+          reportId: z.string(),
+          generatedAt: z.string(),
+          expiresAt: z.string(),
+          verification: z.object({
+            alchemyNode: z.string(),
+            alchemyNetwork: z.string(),
+            aiModel: z.string(),
+            encryptionStandard: z.string(),
+            hashAlgorithm: z.string(),
+          }),
+          subject: z.object({
+            walletAddress: z.string(),
+            transactionValueAED: z.number(),
+            network: z.string(),
+          }),
+          blockchainIntelligence: z.object({
+            balance: z.string(),
+            transactionCount: z.number(),
+            isSmartContract: z.boolean(),
+            dataSource: z.string(),
+          }),
+          riskAssessment: z.object({
+            riskScore: z.number(),
+            riskLevel: z.string(),
+            formula: z.string(),
+            components: z.object({
+              historyScore: z.number(),
+              associationScore: z.number(),
+              walletAgeFactor: z.number(),
+            }),
+          }),
+          aiIntelligence: z.object({
+            analysis: z.string(),
+            recommendation: z.string(),
+            riskFactors: z.array(z.string()),
+            modelUsed: z.string(),
+          }).optional(),
+          threatDatabase: z.object({
+            verifiedThreats: z.number(),
+            database: z.string(),
+            lastUpdated: z.string(),
+          }),
+          legalDisclaimer: z.object({
+            en: z.string(),
+          }),
+          auditTrail: z.object({
+            transactionHash: z.string(),
+            dataHash: z.string(),
+            encryptedAt: z.string(),
+            storageLocation: z.string(),
+          }),
+        }),
+      });
+
+      const { report } = reportSchema.parse(req.body);
+      
+      const pdfBuffer = await generatePDFReport(report as SovereignReport);
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="UAE7Guard-${report.reportId}.pdf"`);
+      res.setHeader("Content-Length", pdfBuffer.length);
+      res.send(pdfBuffer);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid report data",
+          details: error.errors 
+        });
+      }
+      console.error("PDF generation error:", error);
+      res.status(500).json({ error: "Failed to generate PDF report" });
     }
   });
 

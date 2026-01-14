@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, Shield, AlertTriangle, Search, FileText, Lock } from "lucide-react";
+import { Code, Shield, AlertTriangle, Search, FileText, Lock, Globe } from "lucide-react";
 
 interface Endpoint {
   method: "GET" | "POST" | "PUT" | "DELETE";
@@ -13,6 +13,49 @@ interface Endpoint {
 }
 
 const endpoints: Record<string, Endpoint[]> = {
+  networks: [
+    {
+      method: "GET",
+      path: "/api/networks",
+      description: "Get list of supported blockchain networks",
+      auth: false,
+      response: {
+        success: true,
+        networks: [
+          { id: "ethereum", name: "Ethereum", symbol: "ETH", type: "evm" },
+          { id: "bitcoin", name: "Bitcoin", symbol: "BTC", type: "utxo" },
+          { id: "polygon", name: "Polygon", symbol: "MATIC", type: "evm" },
+          { id: "bsc", name: "BNB Smart Chain", symbol: "BNB", type: "evm" }
+        ]
+      }
+    },
+    {
+      method: "GET",
+      path: "/api/wallet/:network/:address",
+      description: "Get unified wallet data across any supported network (Bitcoin, Ethereum, BSC, Polygon, etc.)",
+      auth: false,
+      response: {
+        success: true,
+        wallet: {
+          address: "0x... or bc1...",
+          network: "ethereum | bitcoin | polygon | bsc",
+          networkType: "evm | utxo",
+          isValid: true,
+          balance: "1000000000000000000",
+          balanceFormatted: "1.0 ETH",
+          symbol: "ETH",
+          transactionCount: 150,
+          walletAgeDays: 365,
+          isContract: false
+        },
+        threats: {
+          total: 0,
+          verified: 0,
+          pending: 0
+        }
+      }
+    }
+  ],
   threats: [
     {
       method: "GET",
@@ -143,6 +186,24 @@ const endpoints: Record<string, Endpoint[]> = {
       path: "/api/audit/logs",
       description: "Get all audit logs (encrypted metadata only)",
       auth: true,
+    },
+    {
+      method: "POST",
+      path: "/api/reports/pdf",
+      description: "Generate PDF report from sovereign verification report data",
+      auth: true,
+      request: {
+        report: {
+          reportId: "SVR-...",
+          generatedAt: "2024-01-01T00:00:00Z",
+          expiresAt: "2024-02-01T00:00:00Z",
+          subject: { walletAddress: "0x...", transactionValueAED: 500000 },
+          riskAssessment: { riskScore: 25, riskLevel: "low" }
+        }
+      },
+      response: {
+        description: "Returns PDF binary file with Content-Type: application/pdf"
+      }
     }
   ]
 };
@@ -205,6 +266,7 @@ function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
 
 export default function ApiDocs() {
   const categories = [
+    { key: "networks", label: "Multi-Chain", icon: Globe },
     { key: "threats", label: "Threat Lookup", icon: Search },
     { key: "reports", label: "Reports", icon: FileText },
     { key: "risk", label: "Risk Analysis", icon: AlertTriangle },

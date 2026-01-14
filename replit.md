@@ -244,6 +244,12 @@ RiskScore = (AgeRisk × 0.20) + (ActivityRisk × 0.25) + (ValueRisk × 0.20) + (
 `POST /api/risk/calculate` - Returns full breakdown with recommendation in English/Arabic
 
 ## Recent Changes
+- Added PDF export for verification reports using PDFKit
+- Implemented multi-chain support: Bitcoin, BSC, Polygon, Arbitrum, Base, Optimism
+- Created unified wallet data API endpoint `/api/wallet/:network/:address`
+- Added Bitcoin blockchain validation and transaction fetching
+- Updated API documentation with multi-chain endpoints
+- Enhanced live monitoring with 30-second auto-refresh
 - Implemented enhanced multi-factor risk scoring algorithm with transparent weights
 - Added 5-component breakdown: Age, Activity, Value, Pattern, Threat
 - Added bilingual recommendations (English/Arabic)

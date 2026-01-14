@@ -1,4 +1,5 @@
 import { Alchemy, Network, AssetTransfersCategory, SortingOrder } from "alchemy-sdk";
+import { getBitcoinAddressInfo, getBitcoinTransactions, calculateBitcoinWalletAge, type BitcoinAddressInfo } from "./bitcoin";
 
 const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 
@@ -48,7 +49,20 @@ const networkMap: Record<string, Network> = {
   arbitrum: Network.ARB_MAINNET,
   optimism: Network.OPT_MAINNET,
   base: Network.BASE_MAINNET,
+  bsc: Network.BNB_MAINNET,
 };
+
+export const SUPPORTED_NETWORKS = [
+  { id: "ethereum", name: "Ethereum", symbol: "ETH", type: "evm" },
+  { id: "polygon", name: "Polygon", symbol: "MATIC", type: "evm" },
+  { id: "bsc", name: "BNB Smart Chain", symbol: "BNB", type: "evm" },
+  { id: "arbitrum", name: "Arbitrum", symbol: "ETH", type: "evm" },
+  { id: "optimism", name: "Optimism", symbol: "ETH", type: "evm" },
+  { id: "base", name: "Base", symbol: "ETH", type: "evm" },
+  { id: "bitcoin", name: "Bitcoin", symbol: "BTC", type: "utxo" },
+] as const;
+
+export type SupportedNetwork = typeof SUPPORTED_NETWORKS[number]["id"];
 
 export async function getWalletBalance(
   address: string,
@@ -229,4 +243,100 @@ export async function getHybridWalletSnapshot(
     network: networkName,
     firstTransactionBlock,
   };
+}
+
+export interface UnifiedWalletData {
+  address: string;
+  network: string;
+  networkType: "evm" | "utxo";
+  isValid: boolean;
+  balance: string;
+  balanceFormatted: string;
+  symbol: string;
+  transactionCount: number;
+  walletAgeDays: number;
+  isContract: boolean;
+  addressType?: string;
+  transactions: Array<{
+    hash: string;
+    from: string;
+    to: string | null;
+    value: string;
+  }>;
+}
+
+export async function getUnifiedWalletData(
+  address: string,
+  networkName: string = "ethereum"
+): Promise<UnifiedWalletData> {
+  const networkInfo = SUPPORTED_NETWORKS.find(n => n.id === networkName);
+  
+  if (!networkInfo) {
+    throw new Error(`Unsupported network: ${networkName}`);
+  }
+
+  if (networkName === "bitcoin") {
+    const btcInfo = await getBitcoinAddressInfo(address);
+    const btcTxs = await getBitcoinTransactions(address, 10);
+    const walletAge = calculateBitcoinWalletAge(btcInfo.firstSeen);
+
+    return {
+      address,
+      network: "bitcoin",
+      networkType: "utxo",
+      isValid: btcInfo.isValid,
+      balance: btcInfo.balance,
+      balanceFormatted: btcInfo.balanceInBtc + " BTC",
+      symbol: "BTC",
+      transactionCount: btcInfo.transactionCount,
+      walletAgeDays: walletAge,
+      isContract: false,
+      addressType: btcInfo.addressType,
+      transactions: btcTxs.map(tx => ({
+        hash: tx.hash,
+        from: tx.from[0] || "",
+        to: tx.to[0] || null,
+        value: tx.value,
+      })),
+    };
+  }
+
+  if (!isAlchemyConfigured()) {
+    throw new Error("ALCHEMY_API_KEY is required for EVM networks");
+  }
+
+  const snapshot = await getHybridWalletSnapshot(address, networkName);
+
+  return {
+    address,
+    network: networkName,
+    networkType: "evm",
+    isValid: true,
+    balance: snapshot.balance.balance,
+    balanceFormatted: snapshot.balance.balanceInEth + " " + networkInfo.symbol,
+    symbol: networkInfo.symbol,
+    transactionCount: snapshot.transactionCount,
+    walletAgeDays: snapshot.walletAgeDays,
+    isContract: snapshot.isContract,
+    transactions: snapshot.transactions.map(tx => ({
+      hash: tx.hash,
+      from: tx.from,
+      to: tx.to,
+      value: tx.value,
+    })),
+  };
+}
+
+export function validateAddress(address: string, network: string): boolean {
+  if (network === "bitcoin") {
+    if (address.startsWith("1") || address.startsWith("3")) {
+      return address.length >= 25 && address.length <= 34;
+    }
+    if (address.startsWith("bc1")) {
+      return address.length >= 42 && address.length <= 62;
+    }
+    return false;
+  }
+
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
 }

@@ -61,41 +61,26 @@ type AddWalletValues = z.infer<typeof addWalletSchema>;
 
 const networks = [
   { value: "ethereum", label: "Ethereum", color: "bg-blue-500" },
+  { value: "bitcoin", label: "Bitcoin", color: "bg-orange-500" },
   { value: "bsc", label: "BNB Chain", color: "bg-yellow-500" },
   { value: "polygon", label: "Polygon", color: "bg-purple-500" },
+  { value: "arbitrum", label: "Arbitrum", color: "bg-cyan-500" },
+  { value: "base", label: "Base", color: "bg-indigo-500" },
 ];
 
-const mockAlerts: MonitoringAlert[] = [
-  {
-    id: "1",
-    monitoringId: "m1",
-    alertType: "outgoing",
-    amount: "50,000 USDT",
-    toAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD12",
-    fromAddress: null,
-    txHash: "0xabc123...",
-    isRead: false,
-    createdAt: new Date(Date.now() - 300000),
-  },
-  {
-    id: "2",
-    monitoringId: "m1",
-    alertType: "large_transfer",
-    amount: "2,500,000 AED",
-    toAddress: "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
-    fromAddress: null,
-    txHash: "0xdef456...",
-    isRead: true,
-    createdAt: new Date(Date.now() - 3600000),
-  },
-];
 
 export default function LiveMonitoringPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
-  const { data: monitoredWallets, isLoading } = useQuery<LiveMonitoring[]>({
+  const { data: monitoredWallets, isLoading, refetch } = useQuery<LiveMonitoring[]>({
     queryKey: ["/api/live-monitoring"],
+    refetchInterval: 30000,
+  });
+
+  const { data: alerts } = useQuery<MonitoringAlert[]>({
+    queryKey: ["/api/alerts"],
+    refetchInterval: 30000,
   });
 
   const form = useForm<AddWalletValues>({
@@ -317,54 +302,76 @@ export default function LiveMonitoringPage() {
               <CardContent className="pt-4">
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-3">
-                    {mockAlerts.map((alert) => (
-                      <div
-                        key={alert.id}
-                        className={`p-3 rounded-lg border ${
-                          alert.isRead
-                            ? "bg-zinc-800/30 border-zinc-700"
-                            : "bg-red-500/10 border-red-500/30"
-                        }`}
-                        data-testid={`alert-item-${alert.id}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                            alert.alertType === "outgoing" ? "bg-red-500/20" : 
-                            alert.alertType === "incoming" ? "bg-green-500/20" : "bg-yellow-500/20"
-                          }`}>
-                            {alert.alertType === "outgoing" ? (
-                              <ArrowUpRight className="h-4 w-4 text-red-400" />
-                            ) : alert.alertType === "incoming" ? (
-                              <ArrowDownLeft className="h-4 w-4 text-green-400" />
-                            ) : (
-                              <AlertTriangle className="h-4 w-4 text-yellow-400" />
-                            )}
+                    {(!alerts || alerts.length === 0) ? (
+                      (!monitoredWallets || monitoredWallets.length === 0) ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4">
+                            <Bell className="h-8 w-8 text-zinc-600" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-sm font-medium ${
-                                alert.alertType === "outgoing" ? "text-red-400" :
-                                alert.alertType === "incoming" ? "text-green-400" : "text-yellow-400"
-                              }`}>
-                                {alert.alertType === "outgoing" ? "Outgoing Transfer" :
-                                 alert.alertType === "incoming" ? "Incoming Transfer" : "Large Transfer"}
-                              </span>
-                              {!alert.isRead && (
-                                <span className="h-2 w-2 rounded-full bg-red-500" />
+                          <p className="text-zinc-400 text-sm">No alerts yet</p>
+                          <p className="text-zinc-500 text-xs mt-1">Add wallets to start monitoring</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                            <CheckCircle className="h-8 w-8 text-emerald-500" />
+                          </div>
+                          <p className="text-emerald-400 text-sm">Monitoring active</p>
+                          <p className="text-zinc-500 text-xs mt-1">No suspicious activity detected</p>
+                          <p className="text-zinc-600 text-xs mt-2">Auto-refresh: 30 seconds</p>
+                        </div>
+                      )
+                    ) : (
+                      alerts.map((alert) => (
+                        <div
+                          key={alert.id}
+                          className={`p-3 rounded-lg border ${
+                            alert.isRead
+                              ? "bg-zinc-800/30 border-zinc-700"
+                              : "bg-red-500/10 border-red-500/30"
+                          }`}
+                          data-testid={`alert-item-${alert.id}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                              alert.alertType === "outgoing" ? "bg-red-500/20" : 
+                              alert.alertType === "incoming" ? "bg-green-500/20" : "bg-yellow-500/20"
+                            }`}>
+                              {alert.alertType === "outgoing" ? (
+                                <ArrowUpRight className="h-4 w-4 text-red-400" />
+                              ) : alert.alertType === "incoming" ? (
+                                <ArrowDownLeft className="h-4 w-4 text-green-400" />
+                              ) : (
+                                <AlertTriangle className="h-4 w-4 text-yellow-400" />
                               )}
                             </div>
-                            <p className="text-emerald-100 font-semibold">{alert.amount}</p>
-                            <p className="text-emerald-200/60 text-xs font-mono truncate">
-                              To: {alert.toAddress?.slice(0, 16)}...
-                            </p>
-                            <div className="flex items-center gap-1 mt-1 text-emerald-200/40 text-xs">
-                              <Clock className="h-3 w-3" />
-                              {formatTime(alert.createdAt)}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-medium ${
+                                  alert.alertType === "outgoing" ? "text-red-400" :
+                                  alert.alertType === "incoming" ? "text-green-400" : "text-yellow-400"
+                                }`}>
+                                  {alert.alertType === "outgoing" ? "Outgoing Transfer" :
+                                   alert.alertType === "incoming" ? "Incoming Transfer" : "Large Transfer"}
+                                </span>
+                                {!alert.isRead && (
+                                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                                )}
+                              </div>
+                              <p className="text-emerald-100 font-semibold">{alert.amount}</p>
+                              <p className="text-emerald-200/60 text-xs font-mono truncate">
+                                {alert.toAddress ? `To: ${alert.toAddress.slice(0, 16)}...` : 
+                                 alert.fromAddress ? `From: ${alert.fromAddress.slice(0, 16)}...` : ""}
+                              </p>
+                              <div className="flex items-center gap-1 mt-1 text-emerald-200/40 text-xs">
+                                <Clock className="h-3 w-3" />
+                                {formatTime(alert.createdAt)}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
