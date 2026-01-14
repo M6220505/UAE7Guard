@@ -152,6 +152,11 @@ export function ThreatSearch({ compact = false }: ThreatSearchProps) {
     );
   };
 
+  const disclaimerText = {
+    en: "Disclaimer: Information provided by UAE7Guard is based on community reports and experimental analytical tools. The platform does not provide financial advice and is not responsible for the accuracy of individual reports. Please always consult official UAE authorities before making any major financial decisions.",
+    ar: "إخلاء مسؤولية: المعلومات المقدمة عبر UAE7Guard هي نتاج بلاغات مجتمعية وأدوات تحليلية تجريبية. المنصة لا تقدم استشارات مالية ولا تتحمل مسؤولية دقة البلاغات الفردية. يرجى دائماً مراجعة الجهات الرسمية في الإمارات قبل اتخاذ أي قرار مالي ضخم."
+  };
+
   return (
     <div className={compact ? "space-y-4" : "space-y-6"}>
       <form onSubmit={handleSearch} className="flex gap-2">
@@ -173,6 +178,19 @@ export function ThreatSearch({ compact = false }: ThreatSearchProps) {
         </Button>
       </form>
       {renderResult()}
+      
+      {/* Legal Disclaimer - إخلاء المسؤولية */}
+      {isFetched && searchAddress && (
+        <div 
+          className="mt-4 p-3 rounded-md bg-muted/50 border border-border/50"
+          dir={isRTL ? "rtl" : "ltr"}
+          data-testid="disclaimer-notice"
+        >
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {disclaimerText[language]}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
