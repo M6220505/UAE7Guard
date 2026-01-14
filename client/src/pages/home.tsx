@@ -114,11 +114,14 @@ export default function Home() {
   return (
     <div className={`min-h-screen bg-background flex ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       <aside className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} z-40 h-screen w-64 border-r bg-background hidden md:block`}>
-        <div className="flex flex-col items-center gap-3 border-b px-4 py-5">
-          <div className="h-[72px] w-[72px] rounded-xl bg-gradient-to-br from-[#0B1220] to-[#0F1628] p-2 shadow-lg border border-cyan-500/20">
-            <img src="/logo.png" alt="UAE7Guard" className="h-full w-full object-contain" />
-          </div>
-          <span className="text-base font-bold tracking-tight">UAE7Guard</span>
+        <div className="flex items-center gap-3 border-b px-4 h-16">
+          <img 
+            src="/logo.png" 
+            alt="UAE7Guard" 
+            className="h-12 w-12 object-contain rounded-lg"
+            style={{ mixBlendMode: 'lighten' }}
+          />
+          <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
         </div>
         <nav className="flex flex-col gap-1 p-4">
           {sidebarItems.map((item) => {
@@ -180,11 +183,14 @@ export default function Home() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side={isRTL ? "right" : "left"} className="w-72">
-                  <div className="flex flex-col items-center gap-3 mb-6">
-                    <div className="h-[72px] w-[72px] rounded-xl bg-gradient-to-br from-[#0B1220] to-[#0F1628] p-2 shadow-lg border border-cyan-500/20">
-                      <img src="/logo.png" alt="UAE7Guard" className="h-full w-full object-contain" />
-                    </div>
-                    <span className="text-base font-bold tracking-tight">UAE7Guard</span>
+                  <div className="flex items-center gap-3 mb-6">
+                    <img 
+                      src="/logo.png" 
+                      alt="UAE7Guard" 
+                      className="h-12 w-12 object-contain rounded-lg"
+                      style={{ mixBlendMode: 'lighten' }}
+                    />
+                    <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
                   </div>
                   <nav className="flex flex-col gap-1">
                     {sidebarItems.map((item) => {
@@ -235,10 +241,13 @@ export default function Home() {
                 </SheetContent>
               </Sheet>
               <div className="flex items-center gap-3 md:hidden">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#0B1220] to-[#0F1628] p-1 border border-cyan-500/20 flex-shrink-0">
-                  <img src="/logo.png" alt="UAE7Guard" className="h-full w-full object-contain" />
-                </div>
-                <span className="text-base font-bold tracking-tight">UAE7Guard</span>
+                <img 
+                  src="/logo.png" 
+                  alt="UAE7Guard" 
+                  className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
+                  style={{ mixBlendMode: 'lighten' }}
+                />
+                <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
               </div>
             </div>
             <div className="hidden md:block" />
