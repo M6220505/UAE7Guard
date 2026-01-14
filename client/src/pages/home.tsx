@@ -114,11 +114,11 @@ export default function Home() {
   return (
     <div className={`min-h-screen bg-background flex ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       <aside className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} z-40 h-screen w-64 border-r bg-background hidden md:block`}>
-        <div className="flex items-center gap-3 border-b px-4 h-16">
+        <div className="flex items-center gap-4 border-b px-4 h-20">
           <img 
             src="/logo.png" 
             alt="UAE7Guard" 
-            className="h-12 w-12 object-contain rounded-lg"
+            className="h-16 w-16 object-contain rounded-xl"
             style={{ mixBlendMode: 'lighten' }}
           />
           <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
@@ -183,11 +183,11 @@ export default function Home() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side={isRTL ? "right" : "left"} className="w-72">
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-4 mb-6">
                     <img 
                       src="/logo.png" 
                       alt="UAE7Guard" 
-                      className="h-12 w-12 object-contain rounded-lg"
+                      className="h-16 w-16 object-contain rounded-xl"
                       style={{ mixBlendMode: 'lighten' }}
                     />
                     <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
@@ -244,7 +244,7 @@ export default function Home() {
                 <img 
                   src="/logo.png" 
                   alt="UAE7Guard" 
-                  className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
+                  className="h-12 w-12 object-contain rounded-lg flex-shrink-0"
                   style={{ mixBlendMode: 'lighten' }}
                 />
                 <span className="text-lg font-bold tracking-tight">UAE7Guard</span>

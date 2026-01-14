@@ -104,7 +104,7 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
             <img 
               src="/logo.png" 
               alt="UAE7Guard" 
-              className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
+              className="h-12 w-12 object-contain rounded-lg flex-shrink-0"
               style={{ mixBlendMode: 'lighten' }}
             />
             <span className="font-bold text-lg">UAE7Guard</span>

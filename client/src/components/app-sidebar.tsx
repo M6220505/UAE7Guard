@@ -77,7 +77,7 @@ export function AppSidebar() {
           <img 
             src="/logo.png" 
             alt="UAE7Guard" 
-            className="h-12 w-12 object-contain rounded-lg"
+            className="h-16 w-16 object-contain rounded-xl"
             style={{ mixBlendMode: 'lighten' }}
           />
           <div>
