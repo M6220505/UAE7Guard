@@ -100,9 +100,9 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
     <div className={`min-h-screen bg-background ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
-          <a href="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="UAE7Guard" className="h-10 w-10 object-contain" />
-            <span className="font-semibold">UAE7Guard</span>
+          <a href="/" className="flex items-center gap-4">
+            <img src="/logo.png" alt="UAE7Guard" className="h-12 w-12 object-contain" />
+            <span className="font-semibold text-lg">UAE7Guard</span>
           </a>
           <div className="flex items-center gap-2">
             <LanguageToggle />
