@@ -211,13 +211,27 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
 });
 
-export const insertScamReportSchema = createInsertSchema(scamReports).omit({
+const baseScamReportSchema = createInsertSchema(scamReports).omit({
   id: true,
   status: true,
   verifiedBy: true,
   verifiedAt: true,
   createdAt: true,
 });
+
+export const insertScamReportSchema = baseScamReportSchema.refine(
+  (data) => {
+    if (!data.amountLost) return true;
+    const amount = parseFloat(data.amountLost);
+    if (isNaN(amount)) return true;
+    if (amount > 100000) return false;
+    return true;
+  },
+  {
+    message: "Amount lost cannot exceed 100,000 units. For larger amounts, please contact support for manual review.",
+    path: ["amountLost"],
+  }
+);
 
 export const insertAlertSchema = createInsertSchema(alerts).omit({
   id: true,
