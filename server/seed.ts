@@ -175,10 +175,10 @@ export async function seedDatabase() {
       scamType: scam.type,
       description: `[${scam.network.toUpperCase()}] ${scam.description}. Amount lost: ${scam.amountLost.toLocaleString()} ${scam.currency}`,
       amountLost: scam.amountLost.toString(),
-      status: i < 12 ? "verified" : "pending",
+      status: "verified",
       severity: scam.amountLost > 1000000 ? "critical" : scam.amountLost > 100000 ? "high" : "medium",
-      verifiedBy: i < 12 ? reporter.id : null,
-      verifiedAt: i < 12 ? createdAt : null
+      verifiedBy: reporter.id,
+      verifiedAt: createdAt
     }).onConflictDoNothing();
   }
 
