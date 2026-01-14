@@ -72,11 +72,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-4 py-5">
-        <Link href="/" className="flex items-center gap-4">
-          <img src="/logo.png" alt="UAE7Guard" className="h-14 w-14 object-contain" />
-          <div>
-            <span className="text-xl font-bold tracking-tight">UAE7Guard</span>
+      <SidebarHeader className="border-b px-4 py-6">
+        <Link href="/" className="flex flex-col items-center gap-3">
+          <img src="/logo.png" alt="UAE7Guard" className="h-20 w-20 object-contain rounded-xl" />
+          <div className="text-center">
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">UAE7Guard</span>
             <p className="text-xs text-muted-foreground">Sovereign Intelligence</p>
           </div>
         </Link>
