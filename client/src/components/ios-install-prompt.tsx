@@ -31,8 +31,8 @@ export function IOSInstallPrompt() {
       <Card className="border-amber-500/30 bg-card/95 backdrop-blur-sm">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center border border-amber-500/30">
-              <span className="text-amber-500 font-bold text-lg">U7</span>
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center border border-primary/30 overflow-hidden">
+              <img src="/logo.png" alt="UAE7Guard" className="h-10 w-10 object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">

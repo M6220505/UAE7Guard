@@ -73,8 +73,8 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Shield className="h-7 w-7 text-primary" />
+        <Link href="/" className="flex items-center gap-3">
+          <img src="/logo.png" alt="UAE7Guard" className="h-10 w-10 object-contain" />
           <div>
             <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
             <p className="text-xs text-muted-foreground">Sovereign Intelligence</p>
