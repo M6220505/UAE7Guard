@@ -64,7 +64,7 @@ export default function HybridVerification() {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async (data: FormData & { simulationScenario?: string }) => {
+    mutationFn: async (data: FormData) => {
       const payload = {
         ...data,
         destinationWallet: data.destinationWallet || undefined,
@@ -89,17 +89,6 @@ export default function HybridVerification() {
       });
     },
   });
-
-  const runLayeringSimulation = () => {
-    verifyMutation.mutate({
-      walletAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f8dB77",
-      destinationWallet: "",
-      assetType: "digital_asset",
-      network: "ethereum",
-      transactionAmountAED: 5000000,
-      simulationScenario: "layering_high_value",
-    } as FormData & { simulationScenario: string });
-  };
 
   const onSubmit = (data: FormData) => {
     verifyMutation.mutate(data);
@@ -295,34 +284,6 @@ export default function HybridVerification() {
                 </form>
               </Form>
 
-              <Separator className="my-4 bg-zinc-700" />
-
-              <div className="space-y-3">
-                <p className="text-xs text-zinc-500 text-center">SIMULATION MODE</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-red-500/50 text-red-400"
-                  disabled={verifyMutation.isPending}
-                  onClick={runLayeringSimulation}
-                  data-testid="button-layering-simulation"
-                >
-                  {verifyMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Running Simulation...
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="mr-2 h-4 w-4" />
-                      Run Layering Risk Simulation (AED 5M)
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-zinc-600 text-center">
-                  Simulates 48-hour unverified exchange scenario
-                </p>
-              </div>
             </CardContent>
           </Card>
 
@@ -361,7 +322,7 @@ export default function HybridVerification() {
                         <div className="flex justify-between items-center">
                           <span className="text-zinc-400">Asset Type:</span>
                           <span className="text-zinc-200" data-testid="text-asset-type">
-                            {assetTypeLabels[verification.assetType]?.en || verification.assetType}
+                            {assetTypeLabels[verification.assetType]?.label || verification.assetType}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
