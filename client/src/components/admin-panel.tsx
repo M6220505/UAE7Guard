@@ -132,10 +132,10 @@ export function AdminPanel() {
                     {report.scammerAddress}
                   </div>
                   <div className="flex gap-2">
-                    <Badge size="sm" variant="outline">
+                    <Badge variant="outline">
                       {scamTypeLabels[report.scamType] || report.scamType}
                     </Badge>
-                    <Badge size="sm" className={sevConfig.color}>
+                    <Badge className={sevConfig.color}>
                       {report.severity}
                     </Badge>
                   </div>
