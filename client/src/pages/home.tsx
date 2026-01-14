@@ -13,6 +13,7 @@ import { AnimatedStats } from "@/components/animated-stats";
 import { DemoWallets } from "@/components/demo-wallets";
 import { InstallPrompt } from "@/components/install-prompt";
 import { useAuth } from "@/hooks/use-auth";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 export default function Home() {
   const { t, language, isRTL } = useLanguage();
@@ -498,6 +499,10 @@ export default function Home() {
       </footer>
       
       <InstallPrompt />
+      
+      <MobileBottomNav />
+      
+      <div className="h-20 md:hidden" />
       </div>
     </div>
   );

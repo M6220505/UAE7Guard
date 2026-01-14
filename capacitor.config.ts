@@ -13,8 +13,27 @@ const config: CapacitorConfig = {
       backgroundColor: "#0a0a0b",
       showSpinner: false,
       androidSpinnerStyle: "small",
-      spinnerColor: "#22c55e"
+      spinnerColor: "#22c55e",
+      launchAutoHide: true
+    },
+    Keyboard: {
+      resize: 'body',
+      style: 'dark',
+      resizeOnFullScreen: true
+    },
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#0a0a0b'
     }
+  },
+  ios: {
+    contentInset: 'automatic',
+    preferredContentMode: 'mobile'
+  },
+  android: {
+    backgroundColor: '#0a0a0b',
+    allowMixedContent: false,
+    minWebViewVersion: 60
   }
 };
 

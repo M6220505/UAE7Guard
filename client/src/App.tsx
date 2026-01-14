@@ -33,6 +33,7 @@ import Protection from "@/pages/protection";
 import ReportsAnalytics from "@/pages/reports-analytics";
 import Pricing from "@/pages/pricing";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 const legacyRedirects: Record<string, string> = {
   "/due-diligence": "/verification?tab=due-diligence",
@@ -108,7 +109,7 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
                 className="h-full w-full object-cover"
               />
             </div>
-            <span className="font-bold text-lg">UAE7Guard</span>
+            <span className="font-bold text-lg hidden sm:inline">UAE7Guard</span>
           </a>
           <div className="flex items-center gap-2">
             <LanguageToggle />
@@ -117,9 +118,10 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         {children}
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

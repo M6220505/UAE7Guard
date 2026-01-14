@@ -244,6 +244,13 @@ RiskScore = (AgeRisk × 0.20) + (ActivityRisk × 0.25) + (ValueRisk × 0.20) + (
 `POST /api/risk/calculate` - Returns full breakdown with recommendation in English/Arabic
 
 ## Recent Changes
+- Added mobile bottom navigation bar for touch-friendly navigation
+- Implemented PWA with offline support via service worker caching
+- Updated all PWA icons with custom logo (192x192, 512x512, apple-touch-icon)
+- Added safe-area-inset padding for iPhone notch support
+- Enhanced Capacitor config for iOS and Android native builds
+- Touch-friendly 44px minimum tap targets for mobile devices
+- Logo wrapped in dark container for visibility in both light/dark modes
 - Added PDF export for verification reports using PDFKit
 - Implemented multi-chain support: Bitcoin, BSC, Polygon, Arbitrum, Base, Optimism
 - Created unified wallet data API endpoint `/api/wallet/:network/:address`
