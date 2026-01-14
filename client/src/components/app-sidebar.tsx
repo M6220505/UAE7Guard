@@ -74,12 +74,13 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <img 
-            src="/logo.png" 
-            alt="UAE7Guard" 
-            className="h-16 w-16 object-contain rounded-xl"
-            style={{ mixBlendMode: 'lighten' }}
-          />
+          <div className="h-16 w-16 rounded-xl overflow-hidden bg-[#1a1f2e] flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="UAE7Guard" 
+              className="h-full w-full object-cover"
+            />
+          </div>
           <div>
             <span className="text-lg font-bold tracking-tight">UAE7Guard</span>
             <p className="text-xs text-muted-foreground">Sovereign Intelligence</p>

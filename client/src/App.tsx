@@ -101,12 +101,13 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
           <a href="/" className="flex items-center gap-3">
-            <img 
-              src="/logo.png" 
-              alt="UAE7Guard" 
-              className="h-12 w-12 object-contain rounded-lg flex-shrink-0"
-              style={{ mixBlendMode: 'lighten' }}
-            />
+            <div className="h-12 w-12 rounded-lg overflow-hidden bg-[#1a1f2e] flex items-center justify-center flex-shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="UAE7Guard" 
+                className="h-full w-full object-cover"
+              />
+            </div>
             <span className="font-bold text-lg">UAE7Guard</span>
           </a>
           <div className="flex items-center gap-2">
