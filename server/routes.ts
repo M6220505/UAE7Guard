@@ -696,8 +696,9 @@ Provide comprehensive risk analysis.`;
     try {
       const riskInputSchema = z.object({
         walletAddress: z.string().min(10),
-        walletAgeDays: z.number().min(1),
+        walletAgeDays: z.number().min(0),
         transactionCount: z.number().min(0),
+        balanceEth: z.number().min(0).optional(),
         blacklistAssociations: z.number().min(0),
         isDirectlyBlacklisted: z.boolean(),
         transactionValue: z.number().optional(),
@@ -708,9 +709,14 @@ Provide comprehensive risk analysis.`;
       
       const reports = await storage.getReportsByAddress(input.walletAddress);
       const verifiedReports = reports.filter(r => r.status === 'verified');
+      const pendingReports = reports.filter(r => r.status === 'pending');
+      
+      const threatScore = (verifiedReports.length * 0.6 + pendingReports.length * 0.2) / Math.max(1, reports.length);
       
       const riskInput: RiskInput = {
         ...input,
+        balanceEth: input.balanceEth || 0,
+        threatScore: Math.min(threatScore, 1),
         blacklistAssociations: input.blacklistAssociations + verifiedReports.length,
         isDirectlyBlacklisted: input.isDirectlyBlacklisted || verifiedReports.length > 0,
       };
@@ -952,11 +958,17 @@ Provide comprehensive risk analysis.`;
 
       const reports = await storage.getReportsByAddress(input.walletAddress);
       const verifiedReports = reports.filter(r => r.status === 'verified');
+      const pendingReports = reports.filter(r => r.status === 'pending');
+      
+      const balanceEth = parseFloat(blockchainData.balance) || 0;
+      const threatScore = (verifiedReports.length * 0.6 + pendingReports.length * 0.2) / Math.max(1, reports.length);
 
       const riskInput: RiskInput = {
         walletAddress: input.walletAddress,
         walletAgeDays: input.walletAgeDays,
         transactionCount: blockchainData.transactionCount,
+        balanceEth,
+        threatScore: Math.min(threatScore, 1),
         blacklistAssociations: verifiedReports.length,
         isDirectlyBlacklisted: verifiedReports.length > 0,
         transactionValue: input.transactionValueAED,
@@ -1012,8 +1024,8 @@ Provide:
         riskAnalysis: {
           riskScore: riskResult.riskScore,
           riskLevel: riskResult.riskLevel,
-          historyScore: riskResult.formula?.history || 0,
-          associationScore: riskResult.formula?.associations || 0,
+          historyScore: riskResult.breakdown.activityComponent + riskResult.breakdown.ageComponent,
+          associationScore: riskResult.breakdown.patternComponent + riskResult.breakdown.threatComponent,
           walletAgeDays: input.walletAgeDays,
           formula: riskResult.formula?.calculation || "",
         },
@@ -1029,8 +1041,8 @@ Provide:
         riskScore: riskResult.riskScore,
         riskLevel: riskResult.riskLevel,
         analysisDetails: {
-          historyScore: riskResult.formula?.history || 0,
-          associationScore: riskResult.formula?.associations || 0,
+          historyScore: riskResult.breakdown.activityComponent + riskResult.breakdown.ageComponent,
+          associationScore: riskResult.breakdown.patternComponent + riskResult.breakdown.threatComponent,
           walletAgeDays: input.walletAgeDays,
           formula: riskResult.formula?.calculation || "",
         },

@@ -2,119 +2,197 @@ export interface RiskInput {
   walletAddress: string;
   walletAgeDays: number;
   transactionCount: number;
+  balanceEth: number;
+  threatScore: number;
   blacklistAssociations: number;
   isDirectlyBlacklisted: boolean;
   transactionValue?: number;
   isSmartContract?: boolean;
 }
 
-export interface RiskOutput {
-  riskScore: number;
-  riskLevel: "safe" | "suspicious" | "danger";
-  historyScore: number;
-  associationScore: number;
-  walletAgeFactor: number;
-  formula: {
-    history: number;
-    associations: number;
-    walletAge: number;
-    calculation: string;
-  };
-  recommendation: string;
-  confidence: number;
+export interface RiskBreakdown {
+  ageComponent: number;
+  activityComponent: number;
+  valueComponent: number;
+  patternComponent: number;
+  threatComponent: number;
 }
 
-export function calculateMillionDirhamRisk(input: RiskInput): RiskOutput {
+export interface RiskOutput {
+  riskScore: number;
+  riskLevel: "low" | "moderate" | "high" | "critical";
+  color: "green" | "yellow" | "orange" | "red";
+  recommendation: string;
+  recommendationAr: string;
+  confidence: number;
+  breakdown: RiskBreakdown;
+  formula: {
+    weights: {
+      age: number;
+      activity: number;
+      value: number;
+      pattern: number;
+      threat: number;
+    };
+    calculation: string;
+  };
+}
+
+const WEIGHTS = {
+  AGE: 0.20,
+  ACTIVITY: 0.25,
+  VALUE: 0.20,
+  PATTERN: 0.20,
+  THREAT: 0.15,
+};
+
+function calculateAgeRisk(walletAgeDays: number): number {
+  if (walletAgeDays === 0) return 100;
+  if (walletAgeDays < 7) return 80;
+  if (walletAgeDays < 30) return 60;
+  if (walletAgeDays < 90) return 40;
+  if (walletAgeDays < 365) return 20;
+  return 0;
+}
+
+function calculateActivityRisk(transactionCount: number): number {
+  if (transactionCount === 0) return 100;
+  if (transactionCount < 5) return 80;
+  if (transactionCount < 20) return 50;
+  if (transactionCount < 100) return 20;
+  return 0;
+}
+
+function calculateValueRisk(balanceEth: number): number {
+  if (balanceEth === 0) return 80;
+  if (balanceEth < 0.01) return 60;
+  if (balanceEth < 0.1) return 40;
+  if (balanceEth < 1) return 20;
+  return 10;
+}
+
+function calculatePatternRisk(
+  isSmartContract: boolean,
+  blacklistAssociations: number,
+  isDirectlyBlacklisted: boolean
+): number {
+  if (isDirectlyBlacklisted) return 100;
+  if (blacklistAssociations >= 3) return 90;
+  if (blacklistAssociations === 2) return 70;
+  if (blacklistAssociations === 1) return 50;
+  if (isSmartContract) return 40;
+  return 30;
+}
+
+export function calculateEnhancedRisk(input: RiskInput): RiskOutput {
   const {
     walletAgeDays,
     transactionCount,
+    balanceEth,
+    threatScore,
     blacklistAssociations,
     isDirectlyBlacklisted,
-    transactionValue = 500000,
     isSmartContract = false,
   } = input;
 
-  let historyScore = 0;
-  if (transactionCount < 5) historyScore = 100;
-  else if (transactionCount < 20) historyScore = 70;
-  else if (transactionCount < 50) historyScore = 40;
-  else if (transactionCount < 100) historyScore = 20;
-  else historyScore = 10;
+  const ageRisk = calculateAgeRisk(walletAgeDays);
+  const activityRisk = calculateActivityRisk(transactionCount);
+  const valueRisk = calculateValueRisk(balanceEth);
+  const patternRisk = calculatePatternRisk(isSmartContract, blacklistAssociations, isDirectlyBlacklisted);
+  const threatRisk = threatScore * 100;
 
-  if (walletAgeDays < 30) historyScore += 30;
-  else if (walletAgeDays < 90) historyScore += 15;
-  else if (walletAgeDays < 180) historyScore += 5;
+  const ageComponent = WEIGHTS.AGE * ageRisk;
+  const activityComponent = WEIGHTS.ACTIVITY * activityRisk;
+  const valueComponent = WEIGHTS.VALUE * valueRisk;
+  const patternComponent = WEIGHTS.PATTERN * patternRisk;
+  const threatComponent = WEIGHTS.THREAT * threatRisk;
 
-  historyScore = Math.min(historyScore, 100);
-
-  let associationScore = 0;
-  if (isDirectlyBlacklisted) {
-    associationScore = 100;
-  } else if (blacklistAssociations >= 3) {
-    associationScore = 90;
-  } else if (blacklistAssociations === 2) {
-    associationScore = 70;
-  } else if (blacklistAssociations === 1) {
-    associationScore = 40;
-  } else {
-    associationScore = 0;
-  }
-
-  if (isSmartContract && blacklistAssociations > 0) {
-    associationScore = Math.min(associationScore + 20, 100);
-  }
-
-  const walletAgeFactor = Math.sqrt(Math.max(walletAgeDays, 1));
-
-  const historyComponent = historyScore * 0.4;
-  const associationComponent = (associationScore * 0.6) / walletAgeFactor;
-  const rawScore = historyComponent + associationComponent;
+  const rawScore = ageComponent + activityComponent + valueComponent + patternComponent + threatComponent;
   const riskScore = Math.min(Math.max(Math.round(rawScore), 0), 100);
 
-  let riskLevel: "safe" | "suspicious" | "danger";
+  let riskLevel: "low" | "moderate" | "high" | "critical";
+  let color: "green" | "yellow" | "orange" | "red";
   let recommendation: string;
+  let recommendationAr: string;
 
-  if (riskScore >= 70) {
-    riskLevel = "danger";
-    recommendation = "HIGH RISK - Do not proceed with this transaction. Multiple risk indicators detected.";
-  } else if (riskScore >= 40) {
-    riskLevel = "suspicious";
-    recommendation = "CAUTION - Additional verification recommended before proceeding.";
+  if (riskScore <= 25) {
+    riskLevel = "low";
+    color = "green";
+    recommendation = "LOW RISK - Proceed with standard protocols. Wallet shows healthy activity patterns.";
+    recommendationAr = "مخاطر منخفضة - يمكنك المتابعة بالإجراءات العادية. المحفظة تظهر أنماط نشاط سليمة.";
+  } else if (riskScore <= 50) {
+    riskLevel = "moderate";
+    color = "yellow";
+    recommendation = "MODERATE RISK - Enhanced due diligence recommended before proceeding.";
+    recommendationAr = "مخاطر متوسطة - ننصح بإجراء فحص إضافي قبل المتابعة.";
+  } else if (riskScore <= 75) {
+    riskLevel = "high";
+    color = "orange";
+    recommendation = "HIGH RISK - Additional verification required. Exercise caution.";
+    recommendationAr = "مخاطر عالية - يتطلب تحقق إضافي. كن حذراً.";
   } else {
-    riskLevel = "safe";
-    recommendation = "LOW RISK - Transaction appears safe based on available data.";
+    riskLevel = "critical";
+    color = "red";
+    recommendation = "CRITICAL RISK - Transaction not recommended without thorough investigation.";
+    recommendationAr = "مخاطر حرجة - لا ننصح بالمعاملة بدون تحقيق شامل.";
   }
 
-  const confidence = Math.min(90, 50 + (walletAgeDays / 10) + (transactionCount / 5));
+  const confidence = Math.min(
+    95,
+    50 + (walletAgeDays > 0 ? 15 : 0) + (transactionCount > 0 ? 15 : 0) + (balanceEth > 0 ? 10 : 0) + 5
+  );
 
-  const calculationString = `(${historyScore} × 0.4) + (${associationScore} × 0.6) / √${walletAgeDays} = ${riskScore}`;
+  const calculationString = `(${ageRisk}×0.20) + (${activityRisk}×0.25) + (${valueRisk}×0.20) + (${patternRisk}×0.20) + (${Math.round(threatRisk)}×0.15) = ${riskScore}`;
 
   return {
     riskScore,
     riskLevel,
-    historyScore,
-    associationScore,
-    walletAgeFactor: Math.round(walletAgeFactor * 100) / 100,
+    color,
+    recommendation,
+    recommendationAr,
+    confidence: Math.round(confidence),
+    breakdown: {
+      ageComponent: Math.round(ageComponent * 100) / 100,
+      activityComponent: Math.round(activityComponent * 100) / 100,
+      valueComponent: Math.round(valueComponent * 100) / 100,
+      patternComponent: Math.round(patternComponent * 100) / 100,
+      threatComponent: Math.round(threatComponent * 100) / 100,
+    },
     formula: {
-      history: historyScore,
-      associations: associationScore,
-      walletAge: walletAgeDays,
+      weights: {
+        age: WEIGHTS.AGE,
+        activity: WEIGHTS.ACTIVITY,
+        value: WEIGHTS.VALUE,
+        pattern: WEIGHTS.PATTERN,
+        threat: WEIGHTS.THREAT,
+      },
       calculation: calculationString,
     },
-    recommendation,
-    confidence: Math.round(confidence),
   };
+}
+
+export function calculateMillionDirhamRisk(input: RiskInput): RiskOutput {
+  return calculateEnhancedRisk(input);
 }
 
 export function getRiskColor(riskLevel: string): string {
   switch (riskLevel) {
-    case "danger":
+    case "critical":
       return "#ef4444";
-    case "suspicious":
-      return "#f59e0b";
-    case "safe":
+    case "high":
+      return "#f97316";
+    case "moderate":
+      return "#eab308";
+    case "low":
       return "#22c55e";
     default:
       return "#6b7280";
   }
+}
+
+export function getRiskLevelFromScore(score: number): "low" | "moderate" | "high" | "critical" {
+  if (score <= 25) return "low";
+  if (score <= 50) return "moderate";
+  if (score <= 75) return "high";
+  return "critical";
 }

@@ -217,7 +217,36 @@ Located at `client/src/components/language-toggle.tsx`:
 - `useSubscription` hook (`client/src/hooks/use-subscription.ts`) - Check user tier and limits
 - `FeatureGate` component (`client/src/components/feature-gate.tsx`) - Lock features by tier
 
+## Enhanced Risk Scoring Algorithm
+
+### Multi-Factor Risk Engine
+Located at `server/risk-engine.ts`, implements a transparent, legally defensible scoring system.
+
+### Weight Factors
+- **Age (20%)**: Wallet age risk - newer wallets are riskier
+- **Activity (25%)**: Transaction count risk - inactive wallets are suspicious
+- **Value (20%)**: Balance pattern risk - empty or very low balances indicate risk
+- **Pattern (20%)**: Association with known threats and smart contracts
+- **Threat (15%)**: Database threat score from verified/pending reports
+
+### Risk Levels
+- **LOW (0-25)**: Green - Proceed with standard protocols
+- **MODERATE (26-50)**: Yellow - Enhanced due diligence recommended
+- **HIGH (51-75)**: Orange - Additional verification required
+- **CRITICAL (76-100)**: Red - Transaction not recommended
+
+### Score Components
+```
+RiskScore = (AgeRisk × 0.20) + (ActivityRisk × 0.25) + (ValueRisk × 0.20) + (PatternRisk × 0.20) + (ThreatRisk × 0.15)
+```
+
+### API Endpoint
+`POST /api/risk/calculate` - Returns full breakdown with recommendation in English/Arabic
+
 ## Recent Changes
+- Implemented enhanced multi-factor risk scoring algorithm with transparent weights
+- Added 5-component breakdown: Age, Activity, Value, Pattern, Threat
+- Added bilingual recommendations (English/Arabic)
 - Integrated Stripe for subscription-based monetization with three tiers
 - Created pricing page with monthly/yearly billing toggle and dynamic pricing from Stripe API
 - Added subscription fields to users table (stripeCustomerId, subscriptionTier, subscriptionStatus)
