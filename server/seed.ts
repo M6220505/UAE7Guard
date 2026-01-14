@@ -7,7 +7,7 @@ const knownScamAddresses = [
     type: "phishing",
     network: "ethereum",
     description: "Address poisoning attack - impersonates legitimate addresses by creating similar-looking transactions",
-    amountLost: 2600000,
+    amountLost: 85000,
     currency: "USDT"
   },
   {
@@ -15,7 +15,7 @@ const knownScamAddresses = [
     type: "rug_pull",
     network: "ethereum", 
     description: "Fake DeFi protocol - liquidity removed after attracting deposits",
-    amountLost: 4200000,
+    amountLost: 420,
     currency: "ETH"
   },
   {
@@ -23,7 +23,7 @@ const knownScamAddresses = [
     type: "ransomware",
     network: "bitcoin",
     description: "WannaCry ransomware payment collection address",
-    amountLost: 150000,
+    amountLost: 15,
     currency: "BTC"
   },
   {
@@ -31,7 +31,7 @@ const knownScamAddresses = [
     type: "exchange_hack",
     network: "ethereum",
     description: "Funds traced from major exchange breach - laundering through multiple hops",
-    amountLost: 340000000,
+    amountLost: 3400,
     currency: "ETH"
   },
   {
@@ -39,7 +39,7 @@ const knownScamAddresses = [
     type: "impersonation",
     network: "bitcoin",
     description: "Scammers impersonating Satoshi Nakamoto for Bitcoin doubling scam",
-    amountLost: 89000,
+    amountLost: 8.9,
     currency: "BTC"
   },
   {
@@ -47,7 +47,7 @@ const knownScamAddresses = [
     type: "pig_butchering",
     network: "ethereum",
     description: "Romance scam operation - victims directed to fake investment platform",
-    amountLost: 5500000,
+    amountLost: 550000,
     currency: "USDC"
   },
   {
@@ -55,7 +55,7 @@ const knownScamAddresses = [
     type: "ponzi",
     network: "tron",
     description: "High-yield investment fraud promising 10% daily returns",
-    amountLost: 1200000,
+    amountLost: 120000,
     currency: "USDT"
   },
   {
@@ -63,7 +63,7 @@ const knownScamAddresses = [
     type: "fake_airdrop",
     network: "ethereum",
     description: "Fake UNI token airdrop - malicious approval drains wallets",
-    amountLost: 890000,
+    amountLost: 89,
     currency: "ETH"
   },
   {
@@ -71,7 +71,7 @@ const knownScamAddresses = [
     type: "sextortion",
     network: "bitcoin",
     description: "Sextortion email campaign demanding Bitcoin payment",
-    amountLost: 45000,
+    amountLost: 4.5,
     currency: "BTC"
   },
   {
@@ -79,7 +79,7 @@ const knownScamAddresses = [
     type: "honeypot",
     network: "ethereum",
     description: "Honeypot token - buy transactions succeed but sells fail",
-    amountLost: 320000,
+    amountLost: 32,
     currency: "ETH"
   },
   {
@@ -87,7 +87,7 @@ const knownScamAddresses = [
     type: "address_poisoning",
     network: "ethereum",
     description: "Zero-value transfer spam creating confusing transaction history",
-    amountLost: 50000000,
+    amountLost: 250000,
     currency: "USDT"
   },
   {
@@ -95,7 +95,7 @@ const knownScamAddresses = [
     type: "investment_fraud",
     network: "bitcoin",
     description: "Fake crypto fund promising guaranteed returns from arbitrage",
-    amountLost: 2100000,
+    amountLost: 21,
     currency: "BTC"
   },
   {
@@ -103,7 +103,7 @@ const knownScamAddresses = [
     type: "smart_contract_exploit",
     network: "ethereum",
     description: "Malicious contract with hidden withdrawal function",
-    amountLost: 8900000,
+    amountLost: 145,
     currency: "ETH"
   },
   {
@@ -111,7 +111,7 @@ const knownScamAddresses = [
     type: "fake_exchange",
     network: "tron",
     description: "Fake exchange platform - deposits cannot be withdrawn",
-    amountLost: 670000,
+    amountLost: 67000,
     currency: "TRX"
   },
   {
@@ -119,7 +119,7 @@ const knownScamAddresses = [
     type: "flash_loan_attack",
     network: "ethereum",
     description: "Flash loan manipulation exploiting price oracle",
-    amountLost: 12000000,
+    amountLost: 1200,
     currency: "ETH"
   }
 ];
