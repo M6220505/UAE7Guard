@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { users, userReputation, scamReports, alerts, watchlist } from "@shared/schema";
+import bcrypt from "bcryptjs";
 
 const knownScamAddresses = [
   {
@@ -183,9 +184,10 @@ export async function seedDatabase() {
   }
 
   // Create demo user with watchlist and alerts
+  const hashedPassword = await bcrypt.hash("demo123", 12);
   const [demoUser] = await db.insert(users).values({
     username: "demo-user",
-    password: "demo-password",
+    password: hashedPassword,
     email: "demo@uae7guard.com"
   }).onConflictDoNothing().returning();
 
