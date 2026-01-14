@@ -126,6 +126,84 @@ export async function registerRoutes(
     }
   });
 
+  // ===== ADMIN PANEL AUTHENTICATION =====
+  // Rate limiting map to prevent brute force attacks
+  const adminLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+  app.post("/api/admin/authenticate", async (req, res) => {
+    try {
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      const now = Date.now();
+      
+      // Check rate limiting
+      const attempts = adminLoginAttempts.get(clientIP);
+      if (attempts && attempts.count >= MAX_ATTEMPTS) {
+        const timeSinceLastAttempt = now - attempts.lastAttempt;
+        if (timeSinceLastAttempt < LOCKOUT_TIME) {
+          const remainingTime = Math.ceil((LOCKOUT_TIME - timeSinceLastAttempt) / 60000);
+          return res.status(429).json({ 
+            success: false, 
+            error: `Too many attempts. Try again in ${remainingTime} minutes.` 
+          });
+        } else {
+          // Reset after lockout period
+          adminLoginAttempts.delete(clientIP);
+        }
+      }
+
+      const { password } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      
+      if (!adminPassword) {
+        console.error("ADMIN_PASSWORD not configured - admin authentication disabled");
+        return res.status(503).json({ success: false, error: "Admin authentication not configured" });
+      }
+      
+      if (!password || typeof password !== "string") {
+        return res.status(400).json({ success: false, error: "Invalid password" });
+      }
+      
+      // Use timing-safe comparison to prevent timing attacks
+      const bcrypt = await import("bcryptjs");
+      
+      // Check if ADMIN_PASSWORD is already hashed (starts with $2)
+      let isValid = false;
+      if (adminPassword.startsWith('$2')) {
+        // Already hashed, compare directly
+        isValid = await bcrypt.compare(password, adminPassword);
+      } else {
+        // Plain text fallback (for initial setup) - compare directly but log warning
+        console.warn("WARNING: ADMIN_PASSWORD should be hashed. Use bcrypt to hash it.");
+        isValid = password === adminPassword;
+      }
+      
+      if (isValid) {
+        // Clear failed attempts on successful login
+        adminLoginAttempts.delete(clientIP);
+        
+        res.json({ 
+          success: true, 
+          message: "Admin access granted",
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // Track failed attempt
+        const currentAttempts = adminLoginAttempts.get(clientIP) || { count: 0, lastAttempt: 0 };
+        adminLoginAttempts.set(clientIP, { 
+          count: currentAttempts.count + 1, 
+          lastAttempt: now 
+        });
+        
+        res.status(401).json({ success: false, error: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Admin authentication error:", error);
+      res.status(500).json({ success: false, error: "Authentication failed" });
+    }
+  });
+
   // ===== ESCROW ADMIN AUTHENTICATION =====
   app.post("/api/admin/escrow/authenticate", async (req, res) => {
     try {
