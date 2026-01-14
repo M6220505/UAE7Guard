@@ -74,6 +74,15 @@ export interface IStorage {
   getAuditLogs(): Promise<EncryptedAuditLog[]>;
   getAuditLogsByAddress(address: string): Promise<EncryptedAuditLog[]>;
   createAuditLog(data: InsertEncryptedAuditLog): Promise<EncryptedAuditLog>;
+
+  // Risk Assessment
+  getRiskLevel(walletAddress: string): Promise<{
+    score: number;
+    status: string;
+    level: string;
+    details?: string;
+    reportCount?: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -362,6 +371,52 @@ export class DatabaseStorage implements IStorage {
       walletAddress: data.walletAddress.toLowerCase(),
     }).returning();
     return item;
+  }
+
+  // دالة تقييم المخاطر الحقيقية - تعتمد على البيانات فقط
+  async getRiskLevel(walletAddress: string): Promise<{
+    score: number;
+    status: string;
+    level: string;
+    details?: string;
+    reportCount?: number;
+  }> {
+    // 1. البحث الفعلي في قاعدة البيانات عن بلاغات لهذا العنوان
+    const reports = await db
+      .select()
+      .from(scamReports)
+      .where(eq(scamReports.scammerAddress, walletAddress.toLowerCase()));
+
+    // 2. إذا لم توجد بلاغات، النتيجة هي "صفر مخاطر معلنة" (وهو الرد الصادق الوحيد)
+    if (reports.length === 0) {
+      return {
+        score: 0,
+        status: "Unknown / No Reports Found",
+        level: "Safe",
+        details: "لم يتم العثور على بلاغات مسجلة ضد هذا العنوان في قاعدة بياناتنا المجتمعية."
+      };
+    }
+
+    // 3. حساب المخاطر بناءً على نوع البلاغات (Verified vs Unverified)
+    // البلاغ الموثق (Verified) وزنه 60 نقطة، والمجتمعي (Unverified) وزنه 20 نقطة
+    let totalScore = 0;
+    reports.forEach(report => {
+      if (report.status === 'verified') {
+        totalScore += 60;
+      } else {
+        totalScore += 20;
+      }
+    });
+
+    // سقف المخاطر هو 100
+    const finalScore = Math.min(totalScore, 100);
+
+    return {
+      score: finalScore,
+      status: reports.length > 1 ? "Multiple Reports Found" : "Reported Address",
+      level: finalScore >= 60 ? "High Risk" : "Caution",
+      reportCount: reports.length
+    };
   }
 }
 
