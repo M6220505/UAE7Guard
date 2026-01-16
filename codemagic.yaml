@@ -9,10 +9,10 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.uaeguard.app
+        bundle_identifier: com.uae7guard.app
       vars:
         NODE_VERSION: "20"
-        BUNDLE_ID: "com.uaeguard.app"
+        BUNDLE_ID: "com.uae7guard.app"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
       xcode: latest
@@ -163,7 +163,7 @@ workflows:
         - google_play_credentials
       vars:
         NODE_VERSION: "20"
-        PACKAGE_NAME: "com.uaeguard.app"
+        PACKAGE_NAME: "com.uae7guard.app"
       java: 17
     scripts:
       - name: Setup Node.js
