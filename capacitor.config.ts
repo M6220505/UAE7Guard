@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.uaeguard.app',
+  appId: 'com.uae7guard.crypto',
   appName: 'UAE7Guard',
   webDir: 'dist/public',
   server: {
