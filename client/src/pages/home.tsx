@@ -307,6 +307,12 @@ export default function Home() {
                   <ThreatSearch />
                 </CardContent>
               </Card>
+              <p className="mt-4 text-xs text-muted-foreground/70 max-w-md mx-auto">
+                {language === "en" 
+                  ? "Educational tool only. We do not store, trade, or manage cryptocurrency. Not financial advice."
+                  : "أداة تعليمية فقط. لا نخزن أو نتداول أو ندير العملات الرقمية. ليست نصيحة مالية."
+                }
+              </p>
             </div>
 
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6">
