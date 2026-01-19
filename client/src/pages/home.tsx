@@ -175,9 +175,9 @@ export default function Home() {
       </aside>
 
       <div className={`flex-1 ${isRTL ? "mr-0 md:mr-64" : "ml-0 md:ml-64"}`}>
-        <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md safe-area-pt">
           <div className="flex h-16 items-center justify-between gap-4 px-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild className="md:hidden">
                   <Button variant="ghost" size="icon" data-testid="button-mobile-menu">

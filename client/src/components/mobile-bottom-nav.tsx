@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Home, Shield, Search, BookOpen, User } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
+import { useIsNativeApp } from "@/hooks/use-capacitor";
 
 interface NavItem {
   href: string;
@@ -21,9 +22,13 @@ const navItems: NavItem[] = [
 export function MobileBottomNav() {
   const [location] = useLocation();
   const { language } = useLanguage();
+  const isNative = useIsNativeApp();
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden safe-area-pb">
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 bg-background border-t safe-area-pb",
+      isNative ? "block" : "md:hidden"
+    )}>
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = location === item.href || 
