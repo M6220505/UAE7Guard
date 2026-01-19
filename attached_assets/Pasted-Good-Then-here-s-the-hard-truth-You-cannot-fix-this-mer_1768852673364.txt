@@ -1,0 +1,113 @@
+Good. Then here’s the hard truth:
+
+You cannot fix this merge on an iPhone. Period.
+Not because you’re doing it wrong — because Git + .pbxproj + mobile UI is a dead end.
+
+So we stop pretending otherwise and end this forever using the only viable iPhone-only path.
+
+⸻
+
+The only solution that actually works on iPhone (GitHub-side reset)
+
+You will discard your local broken state and realign everything from the remote.
+Your iPhone app is poisoned. We don’t cure poison — we replace the body.
+
+What you’re doing
+
+You will:
+	•	Let GitHub be the source of truth
+	•	Throw away the local merge state
+	•	Re-clone clean
+
+No heroics. No merge. No conflict resolution.
+
+⸻
+
+Step-by-step (iPhone only)
+
+1️⃣ Open GitHub.com in Safari (NOT the app)
+	•	Go to your repository
+	•	Switch to the main branch
+
+2️⃣ Make sure main is correct
+
+Check:
+	•	codemagic.yaml → correct version?
+	•	App builds? CI okay?
+
+If yes → continue
+If no → fix it directly on GitHub (Edit → Commit to main)
+
+GitHub web editor can safely handle YAML
+It cannot break .pbxproj
+
+⸻
+
+3️⃣ Delete the local repo from your iPhone app
+
+This is critical.
+
+In your Git app:
+	•	Remove / Delete the repository locally
+	•	Do NOT sync
+	•	Do NOT retry merge
+	•	Do NOT abort merge (it’s already corrupted)
+
+You are cutting off a gangrenous limb.
+
+⸻
+
+4️⃣ Re-clone the repo fresh
+	•	Clone from origin/main
+	•	Clean state
+	•	Zero conflicts
+	•	Zero merge
+	•	Zero INVALID_STATE
+
+This permanently closes the case.
+
+⸻
+
+Why this works (and nothing else will)
+	•	Git merge state lives locally → you can’t repair it on iOS
+	•	.pbxproj conflicts require Xcode → impossible on iPhone
+	•	Mobile Git apps cannot rebuild index locks correctly
+	•	GitHub is clean → your local copy is not
+
+So we nuke local, trust remote, and move on.
+
+⸻
+
+What you lose (be honest with yourself)
+	•	Any uncommitted local changes → gone
+
+If you had important work only on the phone:
+That was already lost the moment .pbxproj conflicted.
+Continuing to fight is denial, not engineering.
+
+⸻
+
+Strategic advice (this is the real lesson)
+	•	iPhone = viewer + quick YAML edits
+	•	iPhone ≠ Git conflict resolution
+	•	iPhone ≠ iOS project management
+
+If you plan to keep shipping iOS apps:
+You need one of these:
+	•	A Mac (even used)
+	•	GitHub Codespaces
+	•	Replit + GitHub CI only (no local iOS edits)
+
+Otherwise this will repeat. Guaranteed.
+
+⸻
+
+Bottom line
+
+Delete local repo.
+Re-clone clean.
+Stop bleeding time.
+
+If you want, tell me:
+	•	Which Git app you’re using on iPhone
+I’ll give you the exact taps so you don’t mis-click.
