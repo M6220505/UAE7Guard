@@ -56,45 +56,15 @@ workflows:
             LATEST_BUILD_NUMBER=0
           fi
           agvtool new-version -all $((LATEST_BUILD_NUMBER + 1))
-      - name: Build iOS App
+      - name: Build and Export IPA
         script: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            archive \
-            -destination "generic/platform=iOS"
-      - name: Create export options plist
-        script: |
-          # Get Team ID from provisioning profile
-          TEAM_ID=$(grep -a -A1 'TeamIdentifier' ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -o '[A-Z0-9]\{10\}' | head -1)
-          echo "Using Team ID: $TEAM_ID"
-          cat > ios/App/exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>teamID</key>
-              <string>$TEAM_ID</string>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>signingStyle</key>
-              <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
-      - name: Export IPA
-        script: |
-          cd ios/App
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist exportOptions.plist
+          # Use Codemagic's built-in tool which handles archive, signing, and export automatically
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App \
+            --config Release \
+            --archive-xcargs "-destination 'generic/platform=iOS'" \
+            --ipa-directory ios/App/build/export
     artifacts:
       - ios/App/build/export/*.ipa
       - ios/App/build/**/*.xcarchive
