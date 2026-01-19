@@ -15,6 +15,7 @@ workflows:
         BUNDLE_ID: "com.uae7guard.crypto"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        APP_STORE_APPLE_ID: "6757963820"
       xcode: latest
       cocoapods: default
     scripts:
@@ -49,13 +50,19 @@ workflows:
       - name: Increment build number
         script: |
           cd ios/App
-          # APP_STORE_APPLE_ID must be set in Codemagic environment variables
+          # Get latest build number from App Store Connect
           if [ -n "$APP_STORE_APPLE_ID" ]; then
-            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
+            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 25)
           else
-            LATEST_BUILD_NUMBER=0
+            LATEST_BUILD_NUMBER=25
           fi
-          agvtool new-version -all $((LATEST_BUILD_NUMBER + 1))
+          # Ensure we never go below 25 (to avoid conflicts with previous uploads)
+          if [ "$LATEST_BUILD_NUMBER" -lt 25 ]; then
+            LATEST_BUILD_NUMBER=25
+          fi
+          NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
+          echo "Setting build number to: $NEW_BUILD"
+          agvtool new-version -all $NEW_BUILD
       - name: Build and Export IPA
         script: |
           # Use Codemagic's built-in tool which handles archive, signing, and export automatically
