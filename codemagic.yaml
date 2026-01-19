@@ -67,20 +67,24 @@ workflows:
             -destination "generic/platform=iOS"
       - name: Create export options plist
         script: |
-          # Create export options for App Store distribution
+          # Get Team ID from provisioning profile
+          TEAM_ID=$(grep -a -A1 'TeamIdentifier' ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -o '[A-Z0-9]\{10\}' | head -1)
+          echo "Using Team ID: $TEAM_ID"
           cat > ios/App/exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
               <key>teamID</key>
-              <string>${APPLE_TEAM_ID}</string>
+              <string>$TEAM_ID</string>
               <key>uploadBitcode</key>
               <false/>
               <key>uploadSymbols</key>
               <true/>
+              <key>signingStyle</key>
+              <string>automatic</string>
           </dict>
           </plist>
           EOF
