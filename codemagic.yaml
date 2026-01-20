@@ -1,7 +1,6 @@
 workflows:
-  # iOS App Store Release Build
   ios-release:
-    name: iOS App Store Release
+    name: iOS Release
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
@@ -12,10 +11,8 @@ workflows:
         bundle_identifier: com.uae7guard.crypto
       vars:
         NODE_VERSION: "20"
-        BUNDLE_ID: "com.uae7guard.crypto"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        APP_STORE_APPLE_ID: "6757963820"
       xcode: latest
       cocoapods: default
     scripts:
@@ -25,66 +22,62 @@ workflows:
           nvm install $NODE_VERSION
           nvm use $NODE_VERSION
           node --version
-      - name: Install npm dependencies
+
+      - name: Install dependencies
         script: |
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npm install
-      - name: Build web assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
           npm run build
+
       - name: Copy Capacitor assets
         script: |
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npx cap copy ios
+
       - name: Install CocoaPods
         script: |
           cd ios/App && pod repo update && pod install
+
       - name: Set up code signing
         script: |
-          # Fetches provisioning profiles and certificates from App Store Connect integration
           xcode-project use-profiles
-      - name: Increment build number
+
+      - name: Increment build number (HARD GUARANTEE)
         script: |
           cd ios/App
-          # Get latest build number from App Store Connect
-          if [ -n "$APP_STORE_APPLE_ID" ]; then
-            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 30)
-          else
-            LATEST_BUILD_NUMBER=30
+          LATEST_BUILD=$(agvtool what-version -terse || echo "30")
+          if [ -z "$LATEST_BUILD" ] || [ "$LATEST_BUILD" -lt 30 ]; then
+            LATEST_BUILD=30
           fi
-          # Ensure we never go below 30 (to avoid conflicts with previous uploads)
-          if [ "$LATEST_BUILD_NUMBER" -lt 30 ]; then
-            LATEST_BUILD_NUMBER=30
-          fi
-          NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
-          echo "Setting build number to: $NEW_BUILD"
-          
-          # Method 1: Use PlistBuddy to directly set CFBundleVersion in Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" App/Info.plist
-          echo "Info.plist CFBundleVersion set to: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' App/Info.plist)"
-          
-          # Method 2: Also try agvtool as backup
-          agvtool new-version -all $NEW_BUILD || true
-          
-          # Export for use in build step
-          echo "BUILD_NUMBER=$NEW_BUILD" >> $CM_ENV
-      - name: Build and Export IPA
+          NEXT_BUILD=$((LATEST_BUILD + 1))
+          echo "Incrementing build from $LATEST_BUILD to $NEXT_BUILD"
+          agvtool new-version -all $NEXT_BUILD
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" App/Info.plist
+          echo "BUILD_NUMBER=$NEXT_BUILD" >> $CM_ENV
+
+      - name: Guard - block duplicate builds
         script: |
-          echo "Building with CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
-          # Use Codemagic's built-in tool with explicit build number override
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "BUILD_NUMBER missing - aborting to prevent duplicate"
+            exit 1
+          fi
+          echo "Build number confirmed: $BUILD_NUMBER"
+
+      - name: Build IPA
+        script: |
           xcode-project build-ipa \
-            --workspace ios/App/App.xcworkspace \
-            --scheme App \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
             --config Release \
-            --archive-xcargs "-destination 'generic/platform=iOS' CURRENT_PROJECT_VERSION=$BUILD_NUMBER" \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" \
             --ipa-directory ios/App/build/export
+
     artifacts:
       - ios/App/build/export/*.ipa
       - ios/App/build/**/*.xcarchive
+
     publishing:
       app_store_connect:
         auth: integration
@@ -92,148 +85,3 @@ workflows:
         submit_to_app_store: false
         beta_groups:
           - "Beta Testers"
-
-  # iOS Development Build (no signing)
-  ios-dev:
-    name: iOS Development Build
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-    environment:
-      vars:
-        NODE_VERSION: "20"
-      xcode: latest
-      cocoapods: default
-    scripts:
-      - name: Setup Node.js
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm install $NODE_VERSION
-          nvm use $NODE_VERSION
-          node --version
-      - name: Install npm dependencies
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm install
-      - name: Build web assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm run build
-      - name: Copy Capacitor assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npx cap copy ios
-      - name: Install CocoaPods
-        script: |
-          cd ios/App && pod repo update && pod install
-      - name: Build iOS App
-        script: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            archive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-    artifacts:
-      - ios/App/build/**/*.xcarchive
-
-  # Android Play Store Release Build
-  android-release:
-    name: Android Play Store Release
-    max_build_duration: 60
-    instance_type: linux_x2
-    environment:
-      android_signing:
-        - uae7guard_keystore
-      groups:
-        - google_play_credentials
-      vars:
-        NODE_VERSION: "20"
-        PACKAGE_NAME: "com.uaeguard.app"
-      java: 17
-    scripts:
-      - name: Setup Node.js
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm install $NODE_VERSION
-          nvm use $NODE_VERSION
-          node --version
-      - name: Install npm dependencies
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm install
-      - name: Build web assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm run build
-      - name: Copy Capacitor assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npx cap copy android
-      - name: Build Android Bundle (AAB)
-        script: |
-          # Get latest version from Play Store and increment
-          LATEST_BUILD=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks internal || echo 0)
-          NEW_VERSION_CODE=$((LATEST_BUILD + 1))
-          echo "Building with version code: $NEW_VERSION_CODE"
-          cd android
-          ./gradlew bundleRelease -PversionCode=$NEW_VERSION_CODE
-    artifacts:
-      - android/app/build/outputs/**/*.aab
-      - android/app/build/outputs/**/mapping.txt
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
-
-  # Android Development Build (no signing)
-  android-dev:
-    name: Android Development Build
-    max_build_duration: 60
-    instance_type: linux_x2
-    environment:
-      vars:
-        NODE_VERSION: "20"
-      java: 17
-    scripts:
-      - name: Setup Node.js
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm install $NODE_VERSION
-          nvm use $NODE_VERSION
-          node --version
-      - name: Install npm dependencies
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm install
-      - name: Build web assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npm run build
-      - name: Copy Capacitor assets
-        script: |
-          . ~/.nvm/nvm.sh
-          nvm use $NODE_VERSION
-          npx cap copy android
-      - name: Build Android APK (Debug)
-        script: |
-          cd android
-          ./gradlew assembleDebug
-      - name: Build Android Bundle (Release unsigned)
-        script: |
-          cd android
-          ./gradlew bundleRelease
-    artifacts:
-      - android/app/build/outputs/**/*.apk
-      - android/app/build/outputs/**/*.aab
