@@ -52,25 +52,35 @@ workflows:
           cd ios/App
           # Get latest build number from App Store Connect
           if [ -n "$APP_STORE_APPLE_ID" ]; then
-            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 25)
+            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 30)
           else
-            LATEST_BUILD_NUMBER=25
+            LATEST_BUILD_NUMBER=30
           fi
-          # Ensure we never go below 25 (to avoid conflicts with previous uploads)
-          if [ "$LATEST_BUILD_NUMBER" -lt 25 ]; then
-            LATEST_BUILD_NUMBER=25
+          # Ensure we never go below 30 (to avoid conflicts with previous uploads)
+          if [ "$LATEST_BUILD_NUMBER" -lt 30 ]; then
+            LATEST_BUILD_NUMBER=30
           fi
           NEW_BUILD=$((LATEST_BUILD_NUMBER + 1))
           echo "Setting build number to: $NEW_BUILD"
-          agvtool new-version -all $NEW_BUILD
+          
+          # Method 1: Use PlistBuddy to directly set CFBundleVersion in Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" App/Info.plist
+          echo "Info.plist CFBundleVersion set to: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' App/Info.plist)"
+          
+          # Method 2: Also try agvtool as backup
+          agvtool new-version -all $NEW_BUILD || true
+          
+          # Export for use in build step
+          echo "BUILD_NUMBER=$NEW_BUILD" >> $CM_ENV
       - name: Build and Export IPA
         script: |
-          # Use Codemagic's built-in tool which handles archive, signing, and export automatically
+          echo "Building with CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+          # Use Codemagic's built-in tool with explicit build number override
           xcode-project build-ipa \
             --workspace ios/App/App.xcworkspace \
             --scheme App \
             --config Release \
-            --archive-xcargs "-destination 'generic/platform=iOS'" \
+            --archive-xcargs "-destination 'generic/platform=iOS' CURRENT_PROJECT_VERSION=$BUILD_NUMBER" \
             --ipa-directory ios/App/build/export
     artifacts:
       - ios/App/build/export/*.ipa
