@@ -44,15 +44,13 @@ workflows:
         script: |
           xcode-project use-profiles
 
-      - name: Increment build number (HARD GUARANTEE)
+      - name: Increment build number (TIMESTAMP UNIQUE)
         script: |
           cd ios/App
-          LATEST_BUILD=$(agvtool what-version -terse || echo "30")
-          if [ -z "$LATEST_BUILD" ] || [ "$LATEST_BUILD" -lt 30 ]; then
-            LATEST_BUILD=30
-          fi
-          NEXT_BUILD=$((LATEST_BUILD + 1))
-          echo "Incrementing build from $LATEST_BUILD to $NEXT_BUILD"
+          # Use timestamp to guarantee unique build number
+          # Format: YYMMDDHHMM (e.g., 2601200830 for Jan 20, 2026 08:30)
+          NEXT_BUILD=$(date +%y%m%d%H%M)
+          echo "Using timestamp-based build number: $NEXT_BUILD"
           agvtool new-version -all $NEXT_BUILD
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" App/Info.plist
           echo "BUILD_NUMBER=$NEXT_BUILD" >> $CM_ENV
