@@ -24,10 +24,11 @@ export function MobileBottomNav() {
   const { language } = useLanguage();
   const isNative = useIsNativeApp();
   
+  // Always show on mobile AND in native apps (regardless of screen size)
   return (
     <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 bg-background border-t safe-area-pb",
-      isNative ? "block" : "md:hidden"
+      "fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t safe-area-pb",
+      isNative ? "block" : "block md:hidden"
     )}>
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {

@@ -508,7 +508,8 @@ export default function Home() {
       
       <MobileBottomNav />
       
-      <div className="h-20 md:hidden" />
+      {/* Spacer for bottom navigation */}
+      <div className="h-24" />
       </div>
     </div>
   );
