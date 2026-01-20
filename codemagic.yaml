@@ -44,13 +44,13 @@ workflows:
         script: |
           xcode-project use-profiles
 
-      - name: Increment build number (TIMESTAMP UNIQUE)
+      - name: Increment build number (UNIX TIMESTAMP)
         script: |
           cd ios/App
-          # Use timestamp to guarantee unique build number
-          # Format: YYMMDDHHMM (e.g., 2601200830 for Jan 20, 2026 08:30)
-          NEXT_BUILD=$(date +%y%m%d%H%M)
-          echo "Using timestamp-based build number: $NEXT_BUILD"
+          # Use Unix timestamp for guaranteed unique build number
+          # This number will never repeat (seconds since 1970)
+          NEXT_BUILD=$(date +%s)
+          echo "Using Unix timestamp build number: $NEXT_BUILD"
           agvtool new-version -all $NEXT_BUILD
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" App/Info.plist
           echo "BUILD_NUMBER=$NEXT_BUILD" >> $CM_ENV
