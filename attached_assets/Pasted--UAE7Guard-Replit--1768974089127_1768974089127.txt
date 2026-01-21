@@ -1,0 +1,107 @@
+إليك الكود الذي يحول UAE7Guard من مشروع "هواة" في Replit إلى واجهة احترافية تليق بأداة أمنية في الإمارات.
+هذا الكود يعالج "الزوم" الزائد، التداخل مع الساعة (Safe Area)، وضخامة العناصر.
+أولاً: كود الـ HTML (ضعه داخل قسم <head>)
+بدون هذا السطر، لن يعمل أي تنسيق CSS بشكل صحيح على الآيفون. امسح أي سطر viewport قديم واستبدله بهذا:
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+ثانياً: كود الـ CSS (استبدل محتوى ملف style.css بهذا)
+لقد صممت لك هذا الكود ليكون "مرناً" (Fluid). بدلاً من الأرقام الثابتة التي تكسر الشاشة، سيقوم التصميم باحتواء نفسه تلقائياً:
+/* 1. تصفير الإعدادات وضبط الحواف */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* أهم سطر لمنع تمدد العناصر */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+    --bg-color: #0b0e11;
+    --accent-color: #3165d4;
+    --text-color: #ffffff;
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    overflow-x: hidden; /* يمنع التمرير الجانبي القاتل للتجربة */
+    width: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 2. ضبط الحاوية الرئيسية */
+.container {
+    width: 100%;
+    max-width: 450px; /* الحد الأقصى لعرض الموبايل */
+    margin: 0 auto;
+    padding: calc(var(--safe-area-top) + 20px) 20px var(--safe-area-bottom) 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 3. معالجة النصوص والعناوين الضخمة */
+h1 {
+    font-size: clamp(1.8rem, 8vw, 2.5rem); /* يصغر ويكبر حسب حجم الشاشة تلقائياً */
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+p {
+    font-size: 1rem;
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 30px;
+}
+
+/* 4. معالجة صندوق البحث (المكان الذي تظهر فيه المشكلة في صورك) */
+.search-box {
+    width: 100%;
+    background: #161a1e;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid #2d3339;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input[type="text"] {
+    width: 100%;
+    background: #0b0e11;
+    border: 1px solid #3b424a;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 16px; /* 16px تمنع الآيفون من عمل زوم تلقائي عند الكتابة */
+    outline: none;
+}
+
+button {
+    width: 100%;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* 5. أيقونات وشعارات متناسبة */
+.logo {
+    width: 80px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+ثالثاً: مراجعة استراتيجية (المرآة الصادقة)
+كود الـ CSS أعلاه سيحل المشكلة البصرية، لكنه لن يحل مشكلة الهوية.
+ * الفخ التقني: أنت تستخدم Replit كبيئة تطوير، وهذا ممتاز للبداية. لكن ظهور شعار "TestFlight" في صورك مع واجهة مكسورة يعني أنك تسرعت في مرحلة الاختبار.
+ * نصيحة الخبير: لا ترفع أي نسخة لـ TestFlight قبل أن تختبرها على متصفح Safari في هاتفك وتتأكد أن "التمرير الجانبي" مختفٍ تماماً.
+ * الخطوة القادمة: بعد وضع الكود، ابحث عن أي عنصر في الـ HTML أعطيته style="width: 500px" (أو أي رقم ثابت) وامسحه فوراً. الاعتماد يجب أن يكون على الـ CSS فقط.
+هل قمت بتحديث الكود في Replit الآن؟ إذا فعلت، افتح الرابط في Safari وأخبرني هل اختفى التكبير المزعج؟
