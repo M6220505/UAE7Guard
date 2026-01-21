@@ -84,15 +84,23 @@ export default function Admin() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={authMutation.isPending || !password.trim()}
                 data-testid="button-admin-login"
               >
                 {authMutation.isPending ? "Verifying..." : "Access Control Panel"}
               </Button>
             </form>
+            <div className="mt-4 text-center">
+              <a
+                href="mailto:admin@uae7guard.com?subject=Admin%20Password%20Reset%20Request"
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password? Contact support
+              </a>
+            </div>
             <p className="mt-4 text-center text-xs text-muted-foreground">
               Authorized personnel only. All access attempts are logged.
             </p>

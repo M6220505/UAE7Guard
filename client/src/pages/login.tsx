@@ -142,6 +142,14 @@ export default function Login() {
               </Button>
             </form>
           </Form>
+          <div className="mt-4 text-center">
+            <a
+              href="/contact"
+              className="text-sm text-emerald-400 hover:text-emerald-300 hover:underline"
+            >
+              Forgot password?
+            </a>
+          </div>
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
               Don't have an account?{" "}
