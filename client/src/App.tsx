@@ -207,11 +207,7 @@ function Router() {
   const [location] = useLocation();
   
   if (location === "/") {
-    return (
-      <SimpleLayout>
-        <Home />
-      </SimpleLayout>
-    );
+    return <Home />;
   }
 
   if (legacyRedirects[location]) {
