@@ -125,10 +125,14 @@ export default function DoubleLock() {
 
   const { data: auditStatus } = useQuery<{ configured: boolean; minValueAED: number; message: string }>({
     queryKey: ["/api/audit/status"],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
   });
 
   const { data: blockchainStatus } = useQuery<{ configured: boolean }>({
     queryKey: ["/api/blockchain/status"],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
   });
 
   const form = useForm<FormValues>({
