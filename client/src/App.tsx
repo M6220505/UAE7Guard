@@ -205,7 +205,7 @@ function SidebarLayout({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const [location] = useLocation();
-  
+
   if (location === "/") {
     return <Home />;
   }

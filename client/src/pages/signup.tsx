@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/contexts/language-context";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -30,6 +31,7 @@ export default function Signup() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useLanguage();
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -82,9 +84,9 @@ export default function Signup() {
               <Shield className="h-10 w-10 text-emerald-400" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">{t.createAccount}</CardTitle>
           <CardDescription className="text-zinc-400">
-            Join UAE7Guard to protect your crypto investments
+            {t.joinUAE7Guard}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,10 +98,10 @@ export default function Signup() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-zinc-300">First Name</FormLabel>
+                      <FormLabel className="text-zinc-300">{t.firstName}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="John"
+                          placeholder={t.firstNamePlaceholder}
                           className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                           data-testid="input-firstname"
                           {...field}
@@ -114,10 +116,10 @@ export default function Signup() {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-zinc-300">Last Name</FormLabel>
+                      <FormLabel className="text-zinc-300">{t.lastName}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Doe"
+                          placeholder={t.lastNamePlaceholder}
                           className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                           data-testid="input-lastname"
                           {...field}
@@ -133,11 +135,11 @@ export default function Signup() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-zinc-300">Email</FormLabel>
+                    <FormLabel className="text-zinc-300">{t.email}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={t.emailPlaceholder}
                         className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                         data-testid="input-email"
                         {...field}
@@ -152,12 +154,12 @@ export default function Signup() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-zinc-300">Password</FormLabel>
+                    <FormLabel className="text-zinc-300">{t.password}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Create a password"
+                          placeholder={t.passwordPlaceholder}
                           className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 pr-10"
                           data-testid="input-password"
                           {...field}
@@ -182,11 +184,11 @@ export default function Signup() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-zinc-300">Confirm Password</FormLabel>
+                    <FormLabel className="text-zinc-300">{t.confirmPassword}</FormLabel>
                     <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
+                        placeholder={t.confirmPasswordPlaceholder}
                         className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                         data-testid="input-confirm-password"
                         {...field}
@@ -203,11 +205,11 @@ export default function Signup() {
                 data-testid="button-signup"
               >
                 {signupMutation.isPending ? (
-                  "Creating account..."
+                  t.creatingAccount
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Create Account
+                    {t.createAccountButton}
                   </>
                 )}
               </Button>
@@ -215,9 +217,9 @@ export default function Signup() {
           </Form>
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
-              Already have an account?{" "}
+              {t.alreadyHaveAccount}{" "}
               <Link href="/login" className="text-emerald-400 hover:text-emerald-300 font-medium" data-testid="link-login">
-                Sign in
+                {t.signIn}
               </Link>
             </p>
           </div>
