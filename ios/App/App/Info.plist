@@ -45,5 +45,35 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>UAE7Guard needs access to your camera to scan QR codes for wallet addresses</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>UAE7Guard needs access to your photo library to import wallet address QR codes</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>UAE7Guard uses Face ID to secure your account access</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>replit.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ar</string>
+	</array>
 </dict>
 </plist>
