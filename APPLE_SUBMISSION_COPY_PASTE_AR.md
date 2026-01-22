@@ -74,7 +74,7 @@ Protect yourself from crypto scams! Check wallet addresses before sending money.
 ## 5️⃣ Privacy Policy URL
 
 ```
-https://uae-7-guard-2.replit.app/privacy
+https://uae7guard.com/privacy
 ```
 
 ---
@@ -82,7 +82,7 @@ https://uae-7-guard-2.replit.app/privacy
 ## 6️⃣ Support URL
 
 ```
-https://uae-7-guard-2.replit.app/contact
+https://uae7guard.com/contact
 ```
 
 ---
@@ -90,7 +90,7 @@ https://uae-7-guard-2.replit.app/contact
 ## 7️⃣ Marketing URL (اختياري)
 
 ```
-https://uae-7-guard-2.replit.app
+https://uae7guard.com
 ```
 
 ---
@@ -164,7 +164,7 @@ Step 5: Explore Features
 • UAE PDPL compliant
 • No personal data collected for searches
 • No tracking or analytics beyond essential app functionality
-• Privacy policy: https://uae-7-guard-2.replit.app/privacy
+• Privacy policy: https://uae7guard.com/privacy
 • Users can create accounts optionally for saving preferences
 • Account data: email and encrypted password only
 
@@ -177,7 +177,7 @@ This is comparable to:
 • A fraud awareness educational app
 
 === BACKEND API ===
-Production Server: https://uae-7-guard-2.replit.app
+Production Server: https://uae7guard.com
 - Provides authentication endpoints
 - Scam database lookup
 - Community reporting system
@@ -371,7 +371,7 @@ Best regards,
 UAE7Guard Development Team
 
 Contact: admin@uae7guard.com
-Support: https://uae-7-guard-2.replit.app/contact
+Support: https://uae7guard.com/contact
 ```
 
 ---
@@ -499,8 +499,8 @@ Free
 [ ] Keywords: (أقل من 100 حرف)
 [ ] Screenshots: على الأقل 3 صور
 [ ] App Icon: 1024x1024 موجود
-[ ] Privacy URL: https://uae-7-guard-2.replit.app/privacy
-[ ] Support URL: https://uae-7-guard-2.replit.app/contact
+[ ] Privacy URL: https://uae7guard.com/privacy
+[ ] Support URL: https://uae7guard.com/contact
 [ ] Demo Account: applereview@uae7guard.com
 [ ] Review Notes: (النص الكامل منسوخ)
 [ ] Age Rating: 4+ محدد

@@ -114,12 +114,12 @@ Crypto Scam Address Checker
 
 **3. Privacy Policy URL:**
 ```
-https://uae-7-guard-2.replit.app/privacy
+https://uae7guard.com/privacy
 ```
 
 **4. Support URL:**
 ```
-https://uae-7-guard-2.replit.app/contact
+https://uae7guard.com/contact
 ```
 
 #### ب. App Description (الوصف):
@@ -364,7 +364,7 @@ PRIVACY & COMPLIANCE:
 • UAE PDPL compliant
 • No personal data collected for searches
 • No tracking or analytics beyond essential app functionality
-• Privacy policy available at: https://uae-7-guard-2.replit.app/privacy
+• Privacy policy available at: https://uae7guard.com/privacy
 
 This is comparable to:
 • A phone number spam checker
