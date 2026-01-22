@@ -1,4 +1,4 @@
-package com.uae7guard.app;
+package com.uae7guard.crypto;
 
 import com.getcapacitor.BridgeActivity;
 
