@@ -12,7 +12,7 @@ interface Translations {
   contactUs: string;
   privacy: string;
   terms: string;
-  
+
   // Home page
   startCheck: string;
   heroTitle: string;
@@ -20,12 +20,12 @@ interface Translations {
   checkWalletAddress: string;
   checkWalletPlaceholder: string;
   checkButton: string;
-  
+
   // Trust indicators
   aesEncrypted: string;
   pdplCompliant: string;
   realTimeProtection: string;
-  
+
   // Results
   addressSafe: string;
   addressSafeDesc: string;
@@ -36,20 +36,44 @@ interface Translations {
   amountLost: string;
   confirmedReports: string;
   pendingReports: string;
-  
+
   // Features
   featuresTitle: string;
   featuresSubtitle: string;
-  
+
   // CTA
   ctaTitle: string;
   ctaSubtitle: string;
   tryNow: string;
   learnMore: string;
-  
+
   // Footer
   footerCompliance: string;
   educationalDisclaimer: string;
+
+  // Auth pages
+  welcomeBack: string;
+  signInToAccount: string;
+  createAccount: string;
+  joinUAE7Guard: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  signIn: string;
+  signUp: string;
+  createAccountButton: string;
+  forgotPassword: string;
+  dontHaveAccount: string;
+  alreadyHaveAccount: string;
+  signingIn: string;
+  creatingAccount: string;
+  emailPlaceholder: string;
+  passwordPlaceholder: string;
+  confirmPasswordPlaceholder: string;
+  firstNamePlaceholder: string;
+  lastNamePlaceholder: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -63,7 +87,7 @@ const translations: Record<Language, Translations> = {
     contactUs: "Contact Us",
     privacy: "Privacy",
     terms: "Terms",
-    
+
     // Home page
     startCheck: "Start Check",
     heroTitle: "Protect Yourself from Crypto Scams",
@@ -71,12 +95,12 @@ const translations: Record<Language, Translations> = {
     checkWalletAddress: "Check Wallet Address",
     checkWalletPlaceholder: "Enter wallet address to check...",
     checkButton: "Check",
-    
+
     // Trust indicators
     aesEncrypted: "AES-256 Encrypted",
     pdplCompliant: "UAE Data Protection Compliant",
     realTimeProtection: "Real-Time Protection",
-    
+
     // Results
     addressSafe: "Address is Safe",
     addressSafeDesc: "No scam reports found for this address in our database.",
@@ -87,20 +111,44 @@ const translations: Record<Language, Translations> = {
     amountLost: "Reported losses",
     confirmedReports: "confirmed report(s)",
     pendingReports: "pending report(s)",
-    
+
     // Features
     featuresTitle: "How We Protect You",
     featuresSubtitle: "Simple tools to help you stay safe in the crypto world.",
-    
+
     // CTA
     ctaTitle: "Check an Address Now",
     ctaSubtitle: "Quick and confidential. Your search is not stored.",
     tryNow: "Try Now",
     learnMore: "Learn More",
-    
+
     // Footer
     footerCompliance: "Compliant with UAE Federal Decree-Law No. 45 of 2021",
     educationalDisclaimer: "For educational purposes only. Not financial or legal advice.",
+
+    // Auth pages
+    welcomeBack: "Welcome Back",
+    signInToAccount: "Sign in to your UAE7Guard account",
+    createAccount: "Create Account",
+    joinUAE7Guard: "Join UAE7Guard to protect your crypto investments",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    firstName: "First Name",
+    lastName: "Last Name",
+    signIn: "Sign In",
+    signUp: "Sign up",
+    createAccountButton: "Create Account",
+    forgotPassword: "Forgot password?",
+    dontHaveAccount: "Don't have an account?",
+    alreadyHaveAccount: "Already have an account?",
+    signingIn: "Signing in...",
+    creatingAccount: "Creating account...",
+    emailPlaceholder: "you@example.com",
+    passwordPlaceholder: "Enter your password",
+    confirmPasswordPlaceholder: "Confirm your password",
+    firstNamePlaceholder: "John",
+    lastNamePlaceholder: "Doe",
   },
   ar: {
     // Navigation
@@ -112,7 +160,7 @@ const translations: Record<Language, Translations> = {
     contactUs: "اتصل بنا",
     privacy: "الخصوصية",
     terms: "الشروط",
-    
+
     // Home page
     startCheck: "ابدأ الفحص",
     heroTitle: "احمِ نفسك من عمليات الاحتيال في العملات الرقمية",
@@ -120,12 +168,12 @@ const translations: Record<Language, Translations> = {
     checkWalletAddress: "فحص عنوان محفظة",
     checkWalletPlaceholder: "أدخل عنوان المحفظة للتحقق...",
     checkButton: "فحص",
-    
+
     // Trust indicators
     aesEncrypted: "تشفير AES-256",
     pdplCompliant: "متوافق مع قانون حماية البيانات الإماراتي",
     realTimeProtection: "حماية في الوقت الفعلي",
-    
+
     // Results
     addressSafe: "العنوان آمن",
     addressSafeDesc: "لم يتم العثور على تقارير احتيال لهذا العنوان في قاعدة بياناتنا.",
@@ -136,20 +184,44 @@ const translations: Record<Language, Translations> = {
     amountLost: "الخسائر المبلغ عنها",
     confirmedReports: "تقرير(تقارير) مؤكدة",
     pendingReports: "تقرير(تقارير) معلقة",
-    
+
     // Features
     featuresTitle: "كيف نحميك",
     featuresSubtitle: "أدوات بسيطة لمساعدتك على البقاء آمنًا في عالم العملات الرقمية.",
-    
+
     // CTA
     ctaTitle: "افحص عنوانًا الآن",
     ctaSubtitle: "سريع وسري. لا يتم تخزين بحثك.",
     tryNow: "جرب الآن",
     learnMore: "اعرف المزيد",
-    
+
     // Footer
     footerCompliance: "متوافق مع المرسوم الاتحادي الإماراتي رقم 45 لسنة 2021",
     educationalDisclaimer: "للأغراض التعليمية فقط. ليست نصيحة مالية أو قانونية.",
+
+    // Auth pages
+    welcomeBack: "مرحبًا بعودتك",
+    signInToAccount: "سجل الدخول إلى حسابك في UAE7Guard",
+    createAccount: "إنشاء حساب",
+    joinUAE7Guard: "انضم إلى UAE7Guard لحماية استثماراتك في العملات الرقمية",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    firstName: "الاسم الأول",
+    lastName: "اسم العائلة",
+    signIn: "تسجيل الدخول",
+    signUp: "إنشاء حساب",
+    createAccountButton: "إنشاء حساب",
+    forgotPassword: "نسيت كلمة المرور؟",
+    dontHaveAccount: "ليس لديك حساب؟",
+    alreadyHaveAccount: "هل لديك حساب؟",
+    signingIn: "جاري تسجيل الدخول...",
+    creatingAccount: "جاري إنشاء الحساب...",
+    emailPlaceholder: "example@email.com",
+    passwordPlaceholder: "أدخل كلمة المرور",
+    confirmPasswordPlaceholder: "أكد كلمة المرور",
+    firstNamePlaceholder: "محمد",
+    lastNamePlaceholder: "أحمد",
   },
 };
 
