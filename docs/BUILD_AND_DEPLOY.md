@@ -225,6 +225,15 @@ The app is configured in `capacitor.config.ts`:
 }
 ```
 
+### Mobile App Backend Connection
+
+**IMPORTANT**: Mobile apps need to connect to the backend server. See `docs/MOBILE_API_CONFIGURATION.md` for complete setup instructions.
+
+Quick setup:
+1. Edit `client/src/lib/api-config.ts` - Set your backend URL
+2. Build and sync: `npm run build && npm run cap:sync`
+3. Test login functionality on mobile device
+
 ### Native Plugins Used
 
 - **Splash Screen** - Custom launch screen
@@ -275,6 +284,26 @@ cd android
 npm run build
 npm run cap:sync
 ```
+
+### Mobile App Login Issues
+
+**Problem:** "Login failed - The string did not match the expected pattern"
+**Solution:**
+This error occurs when the mobile app cannot connect to the backend server.
+
+```bash
+# 1. Configure the backend URL
+# Edit client/src/lib/api-config.ts and set PRODUCTION_API_URL
+
+# 2. Rebuild and resync
+npm run build
+npm run cap:sync
+
+# 3. Reinstall the app on your device
+# Uninstall from device, then reinstall from Xcode/Android Studio
+```
+
+See `docs/MOBILE_API_CONFIGURATION.md` for detailed troubleshooting.
 
 ---
 

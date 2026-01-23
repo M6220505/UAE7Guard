@@ -1,9 +1,19 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { buildApiUrl } from "./api-config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+
+    // Try to parse error message from JSON response
+    try {
+      const json = JSON.parse(text);
+      const errorMsg = json.error || json.message || text;
+      throw new Error(errorMsg);
+    } catch {
+      // If parsing fails, use the raw text
+      throw new Error(text);
+    }
   }
 }
 
@@ -12,7 +22,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Build full URL (handles both web and mobile platforms)
+  const fullUrl = buildApiUrl(url);
+
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +42,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const fullUrl = buildApiUrl(url);
+
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 

@@ -5,7 +5,12 @@ const config: CapacitorConfig = {
   appName: 'UAE7Guard',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    // Allow the app to make requests to the backend
+    allowNavigation: ['https://uae7guard.com', 'https://*.uae7guard.com'],
+    // Enable for development with local backend
+    // cleartext: true,
+    // url: 'http://localhost:5000'
   },
   plugins: {
     SplashScreen: {
