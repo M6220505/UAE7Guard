@@ -1,4 +1,4 @@
-import { Shield, Lock, Eye, FileText, Scale } from "lucide-react";
+import { Shield, Lock, Eye, FileText, Scale, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -28,6 +28,16 @@ export default function Privacy() {
             "If you submit a report: the information you provide (address, scam type, description)",
             "If you contact us: your name, email, and message content",
             "Anonymous usage statistics to improve the service",
+          ],
+        },
+        {
+          icon: Smartphone,
+          title: "Mobile App Permissions (iOS)",
+          items: [
+            "Camera Access: Only used to scan QR codes for wallet addresses. Images are not stored or transmitted.",
+            "Photo Library: Only used to import wallet address QR codes. We do not access, store, or transmit your photos.",
+            "Face ID / Touch ID: Only used for secure authentication to your account. Biometric data never leaves your device.",
+            "All permissions are optional and only requested when you use the specific feature.",
           ],
         },
         {
@@ -76,6 +86,16 @@ export default function Privacy() {
             "إذا قدمت تقريرًا: المعلومات التي تقدمها (العنوان، نوع الاحتيال، الوصف)",
             "إذا تواصلت معنا: اسمك وبريدك الإلكتروني ومحتوى الرسالة",
             "إحصائيات استخدام مجهولة لتحسين الخدمة",
+          ],
+        },
+        {
+          icon: Smartphone,
+          title: "أذونات تطبيق الهاتف المحمول (iOS)",
+          items: [
+            "الوصول إلى الكاميرا: يُستخدم فقط لمسح رموز QR لعناوين المحافظ. لا يتم تخزين الصور أو إرسالها.",
+            "مكتبة الصور: يُستخدم فقط لاستيراد رموز QR لعناوين المحافظ. نحن لا نصل إلى صورك أو نخزنها أو نرسلها.",
+            "Face ID / Touch ID: يُستخدم فقط للمصادقة الآمنة على حسابك. البيانات البيومترية لا تغادر جهازك أبدًا.",
+            "جميع الأذونات اختيارية ويتم طلبها فقط عند استخدام الميزة المحددة.",
           ],
         },
         {
