@@ -183,6 +183,43 @@ export async function seedDatabase() {
     }).onConflictDoNothing();
   }
 
+  // Create Apple Review demo account for App Store review team
+  const appleReviewPassword = await bcrypt.hash("AppleReview2026", 12);
+  const [appleReviewUser] = await db.insert(users).values({
+    username: "apple-reviewer",
+    password: appleReviewPassword,
+    email: "applereview@uae7guard.com",
+    firstName: "Apple",
+    lastName: "Reviewer",
+    role: "user",
+    subscriptionTier: "free",
+    subscriptionStatus: "inactive"
+  }).onConflictDoNothing().returning();
+
+  if (appleReviewUser) {
+    await db.insert(userReputation).values({
+      userId: appleReviewUser.id,
+      rank: "Novice",
+      trustScore: 0,
+      verifiedReports: 0
+    }).onConflictDoNothing();
+
+    // Add sample watchlist items for Apple reviewers
+    await db.insert(watchlist).values({
+      userId: appleReviewUser.id,
+      address: "0x957cD4Ff9b3894FC78b5134A8DC72b032fFbC464".toLowerCase(),
+      label: "Test phishing address"
+    }).onConflictDoNothing();
+
+    // Add sample alert for Apple reviewers
+    await db.insert(alerts).values({
+      userId: appleReviewUser.id,
+      title: "Welcome to UAE7Guard",
+      message: "Thank you for reviewing our app. This is a sample security alert notification.",
+      severity: "low"
+    }).onConflictDoNothing();
+  }
+
   // Create demo user with watchlist and alerts
   const hashedPassword = await bcrypt.hash("demo123", 12);
   const [demoUser] = await db.insert(users).values({
@@ -235,5 +272,6 @@ export async function seedDatabase() {
   console.log("Database seeded successfully with:");
   console.log(`- ${investigators.length} investigators`);
   console.log(`- ${knownScamAddresses.length} verified threat reports`);
+  console.log("- Apple Review demo account (applereview@uae7guard.com / AppleReview2026)");
   console.log("- Demo user with watchlist and alerts");
 }

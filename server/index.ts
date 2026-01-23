@@ -133,6 +133,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint (must be before registerRoutes)
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "UAE7Guard API",
+    timestamp: new Date().toISOString()
+  });
+});
+
 (async () => {
   // Initialize Stripe first
   await initStripe();
@@ -179,4 +188,20 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
-})();
+})().catch((error) => {
+  console.error('Fatal server error during initialization:', error);
+  // Keep the process running even if initialization fails partially
+  // The httpServer.listen() call should have already been made
+  process.exitCode = 1;
+});
+
+// Handle uncaught errors to prevent server exit
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  // Don't exit - keep server running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  // Don't exit - keep server running
+});
