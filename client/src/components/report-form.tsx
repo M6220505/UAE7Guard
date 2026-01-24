@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Flag, Send } from "lucide-react";
+import { Loader2, Flag, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -45,6 +46,10 @@ interface ReportFormProps {
 export function ReportForm({ onSuccess }: ReportFormProps) {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [agreedToAccuracy, setAgreedToAccuracy] = useState(false);
+  const [agreedToConsequences, setAgreedToConsequences] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToNoFalseReport, setAgreedToNoFalseReport] = useState(false);
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
@@ -86,8 +91,19 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
   });
 
   const onSubmit = (data: ReportFormValues) => {
+    // Validate all acknowledgments are checked
+    if (!agreedToAccuracy || !agreedToConsequences || !agreedToTerms || !agreedToNoFalseReport) {
+      toast({
+        title: "Acknowledgment Required",
+        description: "Please read and agree to all statements before submitting your report.",
+        variant: "destructive",
+      });
+      return;
+    }
     mutation.mutate(data);
   };
+
+  const allAcknowledgmentsChecked = agreedToAccuracy && agreedToConsequences && agreedToTerms && agreedToNoFalseReport;
 
   if (submitted) {
     return (
@@ -121,7 +137,7 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
           Submit Intelligence Report
         </CardTitle>
         <CardDescription>
-          Report a suspicious address or scam. Verified reports earn reputation points.
+          Report a suspicious address for community review. Please ensure all information is accurate and truthful. False reports may result in account termination.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -257,10 +273,85 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
               />
             </div>
 
+            {/* Acknowledgment Section - App Store Compliance */}
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-4">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Important: Please Read and Confirm</h4>
+                  <p className="text-xs text-muted-foreground">
+                    False or malicious reports may result in account termination and legal action.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="accuracy"
+                    checked={agreedToAccuracy}
+                    onCheckedChange={(checked) => setAgreedToAccuracy(checked === true)}
+                    data-testid="checkbox-accuracy"
+                  />
+                  <label
+                    htmlFor="accuracy"
+                    className="text-sm leading-tight cursor-pointer select-none"
+                  >
+                    I confirm this information is accurate to the best of my knowledge and I have evidence to support this report
+                  </label>
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="false-reports"
+                    checked={agreedToNoFalseReport}
+                    onCheckedChange={(checked) => setAgreedToNoFalseReport(checked === true)}
+                    data-testid="checkbox-false-reports"
+                  />
+                  <label
+                    htmlFor="false-reports"
+                    className="text-sm leading-tight cursor-pointer select-none"
+                  >
+                    I understand that submitting false reports is prohibited and may result in my account being terminated
+                  </label>
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="consequences"
+                    checked={agreedToConsequences}
+                    onCheckedChange={(checked) => setAgreedToConsequences(checked === true)}
+                    data-testid="checkbox-consequences"
+                  />
+                  <label
+                    htmlFor="consequences"
+                    className="text-sm leading-tight cursor-pointer select-none"
+                  >
+                    I understand my report will be reviewed and may affect how others perceive this address
+                  </label>
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    data-testid="checkbox-terms"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm leading-tight cursor-pointer select-none"
+                  >
+                    I agree to the Terms of Service and understand reports are for community protection purposes only
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !allAcknowledgmentsChecked}
               data-testid="button-submit-report"
             >
               {mutation.isPending ? (
