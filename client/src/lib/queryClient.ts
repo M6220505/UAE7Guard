@@ -25,15 +25,30 @@ export async function apiRequest(
   // Build full URL (handles both web and mobile platforms)
   const fullUrl = buildApiUrl(url);
 
-  const res = await fetch(fullUrl, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    // Handle network errors (connection refused, DNS failure, timeout, etc.)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error("Cannot connect to server. Please check your internet connection and try again.");
+    }
+
+    // Handle CORS errors or other network failures
+    if (error instanceof TypeError) {
+      throw new Error("Network error. Please check your internet connection.");
+    }
+
+    // Re-throw other errors (validation errors, HTTP errors, etc.)
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -45,16 +60,31 @@ export const getQueryFn: <T>(options: {
     const url = queryKey.join("/") as string;
     const fullUrl = buildApiUrl(url);
 
-    const res = await fetch(fullUrl, {
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(fullUrl, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    } catch (error) {
+      // Handle network errors (connection refused, DNS failure, timeout, etc.)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error("Cannot connect to server. Please check your internet connection and try again.");
+      }
+
+      // Handle CORS errors or other network failures
+      if (error instanceof TypeError) {
+        throw new Error("Network error. Please check your internet connection.");
+      }
+
+      // Re-throw other errors (validation errors, HTTP errors, etc.)
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

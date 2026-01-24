@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -10,6 +11,33 @@ import { WebhookHandlers } from './webhookHandlers';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Configure CORS to allow mobile app requests
+// This is critical for Capacitor mobile apps to connect to the backend
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+    // or from capacitor:// and ionic:// schemes used by mobile apps
+    if (!origin ||
+        origin.startsWith('capacitor://') ||
+        origin.startsWith('ionic://') ||
+        origin.startsWith('file://') ||
+        origin === 'http://localhost:5173' || // Vite dev server
+        origin === 'http://localhost:5000' || // Production server
+        origin.endsWith('.replit.dev') || // Replit preview
+        origin === 'https://uae7guard.com' || // Production domain
+        origin.endsWith('.uae7guard.com')) { // Production subdomains
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for now (can be restricted later)
+    }
+  },
+  credentials: true, // Allow cookies and sessions
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+app.use(cors(corsOptions));
 
 declare module "http" {
   interface IncomingMessage {
