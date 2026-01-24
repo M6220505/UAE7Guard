@@ -236,7 +236,7 @@ export async function sendWelcomeEmail(data: WelcomeEmail): Promise<boolean> {
           </div>
           
           <div style="text-align: center;">
-            <a href="https://uae7guard.replit.app" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            <a href="https://uae7guard.com" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
               ابدأ الآن / Get Started
             </a>
           </div>

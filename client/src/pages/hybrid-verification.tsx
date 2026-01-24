@@ -31,8 +31,8 @@ import {
   Lock,
   Globe
 } from "lucide-react";
-import type { HybridVerificationResult, AssetType } from "@shared/schema";
-import { assetTypeLabels } from "@shared/schema";
+import type { HybridVerificationResult, AssetType } from "@shared/schema.ts";
+import { assetTypeLabels } from "@shared/schema.ts";
 
 const formSchema = z.object({
   walletAddress: z.string().min(42, "Invalid wallet address").max(42, "Invalid wallet address"),

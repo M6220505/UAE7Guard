@@ -18,9 +18,9 @@ export default function LearningCenter() {
   const content = {
     en: {
       title: "Learning Center",
-      subtitle: "Learn about common cryptocurrency scams and how to protect yourself",
-      introTitle: "Stay Safe in Crypto",
-      introText: "Cryptocurrency scams are becoming increasingly sophisticated. Understanding the common types of fraud can help you avoid becoming a victim. Here are the most common scams we track:",
+      subtitle: "Learn about common cryptocurrency patterns and how to recognize concerning indicators",
+      introTitle: "Educational Resources",
+      introText: "Cryptocurrency-related concerns are becoming increasingly sophisticated. Understanding common patterns can help you make informed decisions. Here are the most common concerning patterns we track:",
       scamTypes: [
         {
           icon: CreditCard,
@@ -101,7 +101,7 @@ export default function LearningCenter() {
           severity: "high" as const,
         },
       ] as ScamType[],
-      protectionTitle: "General Protection Tips",
+      protectionTitle: "General Security Best Practices",
       protectionTips: [
         "Never share your private keys or seed phrases with anyone",
         "Use hardware wallets for storing significant amounts",
@@ -110,8 +110,8 @@ export default function LearningCenter() {
         "Be skeptical of unsolicited messages about investments",
         "Only use well-known, reputable exchanges and services",
       ],
-      checkTool: "Use Our Check Tool",
-      checkToolDesc: "Before sending funds to any address, use our tool to check if it has been reported for scam activity.",
+      checkTool: "Use Our Informational Tool",
+      checkToolDesc: "Before sending funds to any address, use our tool to check if it has been reported by community members.",
     },
     ar: {
       title: "مركز التعلم",
@@ -274,7 +274,7 @@ export default function LearningCenter() {
                 </div>
               </div>
               <div>
-                <p className="font-medium mb-2">{language === "en" ? "How to Protect Yourself:" : "كيف تحمي نفسك:"}</p>
+                <p className="font-medium mb-2">{language === "en" ? "Risk Mitigation Strategies:" : "استراتيجيات تخفيف المخاطر:"}</p>
                 <ul className="space-y-1">
                   {scam.prevention.map((tip, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">

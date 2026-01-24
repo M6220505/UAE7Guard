@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ScamReport } from "@shared/schema";
+import type { ScamReport } from "@shared/schema.ts";
 import { formatDistanceToNow } from "date-fns";
 
 const scamTypeLabels: Record<string, string> = {

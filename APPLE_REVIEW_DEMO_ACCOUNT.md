@@ -133,7 +133,7 @@ Expected: Shows warning with scam reports (if available in DB)
 
 ## 🌐 API Backend
 
-**Production URL:** https://uae-7-guard-2.replit.app
+**Production URL:** https://uae7guard.com
 
 The app connects to our production API hosted on Replit which provides:
 - User authentication endpoints
@@ -257,9 +257,9 @@ UAE7Guard addresses a critical need in the cryptocurrency space:
 
 **Developer Contact:**
 - Email: admin@uae7guard.com
-- Support URL: https://uae-7-guard-2.replit.app/contact
-- Privacy Policy: https://uae-7-guard-2.replit.app/privacy
-- Terms of Service: https://uae-7-guard-2.replit.app/terms
+- Support URL: https://uae7guard.com/contact
+- Privacy Policy: https://uae7guard.com/privacy
+- Terms of Service: https://uae7guard.com/terms
 
 **App Store Connect:**
 - Organization: UAE7Guard

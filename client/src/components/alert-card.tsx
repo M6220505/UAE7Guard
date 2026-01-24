@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Alert } from "@shared/schema";
+import type { Alert } from "@shared/schema.ts";
 import { formatDistanceToNow } from "date-fns";
 
 interface AlertCardProps {

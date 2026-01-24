@@ -94,8 +94,8 @@ const statusConfig = {
     textColor: "text-green-500",
     bgLight: "bg-green-500/10",
     borderColor: "border-green-500/30",
-    label: "Safe",
-    labelAr: "آمن",
+    label: "Lower Risk",
+    labelAr: "مخاطر أقل",
   },
   suspicious: {
     icon: AlertTriangle,
@@ -103,8 +103,8 @@ const statusConfig = {
     textColor: "text-yellow-500",
     bgLight: "bg-yellow-500/10",
     borderColor: "border-yellow-500/30",
-    label: "Suspicious",
-    labelAr: "مشبوه",
+    label: "Moderate Risk",
+    labelAr: "مخاطر متوسطة",
   },
   dangerous: {
     icon: AlertTriangle,
@@ -112,8 +112,8 @@ const statusConfig = {
     textColor: "text-red-500",
     bgLight: "bg-red-500/10",
     borderColor: "border-red-500/30",
-    label: "Dangerous",
-    labelAr: "خطير",
+    label: "Elevated Risk",
+    labelAr: "مخاطر مرتفعة",
   },
 };
 
@@ -145,12 +145,12 @@ export function DemoWallets() {
             </Badge>
           </div>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-            {language === "ar" ? "أمثلة على المحافظ المعروفة" : "Known Wallet Examples"}
+            {language === "ar" ? "أمثلة على المحافظ المعروفة" : "Educational Wallet Examples"}
           </h2>
           <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
             {language === "ar"
               ? "استكشف سيناريوهات احتيال واقعية وتعلم كيفية التعرف على العلامات التحذيرية"
-              : "Explore realistic scam scenarios and learn how to recognize warning signs"}
+              : "Explore educational scenarios and learn how to recognize concerning indicators"}
           </p>
         </div>
 
@@ -207,7 +207,7 @@ export function DemoWallets() {
                     <div className={`mt-4 p-3 rounded-lg ${config.bgLight} border ${config.borderColor}`}>
                       <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
                         <ExternalLink className="h-4 w-4" />
-                        {language === "ar" ? "سيناريو الاحتيال" : "Scam Scenario"}
+                        {language === "ar" ? "السيناريو التعليمي" : "Educational Scenario"}
                       </h4>
                       <p className="text-sm">
                         {language === "ar" ? wallet.scenarioAr : wallet.scenario}
@@ -224,8 +224,8 @@ export function DemoWallets() {
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <Lightbulb className="h-4 w-4 text-primary" />
             {language === "ar"
-              ? "انقر على أي بطاقة لرؤية سيناريو الاحتيال الكامل"
-              : "Click any card to see the full scam scenario"}
+              ? "انقر على أي بطاقة لرؤية السيناريو الكامل"
+              : "Click any card to see the full educational scenario"}
           </p>
         </div>
       </div>

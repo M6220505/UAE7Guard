@@ -1,6 +1,6 @@
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from './db';
-import { users } from '@shared/schema';
+import { users } from '@shared/schema.ts';
 import { eq, sql } from 'drizzle-orm';
 
 export class StripeService {

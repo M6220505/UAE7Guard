@@ -8,7 +8,7 @@ import {
   type EscrowTransaction, type InsertEscrowTransaction,
   type SlippageCalculation, type InsertSlippageCalculation,
   type EncryptedAuditLog, type InsertEncryptedAuditLog
-} from "@shared/schema";
+} from "@shared/schema.ts";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.uae7guard.app"
+    namespace "com.uae7guard.crypto"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.uae7guard.app"
+        applicationId "com.uae7guard.crypto"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Use versionCode from command line if provided, otherwise default to 1

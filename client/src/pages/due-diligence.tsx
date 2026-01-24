@@ -3,11 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  Loader2, 
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
   FileCheck,
   Wallet,
   Clock,
@@ -20,7 +20,8 @@ import {
   ScrollText,
   Scale,
   FileWarning,
-  Gavel
+  Gavel,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,8 +45,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import type { ScamReport } from "@shared/schema";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { ScamReport } from "@shared/schema.ts";
 import { BlockchainData } from "@/components/blockchain-data";
+import { FirstTimeResultsModal, useFirstTimeResultsModal } from "@/components/first-time-results-modal";
 
 const assetTypes = [
   { value: "real_estate", label: "Real Estate", icon: Building2 },
@@ -235,18 +243,24 @@ function calculateRiskScore(
 
 function RiskGauge({ value }: { value: number }) {
   let color = "bg-green-500";
-  if (value > 70) color = "bg-red-500";
-  else if (value >= 30) color = "bg-yellow-500";
+  let label = "Lower Observed Risk";
+  if (value > 70) {
+    color = "bg-red-500";
+    label = "Elevated Risk Indicators";
+  } else if (value >= 30) {
+    color = "bg-yellow-500";
+    label = "Moderate Risk Indicators";
+  }
 
   return (
     <div className="relative pt-4">
       <div className="flex justify-between text-xs text-amber-200/60 mb-2">
-        <span>Safe</span>
+        <span>Lower Risk</span>
         <span>Moderate</span>
-        <span>High Risk</span>
+        <span>Elevated Risk</span>
       </div>
       <div className="h-4 bg-zinc-800 rounded-full overflow-hidden border border-amber-500/30">
-        <div 
+        <div
           className={`h-full ${color} transition-all duration-1000 ease-out`}
           style={{ width: `${value}%` }}
         />
@@ -254,6 +268,30 @@ function RiskGauge({ value }: { value: number }) {
       <div className="mt-3 text-center">
         <span className="text-5xl font-bold text-amber-400">{value}%</span>
         <p className="text-amber-200/60 text-sm mt-1">Risk Index</p>
+      </div>
+      <div className="mt-4 text-center">
+        <div className="inline-flex items-center gap-2 bg-zinc-900/80 border border-amber-500/20 rounded-lg px-4 py-2">
+          <span className={`text-sm font-medium ${value > 70 ? 'text-red-400' : value >= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
+            {label}
+          </span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-amber-400/60 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs bg-zinc-900 border-amber-500/30">
+                <p className="text-xs leading-relaxed">
+                  Risk indicators reflect patterns observed across public data sources. Results may be incomplete or change over time.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      <div className="mt-3 bg-zinc-950/50 border border-amber-500/10 rounded-lg p-3">
+        <p className="text-amber-200/50 text-xs leading-relaxed text-center">
+          Informational only. This assessment is based on publicly available signals and user reports. It does not guarantee safety, fraud, or future behavior.
+        </p>
       </div>
     </div>
   );
@@ -524,8 +562,11 @@ export default function DueDiligence() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<RiskResult | null>(null);
+  const [pendingResult, setPendingResult] = useState<RiskResult | null>(null);
   const [analyzedAddress, setAnalyzedAddress] = useState("");
   const [blockchainData, setBlockchainData] = useState<BlockchainWalletData | null>(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const { hasAcknowledged, markAsAcknowledged } = useFirstTimeResultsModal();
 
   const { data: verifiedReports } = useQuery<ScamReport[]>({
     queryKey: ["/api/reports"],
@@ -590,12 +631,20 @@ export default function DueDiligence() {
           isDirectlyBlacklisted || apiResult.verifiedThreatCount > 0,
           txValue
         );
-        
-        setResult({
+
+        const finalResult = {
           ...riskResult,
           riskIndex: apiResult.riskScore,
           finalScore: apiResult.riskScore,
-        });
+        };
+
+        // Show first-time modal if not acknowledged
+        if (!hasAcknowledged) {
+          setPendingResult(finalResult);
+          setShowResultsModal(true);
+        } else {
+          setResult(finalResult);
+        }
       } else {
         const riskResult = calculateRiskScore(
           walletAgeDays,
@@ -604,7 +653,14 @@ export default function DueDiligence() {
           isDirectlyBlacklisted,
           txValue
         );
-        setResult(riskResult);
+
+        // Show first-time modal if not acknowledged
+        if (!hasAcknowledged) {
+          setPendingResult(riskResult);
+          setShowResultsModal(true);
+        } else {
+          setResult(riskResult);
+        }
       }
     } catch {
       const riskResult = calculateRiskScore(
@@ -614,11 +670,32 @@ export default function DueDiligence() {
         isDirectlyBlacklisted,
         txValue
       );
-      setResult(riskResult);
+
+      // Show first-time modal if not acknowledged
+      if (!hasAcknowledged) {
+        setPendingResult(riskResult);
+        setShowResultsModal(true);
+      } else {
+        setResult(riskResult);
+      }
     }
 
     setAnalyzedAddress(data.walletAddress);
     setAnalyzing(false);
+  };
+
+  const handleAcceptResults = () => {
+    markAsAcknowledged();
+    if (pendingResult) {
+      setResult(pendingResult);
+      setPendingResult(null);
+    }
+    setShowResultsModal(false);
+  };
+
+  const handleCancelResults = () => {
+    setPendingResult(null);
+    setShowResultsModal(false);
   };
 
   const formatAED = (value: string) => {
@@ -629,6 +706,12 @@ export default function DueDiligence() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 -m-6 p-6">
+      <FirstTimeResultsModal
+        open={showResultsModal}
+        onAccept={handleAcceptResults}
+        onCancel={handleCancelResults}
+      />
+
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center space-y-2 py-8">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4">
@@ -854,9 +937,9 @@ export default function DueDiligence() {
                     <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
                       <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-red-400 font-semibold">Blacklisted Address Detected</p>
+                        <p className="text-red-400 font-semibold">Address Flagged in Community Reports</p>
                         <p className="text-red-300/70 text-sm mt-1">
-                          This wallet address exists in our verified scam database.
+                          This wallet address has been reported by community members and appears in our threat intelligence database.
                         </p>
                       </div>
                     </div>
@@ -865,9 +948,9 @@ export default function DueDiligence() {
                   {result.recommendation === "block" && (
                     <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-6 text-center">
                       <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-red-400">Block Transaction Immediately</h3>
+                      <h3 className="text-xl font-bold text-red-400">Elevated Risk Indicators Observed</h3>
                       <p className="text-red-300/70 mt-2">
-                        High risk detected. We strongly advise against proceeding with this transaction.
+                        Based on available data, this address shows patterns associated with higher risk. Exercise caution and consider additional verification.
                       </p>
                     </div>
                   )}
@@ -875,9 +958,9 @@ export default function DueDiligence() {
                   {result.recommendation === "review" && (
                     <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-lg p-6 text-center">
                       <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-yellow-400">Enhanced Review Required</h3>
+                      <h3 className="text-xl font-bold text-yellow-400">Moderate Risk Indicators Present</h3>
                       <p className="text-yellow-300/70 mt-2">
-                        Moderate risk detected. Additional verification recommended before proceeding.
+                        Available signals suggest moderate concerns. Additional verification recommended before proceeding.
                       </p>
                     </div>
                   )}
@@ -885,16 +968,16 @@ export default function DueDiligence() {
                   {result.certificateEligible && (
                     <div className="bg-green-500/10 border border-green-500/40 rounded-lg p-6 text-center">
                       <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-green-400">Transaction Approved</h3>
+                      <h3 className="text-xl font-bold text-green-400">Lower Observed Risk Indicators</h3>
                       <p className="text-green-300/70 mt-2 mb-4">
-                        Low risk detected. This transaction is eligible for a Digital Integrity Certificate.
+                        Based on available data, this address shows fewer concerning patterns. You may generate an informational certificate.
                       </p>
-                      <Button 
+                      <Button
                         className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
                         data-testid="button-issue-certificate"
                       >
                         <FileCheck className="mr-2 h-4 w-4" />
-                        Issue Digital Integrity Certificate
+                        Generate Informational Certificate
                       </Button>
                     </div>
                   )}

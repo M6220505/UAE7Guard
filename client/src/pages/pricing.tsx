@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Check, Shield, Zap, Crown, Sparkles, Globe, Lock, Headphones, X } from "lucide-react";
+import { Check, Shield, Zap, Crown, Sparkles, Globe, Lock, Headphones, X, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface StripePrice {
   id: string;
@@ -147,7 +148,7 @@ export default function Pricing() {
   const content = {
     en: {
       title: "Choose Your Plan",
-      subtitle: "Start with our free tier or upgrade for premium protection features",
+      subtitle: "Start with our free tier or upgrade for enhanced informational tools and insights",
       monthly: "Monthly",
       yearly: "Yearly",
       save: "Save 17%",
@@ -161,16 +162,16 @@ export default function Pricing() {
       free: {
         name: "Free",
         price: "0",
-        description: "Basic protection for casual users",
+        description: "Basic informational tools for casual users",
         features: [
           "3 wallet checks per day",
-          "Basic threat database access",
+          "Basic database access",
           "Community reports viewing",
           "English & Arabic support",
         ],
         notIncluded: [
           "Watchlist addresses",
-          "AI-powered predictions",
+          "AI-powered analysis",
           "API access",
           "Priority support",
         ],
@@ -178,17 +179,17 @@ export default function Pricing() {
       basic: {
         name: "Basic",
         price: isYearly ? prices.basic_yearly.toFixed(2) : prices.basic_monthly.toFixed(2),
-        description: "Enhanced security for active traders",
+        description: "Enhanced analysis for active users",
         features: [
           "Unlimited wallet checks",
-          "Full threat database access",
+          "Full database access",
           "10 watchlist addresses",
-          "Email alerts for threats",
-          "Detailed risk reports",
+          "Email alerts for indicators",
+          "Detailed informational reports",
           "Community reports viewing",
         ],
         notIncluded: [
-          "AI-powered predictions",
+          "AI-powered analysis",
           "API access",
           "Priority support",
         ],
@@ -196,24 +197,24 @@ export default function Pricing() {
       pro: {
         name: "Pro",
         price: isYearly ? prices.pro_yearly.toFixed(2) : prices.pro_monthly.toFixed(2),
-        description: "Complete protection for professionals",
+        description: "Advanced analysis tools for professionals",
         popular: "Most Popular",
         features: [
           "Everything in Basic",
           "Unlimited watchlist addresses",
-          "AI-powered threat predictions",
-          "Real-time blockchain monitoring",
+          "AI-powered risk indicator analysis",
+          "Real-time blockchain data monitoring",
           "Full API access",
           "Priority 24/7 support",
-          "Custom threat alerts",
-          "Monthly security reports",
+          "Custom indicator alerts",
+          "Monthly analysis reports",
         ],
         notIncluded: [],
       },
     },
     ar: {
       title: "اختر خطتك",
-      subtitle: "ابدأ بالمستوى المجاني أو قم بالترقية للحصول على ميزات الحماية المتميزة",
+      subtitle: "ابدأ بالمستوى المجاني أو قم بالترقية للحصول على أدوات ورؤى إعلامية محسّنة",
       monthly: "شهري",
       yearly: "سنوي",
       save: "وفر 17%",
@@ -262,17 +263,17 @@ export default function Pricing() {
       pro: {
         name: "برو",
         price: isYearly ? prices.pro_yearly.toFixed(2) : prices.pro_monthly.toFixed(2),
-        description: "حماية كاملة للمحترفين",
+        description: "أدوات تحليل متقدمة للمحترفين",
         popular: "الأكثر شعبية",
         features: [
           "كل شيء في الأساسي",
           "عناوين قائمة مراقبة غير محدودة",
-          "تنبؤات التهديدات بالذكاء الاصطناعي",
+          "تحليل المخاطر بالذكاء الاصطناعي",
           "مراقبة البلوكشين في الوقت الفعلي",
           "وصول API كامل",
           "دعم أولوية 24/7",
-          "تنبيهات تهديد مخصصة",
-          "تقارير أمان شهرية",
+          "تنبيهات مخاطر مخصصة",
+          "تقارير تحليل شهرية",
         ],
         notIncluded: [],
       },
@@ -413,7 +414,20 @@ export default function Pricing() {
       <div className="text-center mb-12">
         <h1 className="text-3xl font-bold mb-3" data-testid="text-pricing-title">{t.title}</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">{t.subtitle}</p>
-        
+
+        {/* Important Disclaimer for App Store Compliance */}
+        <Alert className="max-w-3xl mx-auto mt-6 text-left" dir={isRTL ? "rtl" : "ltr"}>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="text-sm leading-relaxed">
+            <strong className="font-semibold">
+              {language === "en" ? "Subscription Features:" : "ميزات الاشتراك:"}
+            </strong>{" "}
+            {language === "en"
+              ? "Subscription features provide access to additional informational tools and analysis. No guarantees or enforcement actions are provided. All features are for educational and informational purposes only."
+              : "توفر ميزات الاشتراك وصولاً لأدوات وتحليلات إعلامية إضافية. لا يتم تقديم أي ضمانات أو إجراءات تنفيذية. جميع الميزات لأغراض تعليمية وإعلامية فقط."}
+          </AlertDescription>
+        </Alert>
+
         <div className="flex items-center justify-center gap-3 mt-8">
           <Label htmlFor="billing-toggle" className={!isYearly ? "font-semibold" : "text-muted-foreground"}>
             {t.monthly}
@@ -451,10 +465,10 @@ export default function Pricing() {
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <h3 className="font-medium mb-1">
-              {language === "en" ? "Enhanced Protection" : "حماية معززة"}
+              {language === "en" ? "Enhanced Insights" : "رؤى محسّنة"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {language === "en" ? "Access advanced threat detection" : "الوصول للكشف المتقدم عن التهديدات"}
+              {language === "en" ? "Access additional analysis and insights" : "الوصول لمزيد من التحليل والرؤى"}
             </p>
           </div>
           <div className="text-center">
@@ -462,10 +476,10 @@ export default function Pricing() {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <h3 className="font-medium mb-1">
-              {language === "en" ? "AI Predictions" : "تنبؤات الذكاء الاصطناعي"}
+              {language === "en" ? "AI Indicator Analysis" : "تحليل المؤشرات بالذكاء الاصطناعي"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {language === "en" ? "Predict threats before they happen" : "توقع التهديدات قبل حدوثها"}
+              {language === "en" ? "Advanced pattern analysis for informational indicators" : "تحليل متقدم للأنماط للمؤشرات الإعلامية"}
             </p>
           </div>
           <div className="text-center">

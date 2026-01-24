@@ -1,4 +1,4 @@
-import { Shield, Lock, Eye, FileText, Scale } from "lucide-react";
+import { Shield, Lock, Eye, FileText, Scale, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -9,7 +9,7 @@ export default function Privacy() {
     en: {
       title: "Privacy Policy",
       subtitle: "PDPL Compliant - UAE Federal Decree Law No. 45 of 2021",
-      intro: "UAE7Guard is committed to protecting your privacy. This policy explains what information we collect and how we use it.",
+      intro: "UAE7Guard minimizes data collection. Limited information may be processed to provide core functionality, improve reliability, and prevent abuse. We do not sell personal data. This policy explains what information we collect and how we use it.",
       sections: [
         {
           icon: Eye,
@@ -23,11 +23,24 @@ export default function Privacy() {
         },
         {
           icon: FileText,
-          title: "What We May Collect",
+          title: "What We Do Collect",
           items: [
-            "If you submit a report: the information you provide (address, scam type, description)",
-            "If you contact us: your name, email, and message content",
-            "Anonymous usage statistics to improve the service",
+            "Account Data: If you create an account - email address, encrypted password, and profile information",
+            "Report Submissions: When you submit a report - the scammer address, scam details, and evidence you provide",
+            "Contact Information: If you contact us - your name, email, and message content",
+            "Subscription Data: If you subscribe - payment information processed securely through Stripe (we do not store card details)",
+            "Session Data: Temporary session tokens for authentication (automatically deleted when you log out)",
+            "Usage Analytics: Anonymous, aggregated statistics to improve the service (no personal identification)",
+          ],
+        },
+        {
+          icon: Smartphone,
+          title: "Mobile App Permissions (iOS)",
+          items: [
+            "Camera Access: Only used to scan QR codes for wallet addresses. Images are not stored or transmitted.",
+            "Photo Library: Only used to import wallet address QR codes. We do not access, store, or transmit your photos.",
+            "Face ID / Touch ID: Only used for secure authentication to your account. Biometric data never leaves your device.",
+            "All permissions are optional and only requested when you use the specific feature.",
           ],
         },
         {
@@ -42,12 +55,15 @@ export default function Privacy() {
         },
         {
           icon: Scale,
-          title: "Your Rights",
+          title: "Your Rights & Data Control",
           items: [
-            "You can request deletion of any data you've submitted",
-            "You can ask what information we have about you",
-            "You can object to processing of your personal data",
-            "Contact us at any time with privacy concerns",
+            "Access: You can request to see what data we have about you at any time",
+            "Deletion: You can request deletion of your account and associated data (reports may be anonymized for community safety)",
+            "Correction: You can request corrections to any inaccurate personal information",
+            "Objection: You can object to processing of your personal data for certain purposes",
+            "Portability: You can request a copy of your data in a machine-readable format",
+            "Retention: Account data is retained while your account is active. Deleted accounts are purged within 30 days",
+            "Contact: Reach out to us at any time with privacy concerns or data requests",
           ],
         },
       ],
@@ -57,7 +73,7 @@ export default function Privacy() {
     ar: {
       title: "سياسة الخصوصية",
       subtitle: "متوافق مع قانون حماية البيانات الشخصية - المرسوم الاتحادي رقم 45 لسنة 2021",
-      intro: "تلتزم UAE7Guard بحماية خصوصيتك. توضح هذه السياسة المعلومات التي نجمعها وكيفية استخدامها.",
+      intro: "يقلل UAE7Guard من جمع البيانات. قد تتم معالجة معلومات محدودة لتوفير الوظائف الأساسية وتحسين الموثوقية ومنع إساءة الاستخدام. نحن لا نبيع البيانات الشخصية. توضح هذه السياسة المعلومات التي نجمعها وكيفية استخدامها.",
       sections: [
         {
           icon: Eye,
@@ -71,11 +87,24 @@ export default function Privacy() {
         },
         {
           icon: FileText,
-          title: "ما قد نجمعه",
+          title: "ما نجمعه",
           items: [
-            "إذا قدمت تقريرًا: المعلومات التي تقدمها (العنوان، نوع الاحتيال، الوصف)",
-            "إذا تواصلت معنا: اسمك وبريدك الإلكتروني ومحتوى الرسالة",
-            "إحصائيات استخدام مجهولة لتحسين الخدمة",
+            "بيانات الحساب: إذا أنشأت حساباً - عنوان البريد الإلكتروني، كلمة المرور المشفرة، ومعلومات الملف الشخصي",
+            "تقديم التقارير: عند تقديم تقرير - عنوان المحتال، تفاصيل الاحتيال، والأدلة التي تقدمها",
+            "معلومات الاتصال: إذا تواصلت معنا - اسمك وبريدك الإلكتروني ومحتوى الرسالة",
+            "بيانات الاشتراك: إذا اشتركت - معلومات الدفع المعالجة بشكل آمن عبر Stripe (لا نخزن تفاصيل البطاقة)",
+            "بيانات الجلسة: رموز جلسة مؤقتة للمصادقة (يتم حذفها تلقائياً عند تسجيل الخروج)",
+            "تحليلات الاستخدام: إحصائيات مجمعة ومجهولة لتحسين الخدمة (بدون تحديد شخصي)",
+          ],
+        },
+        {
+          icon: Smartphone,
+          title: "أذونات تطبيق الهاتف المحمول (iOS)",
+          items: [
+            "الوصول إلى الكاميرا: يُستخدم فقط لمسح رموز QR لعناوين المحافظ. لا يتم تخزين الصور أو إرسالها.",
+            "مكتبة الصور: يُستخدم فقط لاستيراد رموز QR لعناوين المحافظ. نحن لا نصل إلى صورك أو نخزنها أو نرسلها.",
+            "Face ID / Touch ID: يُستخدم فقط للمصادقة الآمنة على حسابك. البيانات البيومترية لا تغادر جهازك أبدًا.",
+            "جميع الأذونات اختيارية ويتم طلبها فقط عند استخدام الميزة المحددة.",
           ],
         },
         {
@@ -90,12 +119,15 @@ export default function Privacy() {
         },
         {
           icon: Scale,
-          title: "حقوقك",
+          title: "حقوقك والتحكم في البيانات",
           items: [
-            "يمكنك طلب حذف أي بيانات قدمتها",
-            "يمكنك السؤال عن المعلومات التي لدينا عنك",
-            "يمكنك الاعتراض على معالجة بياناتك الشخصية",
-            "تواصل معنا في أي وقت بشأن مخاوف الخصوصية",
+            "الوصول: يمكنك طلب الاطلاع على البيانات التي لدينا عنك في أي وقت",
+            "الحذف: يمكنك طلب حذف حسابك والبيانات المرتبطة به (قد يتم إخفاء هوية التقارير لسلامة المجتمع)",
+            "التصحيح: يمكنك طلب تصحيح أي معلومات شخصية غير دقيقة",
+            "الاعتراض: يمكنك الاعتراض على معالجة بياناتك الشخصية لأغراض معينة",
+            "قابلية النقل: يمكنك طلب نسخة من بياناتك بتنسيق قابل للقراءة آلياً",
+            "الاحتفاظ: يتم الاحتفاظ ببيانات الحساب طالما حسابك نشط. يتم حذف الحسابات المحذوفة خلال 30 يوماً",
+            "الاتصال: تواصل معنا في أي وقت بشأن مخاوف الخصوصية أو طلبات البيانات",
           ],
         },
       ],

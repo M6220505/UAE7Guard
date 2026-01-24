@@ -4,7 +4,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { storage } from "../storage";
-import type { User } from "@shared/schema";
+import type { User } from "@shared/schema.ts";
 
 // Session configuration
 const SESSION_SECRET = process.env.SESSION_SECRET || "change-this-secret-in-production";

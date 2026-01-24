@@ -174,7 +174,7 @@ cd ../..
 - **Secondary Category:** Utilities
 
 #### ب. **App Privacy**
-- أضف سياسة الخصوصية URL: `https://uae-7-guard-2.replit.app/privacy`
+- أضف سياسة الخصوصية URL: `https://uae7guard.com/privacy`
 - أجب على أسئلة الخصوصية بناءً على بيانات التطبيق
 
 #### ج. **Pricing and Availability**
@@ -247,12 +247,12 @@ crypto,scam,protection,wallet,blockchain,security,UAE,guard,bitcoin,ethereum
 
 #### د. **Support URL**
 ```
-https://uae-7-guard-2.replit.app/contact
+https://uae7guard.com/contact
 ```
 
 #### هـ. **Marketing URL** (Optional)
 ```
-https://uae-7-guard-2.replit.app
+https://uae7guard.com
 ```
 
 ### 3. **Build Information**

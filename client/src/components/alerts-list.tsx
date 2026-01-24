@@ -3,7 +3,7 @@ import { Bell, BellOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCard } from "./alert-card";
-import type { Alert } from "@shared/schema";
+import type { Alert } from "@shared/schema.ts";
 
 export function AlertsList() {
   const { data: alerts, isLoading } = useQuery<Alert[]>({

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -10,6 +11,33 @@ import { WebhookHandlers } from './webhookHandlers';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Configure CORS to allow mobile app requests
+// This is critical for Capacitor mobile apps to connect to the backend
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+    // or from capacitor:// and ionic:// schemes used by mobile apps
+    if (!origin ||
+        origin.startsWith('capacitor://') ||
+        origin.startsWith('ionic://') ||
+        origin.startsWith('file://') ||
+        origin === 'http://localhost:5173' || // Vite dev server
+        origin === 'http://localhost:5000' || // Production server
+        origin.endsWith('.replit.dev') || // Replit preview
+        origin === 'https://uae7guard.com' || // Production domain
+        origin.endsWith('.uae7guard.com')) { // Production subdomains
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for now (can be restricted later)
+    }
+  },
+  credentials: true, // Allow cookies and sessions
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+app.use(cors(corsOptions));
 
 declare module "http" {
   interface IncomingMessage {
@@ -133,6 +161,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint (must be before registerRoutes)
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "UAE7Guard API",
+    timestamp: new Date().toISOString()
+  });
+});
+
 (async () => {
   // Initialize Stripe first
   await initStripe();
@@ -179,4 +216,20 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
-})();
+})().catch((error) => {
+  console.error('Fatal server error during initialization:', error);
+  // Keep the process running even if initialization fails partially
+  // The httpServer.listen() call should have already been made
+  process.exitCode = 1;
+});
+
+// Handle uncaught errors to prevent server exit
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  // Don't exit - keep server running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  // Don't exit - keep server running
+});

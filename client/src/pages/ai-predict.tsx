@@ -132,10 +132,10 @@ export default function AiPredict() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <Brain className="h-8 w-8 text-primary" />
-            AI Scam Prediction
+            AI Risk Indicator Analysis
           </h1>
           <p className="text-muted-foreground mt-1">
-            Advanced AI-powered fraud detection and risk analysis
+            AI-powered informational risk assessment and pattern analysis
           </p>
         </div>
         <Badge variant="secondary" className="gap-1">
@@ -222,11 +222,14 @@ export default function AiPredict() {
                 What AI Analyzes
               </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>Historical threat reports in UAE7Guard database</li>
-                <li>Common scam patterns (rugpulls, honeypots, phishing)</li>
-                <li>VARA/ADGM compliance indicators</li>
-                <li>Transaction value risk assessment</li>
+                <li>Community reports in UAE7Guard database</li>
+                <li>Observed patterns associated with concerning activity</li>
+                <li>Available compliance indicators</li>
+                <li>Transaction value context assessment</li>
               </ul>
+              <p className="text-xs text-muted-foreground mt-3 pt-2 border-t">
+                Results are informational only and based on available data.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -238,9 +241,9 @@ export default function AiPredict() {
                 <CardTitle className="flex items-center gap-2">
                   {getRiskIcon(result.riskLevel)}
                   <span className={getRiskColor(result.riskLevel)}>
-                    {result.riskLevel === "safe" && "Low Risk"}
-                    {result.riskLevel === "suspicious" && "Suspicious"}
-                    {result.riskLevel === "dangerous" && "High Risk"}
+                    {result.riskLevel === "safe" && "Lower Observed Risk"}
+                    {result.riskLevel === "suspicious" && "Moderate Risk Indicators"}
+                    {result.riskLevel === "dangerous" && "Elevated Risk Indicators"}
                   </span>
                 </CardTitle>
                 <Badge variant="outline" className="font-mono text-xs">
@@ -269,9 +272,9 @@ export default function AiPredict() {
                 <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-2">
                   <FileWarning className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-red-500">Verified Threat Found</p>
+                    <p className="text-sm font-medium text-red-500">Reported in Database</p>
                     <p className="text-xs text-red-400">
-                      This address has {result.existingReports} report(s) in our database
+                      This address has {result.existingReports} community report(s) in our database
                     </p>
                   </div>
                 </div>
@@ -323,7 +326,7 @@ export default function AiPredict() {
                 No Analysis Yet
               </h3>
               <p className="text-sm text-muted-foreground/70 max-w-xs mt-2">
-                Enter a wallet address to get AI-powered scam prediction and risk analysis
+                Enter a wallet address to get AI-powered informational risk indicators
               </p>
             </CardContent>
           </Card>
@@ -350,7 +353,7 @@ export default function AiPredict() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">How AI Prediction Works</CardTitle>
+          <CardTitle className="text-lg">How AI Analysis Works</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
@@ -360,7 +363,7 @@ export default function AiPredict() {
               </div>
               <h4 className="font-semibold mb-1">Database Check</h4>
               <p className="text-sm text-muted-foreground">
-                Cross-references with UAE7Guard's verified threat database
+                Cross-references with UAE7Guard's community report database
               </p>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
@@ -369,18 +372,23 @@ export default function AiPredict() {
               </div>
               <h4 className="font-semibold mb-1">Pattern Analysis</h4>
               <p className="text-sm text-muted-foreground">
-                AI analyzes for known scam patterns and suspicious indicators
+                AI analyzes for observed patterns and indicators from available data
               </p>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <span className="text-primary font-bold">3</span>
               </div>
-              <h4 className="font-semibold mb-1">Risk Assessment</h4>
+              <h4 className="font-semibold mb-1">Risk Indicators</h4>
               <p className="text-sm text-muted-foreground">
-                Generates comprehensive risk score with actionable recommendations
+                Generates informational risk indicators based on available data
               </p>
             </div>
+          </div>
+          <div className="mt-4 p-3 bg-muted/30 rounded-lg border">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This analysis is informational only and should not be used as the sole basis for financial decisions.
+            </p>
           </div>
         </CardContent>
       </Card>
