@@ -28,7 +28,37 @@ export async function registerRoutes(
   // Setup Replit Auth (MUST be before other routes)
   await setupAuth(app);
   registerAuthRoutes(app);
-  
+
+  // ===== HEALTH CHECK =====
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Check database connection
+      const stats = await storage.getStats();
+
+      res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        database: "connected",
+        environment: process.env.NODE_ENV || "development",
+        features: {
+          database: !!process.env.DATABASE_URL,
+          sessions: !!process.env.SESSION_SECRET,
+          alchemy: !!process.env.ALCHEMY_API_KEY,
+          openai: !!process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+          email: !!process.env.SENDGRID_API_KEY,
+          stripe: !!process.env.STRIPE_SECRET_KEY,
+        },
+      });
+    } catch (error) {
+      console.error("[HEALTH] Health check failed:", error);
+      res.status(503).json({
+        status: "error",
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // ===== SUPPORTED NETWORKS =====
   app.get("/api/networks", (_req, res) => {
     res.json({

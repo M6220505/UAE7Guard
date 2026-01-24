@@ -9,7 +9,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true, // Auto-create sessions table if it doesn't exist
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -48,18 +48,22 @@ export function registerAuthRoutes(app: Express) {
   // Login with email/password
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log("[AUTH] Login attempt for:", req.body?.email);
+
       const data = loginSchema.parse(req.body);
-      
+
       const user = await authStorage.getUserByEmail(data.email);
       if (!user) {
+        console.log("[AUTH] Login failed: User not found");
         return res.status(401).json({ error: "Invalid email or password" });
       }
-      
+
       const isValid = await authStorage.verifyPassword(user, data.password);
       if (!isValid) {
+        console.log("[AUTH] Login failed: Invalid password");
         return res.status(401).json({ error: "Invalid email or password" });
       }
-      
+
       // Set user in session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
@@ -70,7 +74,8 @@ export function registerAuthRoutes(app: Express) {
         role: user.role,
         profileImageUrl: user.profileImageUrl,
       };
-      
+
+      console.log("[AUTH] Login successful for user:", user.id);
       res.json({
         success: true,
         user: {
@@ -83,27 +88,33 @@ export function registerAuthRoutes(app: Express) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("[AUTH] Login validation error:", error.errors);
         return res.status(400).json({ error: "Invalid email or password format" });
       }
-      console.error("Login error:", error);
-      res.status(500).json({ error: "Login failed" });
+      console.error("[AUTH] Login error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Login failed";
+      res.status(500).json({ error: `Login failed: ${errorMessage}` });
     }
   });
 
   // Signup with email/password
   app.post("/api/auth/signup", async (req, res) => {
     try {
+      console.log("[AUTH] Signup attempt for:", req.body?.email);
+
       const data = signupSchema.parse(req.body);
-      
+
       // Check if email already exists
       const existingUser = await authStorage.getUserByEmail(data.email);
       if (existingUser) {
+        console.log("[AUTH] Signup failed: Email already registered");
         return res.status(400).json({ error: "Email already registered" });
       }
-      
+
       // Create new user
       const user = await authStorage.createUserWithPassword(data);
-      
+      console.log("[AUTH] User created successfully:", user.id);
+
       // Set user in session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
@@ -114,7 +125,8 @@ export function registerAuthRoutes(app: Express) {
         role: user.role,
         profileImageUrl: user.profileImageUrl,
       };
-      
+
+      console.log("[AUTH] Signup successful for user:", user.id);
       res.status(201).json({
         success: true,
         user: {
@@ -127,10 +139,12 @@ export function registerAuthRoutes(app: Express) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("[AUTH] Signup validation error:", error.errors);
         return res.status(400).json({ error: "Invalid signup data", details: error.errors });
       }
-      console.error("Signup error:", error);
-      res.status(500).json({ error: "Signup failed" });
+      console.error("[AUTH] Signup error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Signup failed";
+      res.status(500).json({ error: `Signup failed: ${errorMessage}` });
     }
   });
 
