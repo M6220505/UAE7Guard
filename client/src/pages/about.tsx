@@ -1,4 +1,4 @@
-import { Shield, Target, Users, CheckCircle, Lock, FileCheck } from "lucide-react";
+import { Shield, Target, Users, CheckCircle, Lock, FileCheck, Info, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -37,6 +37,10 @@ export default function About() {
       ],
       securityTitle: "Security Standards",
       securityText: "We use AES-256 encryption and comply with UAE Federal Decree-Law No. 45 of 2021 on Personal Data Protection.",
+      informationalUseTitle: "Informational Use",
+      informationalUseText: "UAE7Guard provides informational tools only. Users are responsible for how they interpret and use results. Our analysis is based on available data and community reports, which may be incomplete or change over time.",
+      supportTitle: "Support",
+      supportText: "For questions, concerns, or assistance, please contact us at: support@uae7guard.com",
       disclaimerTitle: "Important Notice",
       disclaimerText: "This service is provided for educational and informational purposes only. Results should not be considered as financial or legal advice. Always do your own research before making any financial decisions.",
     },
@@ -71,6 +75,10 @@ export default function About() {
       ],
       securityTitle: "معايير الأمان",
       securityText: "نستخدم تشفير AES-256 ونلتزم بالمرسوم الاتحادي الإماراتي رقم 45 لسنة 2021 بشأن حماية البيانات الشخصية.",
+      informationalUseTitle: "الاستخدام الإعلامي",
+      informationalUseText: "يوفر UAE7Guard أدوات إعلامية فقط. المستخدمون مسؤولون عن كيفية تفسيرهم واستخدامهم للنتائج. يستند تحليلنا إلى البيانات المتاحة وتقارير المجتمع، والتي قد تكون غير كاملة أو تتغير بمرور الوقت.",
+      supportTitle: "الدعم",
+      supportText: "للأسئلة أو المخاوف أو المساعدة، يرجى الاتصال بنا على: support@uae7guard.com",
       disclaimerTitle: "إشعار مهم",
       disclaimerText: "هذه الخدمة مقدمة للأغراض التعليمية والمعلوماتية فقط. لا ينبغي اعتبار النتائج نصيحة مالية أو قانونية. قم دائمًا بإجراء بحثك الخاص قبل اتخاذ أي قرارات مالية.",
     },
@@ -144,6 +152,30 @@ export default function About() {
           </CardHeader>
           <CardContent className="text-muted-foreground">
             <p>{t.securityText}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-500" />
+              {t.informationalUseTitle}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-muted-foreground">
+            <p>{t.informationalUseText}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-green-500" />
+              {t.supportTitle}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-muted-foreground">
+            <p>{t.supportText}</p>
           </CardContent>
         </Card>
 

@@ -148,7 +148,7 @@ export default function Pricing() {
   const content = {
     en: {
       title: "Choose Your Plan",
-      subtitle: "Start with our free tier or upgrade for premium protection features",
+      subtitle: "Start with our free tier or upgrade for enhanced informational tools and insights",
       monthly: "Monthly",
       yearly: "Yearly",
       save: "Save 17%",
@@ -162,16 +162,16 @@ export default function Pricing() {
       free: {
         name: "Free",
         price: "0",
-        description: "Basic protection for casual users",
+        description: "Basic informational tools for casual users",
         features: [
           "3 wallet checks per day",
-          "Basic threat database access",
+          "Basic database access",
           "Community reports viewing",
           "English & Arabic support",
         ],
         notIncluded: [
           "Watchlist addresses",
-          "AI-powered predictions",
+          "AI-powered analysis",
           "API access",
           "Priority support",
         ],
@@ -179,17 +179,17 @@ export default function Pricing() {
       basic: {
         name: "Basic",
         price: isYearly ? prices.basic_yearly.toFixed(2) : prices.basic_monthly.toFixed(2),
-        description: "Enhanced security for active traders",
+        description: "Enhanced analysis for active users",
         features: [
           "Unlimited wallet checks",
-          "Full threat database access",
+          "Full database access",
           "10 watchlist addresses",
-          "Email alerts for threats",
-          "Detailed risk reports",
+          "Email alerts for indicators",
+          "Detailed informational reports",
           "Community reports viewing",
         ],
         notIncluded: [
-          "AI-powered predictions",
+          "AI-powered analysis",
           "API access",
           "Priority support",
         ],
@@ -202,11 +202,11 @@ export default function Pricing() {
         features: [
           "Everything in Basic",
           "Unlimited watchlist addresses",
-          "AI-powered risk analysis",
-          "Real-time blockchain monitoring",
+          "AI-powered risk indicator analysis",
+          "Real-time blockchain data monitoring",
           "Full API access",
           "Priority 24/7 support",
-          "Custom risk alerts",
+          "Custom indicator alerts",
           "Monthly analysis reports",
         ],
         notIncluded: [],
@@ -214,7 +214,7 @@ export default function Pricing() {
     },
     ar: {
       title: "اختر خطتك",
-      subtitle: "ابدأ بالمستوى المجاني أو قم بالترقية للحصول على ميزات الحماية المتميزة",
+      subtitle: "ابدأ بالمستوى المجاني أو قم بالترقية للحصول على أدوات ورؤى إعلامية محسّنة",
       monthly: "شهري",
       yearly: "سنوي",
       save: "وفر 17%",
@@ -418,13 +418,13 @@ export default function Pricing() {
         {/* Important Disclaimer for App Store Compliance */}
         <Alert className="max-w-3xl mx-auto mt-6 text-left" dir={isRTL ? "rtl" : "ltr"}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
+          <AlertDescription className="text-sm leading-relaxed">
             <strong className="font-semibold">
-              {language === "en" ? "Important Notice:" : "ملاحظة مهمة:"}
+              {language === "en" ? "Subscription Features:" : "ميزات الاشتراك:"}
             </strong>{" "}
             {language === "en"
-              ? "Premium features provide enhanced tools and access, but do NOT guarantee safety or provide financial advice. All tiers are for educational and informational purposes only. Always verify independently and consult professional advisors before making financial decisions."
-              : "توفر الميزات المميزة أدوات محسّنة ووصولاً أوسع، ولكنها لا تضمن السلامة أو تقدم نصائح مالية. جميع المستويات لأغراض تعليمية وإعلامية فقط. تحقق دائماً بشكل مستقل واستشر المستشارين المحترفين قبل اتخاذ القرارات المالية."}
+              ? "Subscription features provide access to additional informational tools and analysis. No guarantees or enforcement actions are provided. All features are for educational and informational purposes only."
+              : "توفر ميزات الاشتراك وصولاً لأدوات وتحليلات إعلامية إضافية. لا يتم تقديم أي ضمانات أو إجراءات تنفيذية. جميع الميزات لأغراض تعليمية وإعلامية فقط."}
           </AlertDescription>
         </Alert>
 
@@ -465,10 +465,10 @@ export default function Pricing() {
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <h3 className="font-medium mb-1">
-              {language === "en" ? "Enhanced Protection" : "حماية معززة"}
+              {language === "en" ? "Enhanced Insights" : "رؤى محسّنة"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {language === "en" ? "Access advanced threat detection" : "الوصول للكشف المتقدم عن التهديدات"}
+              {language === "en" ? "Access additional analysis and insights" : "الوصول لمزيد من التحليل والرؤى"}
             </p>
           </div>
           <div className="text-center">
@@ -476,10 +476,10 @@ export default function Pricing() {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <h3 className="font-medium mb-1">
-              {language === "en" ? "AI Risk Analysis" : "تحليل المخاطر بالذكاء الاصطناعي"}
+              {language === "en" ? "AI Indicator Analysis" : "تحليل المؤشرات بالذكاء الاصطناعي"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {language === "en" ? "Advanced pattern analysis for risk indicators" : "تحليل متقدم للأنماط لمؤشرات الخطر"}
+              {language === "en" ? "Advanced pattern analysis for informational indicators" : "تحليل متقدم للأنماط للمؤشرات الإعلامية"}
             </p>
           </div>
           <div className="text-center">

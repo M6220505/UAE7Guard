@@ -9,7 +9,7 @@ export default function Privacy() {
     en: {
       title: "Privacy Policy",
       subtitle: "PDPL Compliant - UAE Federal Decree Law No. 45 of 2021",
-      intro: "UAE7Guard is committed to protecting your privacy. This policy explains what information we collect and how we use it.",
+      intro: "UAE7Guard minimizes data collection. Limited information may be processed to provide core functionality, improve reliability, and prevent abuse. We do not sell personal data. This policy explains what information we collect and how we use it.",
       sections: [
         {
           icon: Eye,
@@ -73,7 +73,7 @@ export default function Privacy() {
     ar: {
       title: "سياسة الخصوصية",
       subtitle: "متوافق مع قانون حماية البيانات الشخصية - المرسوم الاتحادي رقم 45 لسنة 2021",
-      intro: "تلتزم UAE7Guard بحماية خصوصيتك. توضح هذه السياسة المعلومات التي نجمعها وكيفية استخدامها.",
+      intro: "يقلل UAE7Guard من جمع البيانات. قد تتم معالجة معلومات محدودة لتوفير الوظائف الأساسية وتحسين الموثوقية ومنع إساءة الاستخدام. نحن لا نبيع البيانات الشخصية. توضح هذه السياسة المعلومات التي نجمعها وكيفية استخدامها.",
       sections: [
         {
           icon: Eye,

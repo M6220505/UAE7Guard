@@ -75,13 +75,13 @@ export default function Home() {
     },
     {
       icon: CheckCircle,
-      title: "Verified Reports",
-      description: "All scam reports are verified by our team before being added to the database.",
+      title: "Reviewed Reports",
+      description: "Community reports are reviewed by our team before being added to the database.",
     },
     {
       icon: Users,
       title: "Community Driven",
-      description: "Built on reports from real victims to help protect others from the same scams.",
+      description: "Built on reports from community members to help inform others about potential concerns.",
     },
   ] : [
     {

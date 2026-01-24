@@ -65,7 +65,7 @@ export default function FAQ() {
             },
             {
               q: "What happens after I report an address?",
-              a: "Our team reviews all reports. If verified, the address is added to our database and will appear in future searches. This helps protect others from the same scam.",
+              a: "Our team reviews all reports. If approved, the address is added to our database and will appear in future searches. This helps inform others about potential concerns.",
             },
             {
               q: "Do I need to create an account to report?",
@@ -79,11 +79,11 @@ export default function FAQ() {
           questions: [
             {
               q: "How do I use this service?",
-              a: "Simply paste a wallet address into the check tool and get instant results. We believe everyone should have access to tools that help protect them from scams.",
+              a: "Simply paste a wallet address into the check tool and get instant informational results. We believe everyone should have access to tools that help inform decision-making.",
             },
             {
               q: "Who runs this service?",
-              a: "We are a team dedicated to protecting users in the UAE and beyond from cryptocurrency fraud. Learn more on our About page.",
+              a: "We are a team dedicated to providing informational tools to users in the UAE and beyond. Learn more on our About page.",
             },
             {
               q: "Is my data safe?",

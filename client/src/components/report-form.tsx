@@ -27,6 +27,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { PreSubmitReportModal } from "@/components/pre-submit-report-modal";
 
 const reportFormSchema = z.object({
   scammerAddress: z.string().min(10, "Address must be at least 10 characters").regex(/^0x[a-fA-F0-9]{40}$|^[a-zA-Z0-9]{30,}$/, "Invalid wallet address format"),
@@ -46,6 +47,8 @@ interface ReportFormProps {
 export function ReportForm({ onSuccess }: ReportFormProps) {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [showPreSubmitModal, setShowPreSubmitModal] = useState(false);
+  const [pendingData, setPendingData] = useState<ReportFormValues | null>(null);
   const [agreedToAccuracy, setAgreedToAccuracy] = useState(false);
   const [agreedToConsequences, setAgreedToConsequences] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -100,7 +103,22 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
       });
       return;
     }
-    mutation.mutate(data);
+    // Show pre-submit modal for final confirmation
+    setPendingData(data);
+    setShowPreSubmitModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    if (pendingData) {
+      mutation.mutate(pendingData);
+      setShowPreSubmitModal(false);
+      setPendingData(null);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowPreSubmitModal(false);
+    setPendingData(null);
   };
 
   const allAcknowledgmentsChecked = agreedToAccuracy && agreedToConsequences && agreedToTerms && agreedToNoFalseReport;
@@ -130,17 +148,24 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Flag className="h-5 w-5" />
-          Submit Intelligence Report
-        </CardTitle>
-        <CardDescription>
-          Report a suspicious address for community review. Please ensure all information is accurate and truthful. False reports may result in account termination.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <PreSubmitReportModal
+        open={showPreSubmitModal}
+        onConfirm={handleConfirmSubmit}
+        onCancel={handleCancelSubmit}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Flag className="h-5 w-5" />
+            Submit Intelligence Report
+          </CardTitle>
+          <CardDescription>
+            Report a suspicious address for community review. Please ensure all information is accurate and truthful. False reports may result in account termination.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -348,6 +373,12 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
               </div>
             </div>
 
+            <div className="bg-zinc-950/30 border border-amber-500/20 rounded-lg p-3 mb-4">
+              <p className="text-amber-200/50 text-xs leading-relaxed">
+                Reports are reviewed and do not constitute verified accusations.
+              </p>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
@@ -365,5 +396,6 @@ export function ReportForm({ onSuccess }: ReportFormProps) {
         </Form>
       </CardContent>
     </Card>
+    </>
   );
 }
