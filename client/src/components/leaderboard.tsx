@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { UserReputation, User } from "@shared/schema";
+import type { UserReputation, User } from "@shared/schema.ts";
 
 interface LeaderboardEntry extends UserReputation {
   user?: Pick<User, "username">;

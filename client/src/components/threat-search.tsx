@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
-import type { ScamReport } from "@shared/schema";
+import type { ScamReport } from "@shared/schema.ts";
 import {
   AlertDialog,
   AlertDialogAction,

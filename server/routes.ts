@@ -1,11 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema";
+import { insertScamReportSchema, insertAlertSchema, insertWatchlistSchema, insertSecurityLogSchema, insertLiveMonitoringSchema, insertEscrowTransactionSchema, insertSlippageCalculationSchema } from "@shared/schema.ts";
 import { z } from "zod";
 import OpenAI from "openai";
 import { getFullWalletData, getWalletBalance, getRecentTransactions, checkIfContract, isAlchemyConfigured, getHybridWalletSnapshot, getUnifiedWalletData, SUPPORTED_NETWORKS, validateAddress } from "./alchemy";
-import { hybridVerificationInputSchema, type HybridVerificationResult, type OnChainFacts, type AIInsight } from "@shared/schema";
+import { hybridVerificationInputSchema, type HybridVerificationResult, type OnChainFacts, type AIInsight } from "@shared/schema.ts";
 import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput, type SovereignReport } from "./sovereign-report";

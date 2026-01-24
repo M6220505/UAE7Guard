@@ -1,4 +1,4 @@
-import { users, type User, type UpsertUser } from "@shared/schema";
+import { users, type User, type UpsertUser } from "@shared/schema.ts";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";

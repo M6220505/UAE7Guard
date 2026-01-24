@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, userReputation, scamReports, alerts, watchlist } from "@shared/schema";
+import { users, userReputation, scamReports, alerts, watchlist } from "@shared/schema.ts";
 import bcrypt from "bcryptjs";
 
 const knownScamAddresses = [

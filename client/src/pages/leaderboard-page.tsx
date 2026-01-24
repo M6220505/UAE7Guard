@@ -4,7 +4,7 @@ import { UserReputationCard } from "@/components/dashboard-stats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Shield, Target, TrendingUp, Award, Star, Crown, Medal } from "lucide-react";
-import type { UserReputation } from "@shared/schema";
+import type { UserReputation } from "@shared/schema.ts";
 
 type LeaderboardEntry = UserReputation & { user?: { username: string } };
 

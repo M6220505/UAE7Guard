@@ -51,7 +51,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ScamReport } from "@shared/schema";
+import type { ScamReport } from "@shared/schema.ts";
 import { BlockchainData } from "@/components/blockchain-data";
 import { FirstTimeResultsModal, useFirstTimeResultsModal } from "@/components/first-time-results-modal";
 

@@ -49,7 +49,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { LiveMonitoring, MonitoringAlert } from "@shared/schema";
+import type { LiveMonitoring, MonitoringAlert } from "@shared/schema.ts";
 
 const addWalletSchema = z.object({
   walletAddress: z.string().min(26, "Invalid wallet address").max(62),

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, FileText, FileSpreadsheet, Shield, Eye, AlertTriangle, Calendar, CheckCircle, Clock, FileDown, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { ScamReport, Watchlist } from "@shared/schema";
+import type { ScamReport, Watchlist } from "@shared/schema.ts";
 
 type ExportFormat = "csv" | "json" | "html";
 
