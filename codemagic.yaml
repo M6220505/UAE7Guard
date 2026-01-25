@@ -13,10 +13,9 @@ workflows:
         NODE_VERSION: "20"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        # Backend API URL - CRITICAL: Set this to your actual Replit deployment URL
-        # Example: https://uae7guard-username.repl.co
-        # Or custom domain: https://api.uae7guard.com
-        VITE_API_BASE_URL: "https://uae7guard.com"
+        # Backend API URL - Updated to Replit deployment URL
+        # If this URL is incorrect, update it to your actual Replit URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
         # Apple Review Account Password
         APPLE_REVIEW_PASSWORD: "AppleReview2026"
       xcode: latest
@@ -103,8 +102,8 @@ workflows:
       java: 17
       vars:
         NODE_VERSION: "20"
-        # Backend API URL - CRITICAL: Set this to your actual Replit deployment URL
-        VITE_API_BASE_URL: "https://uae7guard.com"
+        # Backend API URL - Updated to Replit deployment URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
         # Apple Review Account Password
         APPLE_REVIEW_PASSWORD: "AppleReview2026"
     scripts:
