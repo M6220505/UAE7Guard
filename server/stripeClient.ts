@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { getDatabaseUrl } from './getDatabaseUrl';
 
 let connectionSettings: any;
 
@@ -69,7 +70,7 @@ export async function getStripeSync() {
 
     stripeSync = new StripeSync({
       poolConfig: {
-        connectionString: process.env.DATABASE_URL!,
+        connectionString: getDatabaseUrl(),
         max: 2,
       },
       stripeSecretKey: secretKey,
