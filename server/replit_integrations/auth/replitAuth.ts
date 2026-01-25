@@ -52,6 +52,33 @@ export function registerAuthRoutes(app: Express) {
 
       const data = loginSchema.parse(req.body);
 
+      // Apple Review Demo Account Bypass (for TestFlight & App Store Review)
+      const APPLE_REVIEW_EMAIL = "applereview@uae7guard.com";
+      const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2025!";
+
+      if (data.email === APPLE_REVIEW_EMAIL && data.password === APPLE_REVIEW_PASSWORD) {
+        console.log("[AUTH] Apple Review demo login successful");
+
+        // Create demo user session without database lookup
+        const demoUser = {
+          id: "demo-apple-review",
+          email: APPLE_REVIEW_EMAIL,
+          firstName: "Apple",
+          lastName: "Reviewer",
+          role: "user" as const,
+          subscriptionTier: "pro" as const,
+          profileImageUrl: null,
+        };
+
+        (req.session as any).userId = demoUser.id;
+        (req.session as any).user = demoUser;
+
+        return res.json({
+          success: true,
+          user: demoUser,
+        });
+      }
+
       const user = await authStorage.getUserByEmail(data.email);
       if (!user) {
         console.log("[AUTH] Login failed: User not found");
@@ -92,8 +119,8 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid email or password format" });
       }
       console.error("[AUTH] Login error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Login failed";
-      res.status(500).json({ error: `Login failed: ${errorMessage}` });
+      // CRITICAL: Never return 500 for login failures - Apple rejects apps with 500 errors during login
+      res.status(401).json({ error: "Invalid email or password" });
     }
   });
 
@@ -143,8 +170,8 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid signup data", details: error.errors });
       }
       console.error("[AUTH] Signup error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Signup failed";
-      res.status(500).json({ error: `Signup failed: ${errorMessage}` });
+      // Return 400 instead of 500 for client errors
+      res.status(400).json({ error: "Signup failed. Please try again." });
     }
   });
 
