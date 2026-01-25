@@ -54,7 +54,7 @@ export function registerAuthRoutes(app: Express) {
 
       // Apple Review Demo Account Bypass (for TestFlight & App Store Review)
       const APPLE_REVIEW_EMAIL = "applereview@uae7guard.com";
-      const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2025!";
+      const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2026";
 
       if (data.email === APPLE_REVIEW_EMAIL && data.password === APPLE_REVIEW_PASSWORD) {
         console.log("[AUTH] Apple Review demo login successful");
