@@ -105,7 +105,7 @@ export function RecentReports() {
                   {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
                 </p>
               </div>
-              <Badge size="sm" className={config.color}>
+              <Badge className={config.color}>
                 {config.label}
               </Badge>
             </div>

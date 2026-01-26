@@ -84,20 +84,22 @@ export async function readinessCheck(req: Request, res: Response): Promise<void>
     const dbCheck = await checkDatabase();
 
     if (dbCheck.status === 'fail') {
-      return res.status(503).json({
+      res.status(503).json({
         ready: false,
         reason: 'Database not available',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
 
     // Check if in maintenance mode
     if (config.maintenance.enabled) {
-      return res.status(503).json({
+      res.status(503).json({
         ready: false,
         reason: 'Maintenance mode enabled',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
 
     res.status(200).json({

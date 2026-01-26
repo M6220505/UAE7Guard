@@ -56,7 +56,7 @@ export function AlertCard({ alert }: AlertCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="font-semibold">{alert.title}</h4>
-            <Badge size="sm" className={config.badge}>
+            <Badge className={config.badge}>
               {alert.severity}
             </Badge>
           </div>

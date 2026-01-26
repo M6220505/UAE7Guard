@@ -75,6 +75,7 @@ interface SovereignReport {
   };
   legalDisclaimer: {
     en: string;
+    ar: string;
   };
   auditTrail: {
     transactionHash: string;

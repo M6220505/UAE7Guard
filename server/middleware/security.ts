@@ -144,9 +144,9 @@ export function trustProxy(req: Request, res: Response, next: NextFunction) {
 
   if (forwarded) {
     const ips = (Array.isArray(forwarded) ? forwarded[0] : forwarded).split(',');
-    req.ip = ips[0].trim();
+    (req as any).ip = ips[0].trim();
   } else if (realIp) {
-    req.ip = Array.isArray(realIp) ? realIp[0] : realIp;
+    (req as any).ip = Array.isArray(realIp) ? realIp[0] : realIp;
   }
 
   next();
@@ -257,7 +257,7 @@ export function adminOnly(req: Request, res: Response, next: NextFunction) {
  * Ensures user is authenticated
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
     return res.status(401).json({
       error: 'Unauthorized',
       message: 'Authentication required',
