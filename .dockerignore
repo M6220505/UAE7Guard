@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+dist
+build
+*.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Mobile
+android
+ios
+*.apk
+*.ipa
+*.aab
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Uploads (don't include in image)
+uploads
+
+# Zip files
+*.zip
+
+# Replit specific
+.replit
+replit.md
+attached_assets

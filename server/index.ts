@@ -9,8 +9,32 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 
+// Import production middleware and utilities
+import config, { validateConfig } from './config';
+import { helmet, maintenanceMode } from './middleware/security';
+import { apiLimiter } from './middleware/rateLimit';
+import { logger, requestLogger, errorLogger } from './utils/logger';
+import { monitoringMiddleware } from './utils/monitoring';
+import {
+  healthCheck,
+  detailedHealthCheck,
+  readinessCheck,
+  livenessCheck,
+  getMetrics,
+} from './middleware/healthCheck';
+
 const app = express();
 const httpServer = createServer(app);
+
+// Validate production configuration
+if (config.isProduction) {
+  try {
+    validateConfig();
+  } catch (error) {
+    logger.error('Configuration validation failed', error);
+    process.exit(1);
+  }
+}
 
 // Configure CORS to allow mobile app requests
 // This is critical for Capacitor mobile apps to connect to the backend
@@ -37,7 +61,20 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 
+// Apply security middleware first
+app.use(helmet());
+
+// Maintenance mode check
+app.use(maintenanceMode);
+
+// CORS configuration
 app.use(cors(corsOptions));
+
+// Monitoring middleware
+app.use(monitoringMiddleware);
+
+// Request logging
+app.use(requestLogger);
 
 declare module "http" {
   interface IncomingMessage {
@@ -124,51 +161,21 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// Legacy log function for backward compatibility
 export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  console.log(`${formattedTime} [${source}] ${message}`);
+  logger.info(message, { source });
 }
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+// Health check endpoints (must be before rate limiting and other routes)
+app.get("/", healthCheck);
+app.get("/api/health", healthCheck);
+app.get("/api/health/detailed", detailedHealthCheck);
+app.get("/api/health/ready", readinessCheck);
+app.get("/api/health/live", livenessCheck);
+app.get("/api/health/metrics", getMetrics);
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
-// Health check endpoint (must be before registerRoutes)
-app.get("/", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "UAE7Guard API",
-    timestamp: new Date().toISOString()
-  });
-});
+// Apply rate limiting to API routes
+app.use("/api", apiLimiter);
 
 (async () => {
   // Initialize Stripe first
@@ -183,12 +190,27 @@ app.get("/", (_req, res) => {
     console.log("Seed completed or skipped (data may already exist)");
   }
 
+  // Error logging middleware
+  app.use(errorLogger);
+
+  // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log error with appropriate level
+    if (status >= 500) {
+      logger.error('Server error', err);
+    } else if (status >= 400) {
+      logger.warn('Client error', { status, message });
+    }
+
+    // Don't leak error details in production
+    const errorResponse = config.isProduction
+      ? { error: status >= 500 ? 'Internal Server Error' : message }
+      : { error: message, stack: err.stack };
+
+    res.status(status).json(errorResponse);
   });
 
   // importantly only setup vite in development and after
@@ -205,31 +227,79 @@ app.get("/", (_req, res) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
+  const port = config.server.port;
+  const host = config.server.host;
+
   httpServer.listen(
     {
       port,
-      host: "0.0.0.0",
+      host,
       reusePort: true,
     },
     () => {
-      log(`serving on port ${port}`);
+      logger.info(`🚀 Server started successfully`, {
+        port,
+        host,
+        environment: config.env,
+        nodeVersion: process.version,
+      });
+
+      // Log configuration info
+      if (config.isProduction) {
+        logger.info('Production mode enabled');
+        logger.info('Security features active');
+      } else {
+        logger.info('Development mode enabled');
+      }
     },
   );
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received, starting graceful shutdown...`);
+
+    // Stop accepting new connections
+    httpServer.close(() => {
+      logger.info('HTTP server closed');
+
+      // Close database connections, cleanup, etc.
+      process.exit(0);
+    });
+
+    // Force shutdown after 30 seconds
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 30000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 })().catch((error) => {
-  console.error('Fatal server error during initialization:', error);
-  // Keep the process running even if initialization fails partially
-  // The httpServer.listen() call should have already been made
-  process.exitCode = 1;
+  logger.error('Fatal server error during initialization', error);
+  process.exit(1);
 });
 
-// Handle uncaught errors to prevent server exit
+// Handle uncaught errors
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
-  // Don't exit - keep server running
+  logger.error('Uncaught exception - this should never happen!', error);
+
+  // In production, try to keep running but mark as unhealthy
+  if (config.isProduction) {
+    logger.error('Server marked as unhealthy but continuing...');
+  } else {
+    // In development, exit to catch errors early
+    process.exit(1);
+  }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
-  // Don't exit - keep server running
+process.on('unhandledRejection', (reason: any, promise) => {
+  logger.error('Unhandled promise rejection', reason, {
+    promise: promise.toString(),
+  });
+
+  // Don't exit in production for unhandled rejections
+  if (!config.isProduction) {
+    process.exit(1);
+  }
 });
