@@ -38,12 +38,6 @@
       ]
     }
   ],
-  "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
   "regions": ["iad1"],
   "env": {
     "NODE_ENV": "production"
