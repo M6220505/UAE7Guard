@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,9 +9,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, LogIn } from "lucide-react";
+import { Shield, Eye, EyeOff, LogIn, WifiOff, Wifi } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
+import { isOnline, addNetworkListeners } from "@/lib/network-utils";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -25,7 +26,31 @@ export default function Login() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState(isOnline());
   const { t } = useLanguage();
+
+  // Monitor network status
+  useEffect(() => {
+    const cleanup = addNetworkListeners(
+      () => {
+        setNetworkStatus(true);
+        toast({
+          title: "Connection restored",
+          description: "You are back online",
+        });
+      },
+      () => {
+        setNetworkStatus(false);
+        toast({
+          title: "No internet connection",
+          description: "Please check your network settings",
+          variant: "destructive",
+        });
+      }
+    );
+
+    return cleanup;
+  }, [toast]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -37,6 +62,11 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
+      // Check network status before making request
+      if (!isOnline()) {
+        throw new Error("No internet connection. Please check your network settings and try again.");
+      }
+
       const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
@@ -49,9 +79,19 @@ export default function Login() {
       setLocation("/dashboard");
     },
     onError: (error: Error) => {
+      const errorMessage = error.message || "Invalid email or password";
+
+      // Provide specific guidance based on error type
+      let description = errorMessage;
+      if (errorMessage.includes("timeout")) {
+        description = "The server is taking too long to respond. Please check your internet connection and try again.";
+      } else if (errorMessage.includes("Cannot connect")) {
+        description = "Cannot reach the server. Please check your internet connection and try again.";
+      }
+
       toast({
         title: "Login failed",
-        description: error.message || "Invalid email or password",
+        description,
         variant: "destructive",
       });
     },
@@ -74,6 +114,12 @@ export default function Login() {
           <CardDescription className="text-zinc-400">
             {t.signInToAccount}
           </CardDescription>
+          {!networkStatus && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-amber-500 text-sm bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+              <WifiOff className="h-4 w-4" />
+              <span>No internet connection</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -129,12 +175,17 @@ export default function Login() {
               />
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={loginMutation.isPending}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loginMutation.isPending || !networkStatus}
                 data-testid="button-login"
               >
                 {loginMutation.isPending ? (
                   t.signingIn
+                ) : !networkStatus ? (
+                  <>
+                    <WifiOff className="h-4 w-4 mr-2" />
+                    Offline
+                  </>
                 ) : (
                   <>
                     <LogIn className="h-4 w-4 mr-2" />
