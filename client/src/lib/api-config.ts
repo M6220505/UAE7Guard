@@ -9,12 +9,19 @@ import { Capacitor } from '@capacitor/core';
 
 // Default backend URL for production mobile builds
 // Can be overridden with VITE_API_BASE_URL environment variable during build
-// This should match your deployed backend URL (e.g., Replit deployment URL)
-const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://uae7guard-m6220505.repl.co';
+// 🔥 IMPORTANT: Update this URL after deploying to Vercel
+// Example: 'https://uae7guard.vercel.app' or your custom domain
+//
+// To override at build time:
+//   export VITE_API_BASE_URL="https://your-backend-url.com"
+//   npm run build
+//
+const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // Development API URL (when testing mobile app locally)
 // Can be overridden with VITE_DEV_API_URL environment variable
-const DEV_API_URL = import.meta.env.VITE_DEV_API_URL || 'https://uae7guard-m6220505.repl.co';
+// Set this to your local backend or staging URL
+const DEV_API_URL = import.meta.env.VITE_DEV_API_URL || '';
 
 /**
  * Get the appropriate API base URL based on the platform
