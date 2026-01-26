@@ -8,6 +8,7 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
+    "check-env": "tsx scripts/check-env-config.ts",
     "db:push": "drizzle-kit push",
     "db:setup": "tsx scripts/setup-database.ts",
     "db:setup:force": "tsx scripts/setup-database.ts --force",
