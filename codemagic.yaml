@@ -13,6 +13,11 @@ workflows:
         NODE_VERSION: "20"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        # Backend API URL - Updated to Replit deployment URL
+        # If this URL is incorrect, update it to your actual Replit URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
+        # Apple Review Account Password
+        APPLE_REVIEW_PASSWORD: "AppleReview2026"
       xcode: latest
       cocoapods: default
     scripts:
@@ -28,6 +33,13 @@ workflows:
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npm install
+
+      - name: Build with environment variables
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          echo "Building with API URL: $VITE_API_BASE_URL"
+          echo "Apple Review Password configured: ${APPLE_REVIEW_PASSWORD:0:5}***"
           npm run build
 
       - name: Copy Capacitor assets
@@ -90,6 +102,10 @@ workflows:
       java: 17
       vars:
         NODE_VERSION: "20"
+        # Backend API URL - Updated to Replit deployment URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
+        # Apple Review Account Password
+        APPLE_REVIEW_PASSWORD: "AppleReview2026"
     scripts:
       - name: Setup Node.js
         script: |
@@ -98,11 +114,17 @@ workflows:
           nvm use $NODE_VERSION
           node --version
 
-      - name: Install dependencies and build
+      - name: Install dependencies
         script: |
           . ~/.nvm/nvm.sh
           nvm use $NODE_VERSION
           npm install
+
+      - name: Build with environment variables
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          echo "Building with API URL: $VITE_API_BASE_URL"
           npm run build
 
       - name: Sync Capacitor Android

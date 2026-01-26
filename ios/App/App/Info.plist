@@ -66,6 +66,24 @@
 				<key>NSExceptionRequiresForwardSecrecy</key>
 				<true/>
 			</dict>
+			<key>repl.co</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
+			<key>replit.dev</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
 		</dict>
 	</dict>
 	<key>ITSAppUsesNonExemptEncryption</key>

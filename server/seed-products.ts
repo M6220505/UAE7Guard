@@ -96,4 +96,9 @@ async function createProducts() {
   console.log('  Pro Yearly:', proYearlyPrice.id);
 }
 
-createProducts().catch(console.error);
+export default createProducts;
+
+// Run if called directly
+if (require.main === module) {
+  createProducts().catch(console.error);
+}
