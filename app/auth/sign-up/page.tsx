@@ -40,13 +40,7 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient()
-      
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout. Please try again.')), 15000)
-      })
-
-      const authPromise = supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -56,8 +50,6 @@ export default function SignUpPage() {
         },
       })
 
-      const { error, data } = await Promise.race([authPromise, timeoutPromise]) as Awaited<typeof authPromise>
-
       if (error) {
         if (error.message.includes('User already registered')) {
           throw new Error('An account with this email already exists')
@@ -65,20 +57,11 @@ export default function SignUpPage() {
         throw error
       }
 
-      // Check if user needs to confirm email
-      if (data?.user && !data.session) {
-        router.push('/auth/sign-up-success')
-      } else {
-        router.push('/dashboard')
-      }
+      router.push('/auth/sign-up-success')
     } catch (err: unknown) {
       if (err instanceof Error) {
-        if (err.message.includes('Missing Supabase')) {
-          setError('Service not configured. Please contact support.')
-        } else if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed to fetch')) {
+        if (err.message.includes('fetch') || err.message.includes('network')) {
           setError('Network error. Please check your internet connection.')
-        } else if (err.message.includes('timeout')) {
-          setError('Connection timeout. Please try again.')
         } else {
           setError(err.message || 'Could not create account')
         }
