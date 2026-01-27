@@ -1,2 +1,0 @@
-Address,Type,Status,Severity,Description,Amount Lost,Reported Date,Verified Date
-0x742d35cc6634c0532925a3b844bc9e7595f1b5d8,smart_contract_exploit,pending,critical,"[ETHEREUM] Malicious contract with hidden withdrawal function. Amount lost: 8,900,000 ETH",8900000,1/4/2026,Pending
