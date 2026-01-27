@@ -1,4 +1,3 @@
-import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
@@ -8,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'UAE7Guard',
-  description: 'Your trusted security guard verification app',
+  title: 'v0 App',
+  description: 'Created with v0',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -36,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="font-sans antialiased">
+    <html lang="en">
+      <body className={`font-sans antialiased`}>
         {children}
         <Analytics />
       </body>
