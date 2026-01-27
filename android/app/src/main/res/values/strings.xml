@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">UAE7Guard</string>
-    <string name="title_activity_main">UAE7Guard</string>
-    <string name="package_name">com.uae7guard.app</string>
-    <string name="custom_url_scheme">com.uae7guard.app</string>
-</resources>
