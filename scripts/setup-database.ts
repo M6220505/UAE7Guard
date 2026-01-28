@@ -15,6 +15,7 @@
  *   npm run db:setup -- --force       # Drop and recreate all tables
  */
 
+import 'dotenv/config';
 import { sql } from 'drizzle-orm';
 import { db } from '../server/db';
 import { seedDatabase } from '../server/seed';
