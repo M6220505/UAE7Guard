@@ -7,7 +7,16 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     // Allow the app to make requests to the backend
-    allowNavigation: ['https://uae7guard.com', 'https://*.uae7guard.com', 'https://*.repl.co', 'https://*.replit.dev', 'https://uae7guard-m6220505.repl.co'],
+    allowNavigation: [
+      'https://uae7guard.com',
+      'https://*.uae7guard.com',
+      'https://uae7guard.vercel.app',
+      'https://*.vercel.app',
+      'https://*.repl.co',
+      'https://*.replit.dev',
+      'capacitor://localhost',
+      'ionic://localhost'
+    ],
     // Enable for development with local backend
     // cleartext: true,
     // url: 'http://localhost:5000'
