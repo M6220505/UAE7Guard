@@ -26,6 +26,10 @@ import {
 const app = express();
 const httpServer = createServer(app);
 
+// For Vercel serverless: export app and initialization function
+export { app, httpServer };
+export let isInitialized = false;
+
 // Validate production configuration
 if (config.isProduction) {
   try {
@@ -177,12 +181,17 @@ app.get("/api/health/metrics", getMetrics);
 // Apply rate limiting to API routes
 app.use("/api", apiLimiter);
 
-(async () => {
+// Initialize the application
+export async function initializeApp() {
+  if (isInitialized) {
+    return app;
+  }
+
   // Initialize Stripe first
   await initStripe();
-  
+
   await registerRoutes(httpServer, app);
-  
+
   // Seed database with initial data
   try {
     await seedDatabase();
@@ -223,62 +232,75 @@ app.use("/api", apiLimiter);
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = config.server.port;
-  const host = config.server.host;
+  isInitialized = true;
+  return app;
+}
 
-  httpServer.listen(
-    {
-      port,
-      host,
-      reusePort: true,
-    },
-    () => {
-      logger.info(`🚀 Server started successfully`, {
+// Check if running in Vercel serverless environment
+const isVercelServerless = process.env.VERCEL === '1' && !process.env.PORT;
+
+// Only start the server if not in Vercel serverless mode
+if (!isVercelServerless) {
+  (async () => {
+    await initializeApp();
+
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = config.server.port;
+    const host = config.server.host;
+
+    httpServer.listen(
+      {
         port,
         host,
-        environment: config.env,
-        nodeVersion: process.version,
+        reusePort: true,
+      },
+      () => {
+        logger.info(`🚀 Server started successfully`, {
+          port,
+          host,
+          environment: config.env,
+          nodeVersion: process.version,
+        });
+
+        // Log configuration info
+        if (config.isProduction) {
+          logger.info('Production mode enabled');
+          logger.info('Security features active');
+        } else {
+          logger.info('Development mode enabled');
+        }
+      },
+    );
+
+    // Graceful shutdown
+    const shutdown = async (signal: string) => {
+      logger.info(`${signal} received, starting graceful shutdown...`);
+
+      // Stop accepting new connections
+      httpServer.close(() => {
+        logger.info('HTTP server closed');
+
+        // Close database connections, cleanup, etc.
+        process.exit(0);
       });
 
-      // Log configuration info
-      if (config.isProduction) {
-        logger.info('Production mode enabled');
-        logger.info('Security features active');
-      } else {
-        logger.info('Development mode enabled');
-      }
-    },
-  );
+      // Force shutdown after 30 seconds
+      setTimeout(() => {
+        logger.error('Forced shutdown after timeout');
+        process.exit(1);
+      }, 30000);
+    };
 
-  // Graceful shutdown
-  const shutdown = async (signal: string) => {
-    logger.info(`${signal} received, starting graceful shutdown...`);
-
-    // Stop accepting new connections
-    httpServer.close(() => {
-      logger.info('HTTP server closed');
-
-      // Close database connections, cleanup, etc.
-      process.exit(0);
-    });
-
-    // Force shutdown after 30 seconds
-    setTimeout(() => {
-      logger.error('Forced shutdown after timeout');
-      process.exit(1);
-    }, 30000);
-  };
-
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
-})().catch((error) => {
-  logger.error('Fatal server error during initialization', error);
-  process.exit(1);
-});
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+  })().catch((error) => {
+    logger.error('Fatal server error during initialization', error);
+    process.exit(1);
+  });
+}
 
 // Handle uncaught errors
 process.on('uncaughtException', (error) => {
