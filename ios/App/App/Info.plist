@@ -57,12 +57,12 @@
 		<false/>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>vercel.app</key>
+			<key>uae7guard.vercel.app</key>
 			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
 				<key>NSIncludesSubdomains</key>
 				<true/>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
 				<key>NSExceptionRequiresForwardSecrecy</key>
 				<true/>
 			</dict>
