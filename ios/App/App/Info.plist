@@ -57,6 +57,15 @@
 		<false/>
 		<key>NSExceptionDomains</key>
 		<dict>
+			<key>vercel.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
 			<key>replit.app</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>

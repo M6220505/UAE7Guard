@@ -15,6 +15,8 @@ export interface IAuthStorage {
     lastName: string;
   }): Promise<User>;
   verifyPassword(user: User, password: string): Promise<boolean>;
+  updatePassword(userId: string, newPassword: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
 }
 
 class AuthStorage implements IAuthStorage {
@@ -78,6 +80,21 @@ class AuthStorage implements IAuthStorage {
       return false;
     }
     return bcrypt.compare(password, user.password);
+  }
+
+  async updatePassword(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
   }
 }
 

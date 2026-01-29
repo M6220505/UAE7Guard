@@ -196,6 +196,93 @@ export function registerAuthRoutes(app: Express) {
       res.json({ success: true });
     });
   });
+
+  // Forgot Password
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await authStorage.getUserByEmail(email);
+
+      // SECURITY: Always return success even if user doesn't exist (prevents email enumeration)
+      // In production, you would send a password reset email here
+      console.log("[AUTH] Password reset requested for:", email);
+
+      // For now, return success without actually sending email
+      // TODO: Integrate with SendGrid or similar email service
+      res.json({
+        success: true,
+        message: "If an account exists with this email, you will receive password reset instructions."
+      });
+    } catch (error) {
+      console.error("[AUTH] Forgot password error:", error);
+      res.status(500).json({ error: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset Password (would be used with a token from email)
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, newPassword } = req.body;
+
+      if (!email || !newPassword) {
+        return res.status(400).json({ error: "Email and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      const user = await authStorage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update password
+      await authStorage.updatePassword(user.id, newPassword);
+
+      console.log("[AUTH] Password reset successful for user:", user.id);
+      res.json({ success: true, message: "Password updated successfully" });
+    } catch (error) {
+      console.error("[AUTH] Reset password error:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  });
+
+  // Delete Account
+  app.post("/api/auth/delete-account", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.session as any).userId;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      console.log("[AUTH] Account deletion requested for user:", userId);
+
+      // Delete user from database
+      await authStorage.deleteUser(userId);
+
+      // Destroy session
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Session destroy error during account deletion:", err);
+        }
+      });
+
+      res.clearCookie("connect.sid");
+      console.log("[AUTH] Account deleted successfully:", userId);
+      res.json({ success: true, message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("[AUTH] Delete account error:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
 }
 
 // Middleware to check if user is authenticated

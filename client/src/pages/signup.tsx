@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, UserPlus } from "lucide-react";
+import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -215,6 +215,31 @@ export default function Signup() {
               </Button>
             </form>
           </Form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300"
+            onClick={() => {
+              toast({
+                title: "Coming Soon",
+                description: "Sign in with Apple will be available in the next update",
+              });
+            }}
+            data-testid="button-apple-signup"
+          >
+            <Apple className="h-5 w-5 mr-2 fill-current" />
+            Sign up with Apple
+          </Button>
+
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
               {t.alreadyHaveAccount}{" "}

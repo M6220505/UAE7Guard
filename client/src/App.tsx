@@ -13,7 +13,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import About from "@/pages/about";
@@ -28,6 +31,7 @@ import Leaderboard from "@/pages/leaderboard-page";
 import ApiDocs from "@/pages/api-docs";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import ForgotPassword from "@/pages/forgot-password";
 import Verification from "@/pages/verification";
 import Protection from "@/pages/protection";
 import ReportsAnalytics from "@/pages/reports-analytics";
@@ -50,19 +54,45 @@ const legacyRedirects: Record<string, string> = {
 
 function UserNav() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
-  
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
   if (isLoading) {
     return <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />;
   }
-  
+
   if (!isAuthenticated) {
     return null;
   }
-  
-  const initials = user?.firstName && user?.lastName 
+
+  const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
     : user?.email?.[0]?.toUpperCase() || "U";
-  
+
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await apiRequest("POST", "/api/auth/delete-account", {});
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Account Deleted",
+          description: "Your account has been permanently deleted.",
+        });
+        queryClient.invalidateQueries();
+        setLocation("/");
+      } else {
+        throw new Error(data.error || "Failed to delete account");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Deletion Failed",
+        description: error.message || "Could not delete account",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -89,6 +119,29 @@ function UserNav() {
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive" data-testid="button-delete-account">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Account
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete Account
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -214,7 +267,7 @@ function Router() {
     return <Redirect to={legacyRedirects[location]} />;
   }
 
-  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup", "/pricing"];
+  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/pricing"];
   
   if (simplePages.includes(location)) {
     return (
@@ -228,6 +281,7 @@ function Router() {
           <Route path="/terms" component={Terms} />
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
+          <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/pricing" component={Pricing} />
         </Switch>
       </SimpleLayout>
