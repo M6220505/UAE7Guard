@@ -21,7 +21,8 @@ export type SubscriptionTier = "free" | "basic" | "pro";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username"),
-  password: text("password"),
+  password: text("password"), // Optional: will be null for Firebase users
+  firebaseUid: text("firebase_uid").unique(), // Firebase Authentication UID
   email: text("email"),
   firstName: text("first_name"),
   lastName: text("last_name"),

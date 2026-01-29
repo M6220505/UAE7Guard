@@ -11,6 +11,7 @@ import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type 
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput, type SovereignReport } from "./sovereign-report";
 import { generatePDFReport } from "./pdf-generator";
 import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
+import firebaseAuthRouter from "./replit_integrations/auth/firebaseAuth";
 import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotificationEmail } from "./email";
 import { getUserIdForRequest } from "./demo-access";
 import { stripeService } from "./stripeService";
@@ -28,6 +29,9 @@ export async function registerRoutes(
   // Setup Replit Auth (MUST be before other routes)
   await setupAuth(app);
   registerAuthRoutes(app);
+
+  // Register Firebase Auth routes
+  app.use("/api/auth/firebase", firebaseAuthRouter);
 
   // ===== HEALTH CHECK =====
   app.get("/api/health", async (req, res) => {

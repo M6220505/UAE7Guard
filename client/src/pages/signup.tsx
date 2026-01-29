@@ -3,15 +3,15 @@ import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
+import { signUpWithEmail, signInWithApple } from "@/lib/firebase";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -31,6 +31,8 @@ export default function Signup() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { t } = useLanguage();
 
   const form = useForm<SignupForm>({
@@ -44,35 +46,58 @@ export default function Signup() {
     },
   });
 
-  const signupMutation = useMutation({
-    mutationFn: async (data: SignupForm) => {
-      const response = await apiRequest("POST", "/api/auth/signup", {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
+  const onSubmit = async (data: SignupForm) => {
+    setIsLoading(true);
+    try {
+      // Create Firebase account
+      const firebaseUser = await signUpWithEmail(data.email, data.password);
+
+      // Update profile with first and last name (this will be synced to our database via the auth hook)
+      await firebaseUser.updateProfile({
+        displayName: `${data.firstName} ${data.lastName}`,
       });
-      return response.json();
-    },
-    onSuccess: () => {
+
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Account created!",
         description: "Welcome to UAE7Guard. You are now logged in.",
       });
       setLocation("/dashboard");
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
         title: "Signup failed",
         description: error.message || "Could not create account",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const onSubmit = (data: SignupForm) => {
-    signupMutation.mutate(data);
+  const handleAppleSignUp = async () => {
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+      // On iOS, this will redirect, so the following code won't execute
+      // On web, user will be signed in via popup
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Welcome!",
+        description: "You have successfully signed up with Apple.",
+      });
+      setLocation("/dashboard");
+    } catch (error: any) {
+      // Don't show error for redirect in progress
+      if (error.message !== 'REDIRECT_IN_PROGRESS') {
+        toast({
+          title: "Apple Sign Up failed",
+          description: error.message || "Failed to sign up with Apple",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsAppleLoading(false);
+    }
   };
 
   return (
@@ -90,6 +115,37 @@ export default function Signup() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Sign up with Apple - Primary Option */}
+          <Button
+            variant="outline"
+            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
+            onClick={handleAppleSignUp}
+            disabled={isAppleLoading}
+            data-testid="button-apple-signup"
+          >
+            {isAppleLoading ? (
+              <>
+                <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                Signing up...
+              </>
+            ) : (
+              <>
+                <Apple className="h-5 w-5 mr-2 fill-current" />
+                Sign up with Apple
+              </>
+            )}
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
+            </div>
+          </div>
+
+          {/* Email/Password Sign Up */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -201,10 +257,10 @@ export default function Signup() {
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={signupMutation.isPending}
+                disabled={isLoading}
                 data-testid="button-signup"
               >
-                {signupMutation.isPending ? (
+                {isLoading ? (
                   t.creatingAccount
                 ) : (
                   <>
@@ -215,30 +271,6 @@ export default function Signup() {
               </Button>
             </form>
           </Form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with</span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "Sign in with Apple will be available in the next update",
-              });
-            }}
-            data-testid="button-apple-signup"
-          >
-            <Apple className="h-5 w-5 mr-2 fill-current" />
-            Sign up with Apple
-          </Button>
 
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">

@@ -3,16 +3,16 @@ import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, LogIn, WifiOff, Wifi, Apple } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Shield, Eye, EyeOff, LogIn, WifiOff, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { isOnline, addNetworkListeners } from "@/lib/network-utils";
+import { signInWithEmail, signInWithApple } from "@/lib/firebase";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -27,6 +27,8 @@ export default function Login() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [networkStatus, setNetworkStatus] = useState(isOnline());
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { t } = useLanguage();
 
   // Monitor network status
@@ -60,45 +62,69 @@ export default function Login() {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginForm) => {
-      // Check network status before making request
-      if (!isOnline()) {
-        throw new Error("No internet connection. Please check your network settings and try again.");
-      }
+  const onSubmit = async (data: LoginForm) => {
+    if (!isOnline()) {
+      toast({
+        title: "No internet connection",
+        description: "Please check your network settings and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
-    },
-    onSuccess: () => {
+    setIsLoading(true);
+    try {
+      await signInWithEmail(data.email, data.password);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
       setLocation("/dashboard");
-    },
-    onError: (error: Error) => {
-      const errorMessage = error.message || "Invalid email or password";
-
-      // Provide specific guidance based on error type
-      let description = errorMessage;
-      if (errorMessage.includes("timeout")) {
-        description = "The server is taking too long to respond. Please check your internet connection and try again.";
-      } else if (errorMessage.includes("Cannot connect")) {
-        description = "Cannot reach the server. Please check your internet connection and try again.";
-      }
-
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description,
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const onSubmit = (data: LoginForm) => {
-    loginMutation.mutate(data);
+  const handleAppleSignIn = async () => {
+    if (!isOnline()) {
+      toast({
+        title: "No internet connection",
+        description: "Please check your network settings and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+      // On iOS, this will redirect, so the following code won't execute
+      // On web, user will be signed in via popup
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Welcome!",
+        description: "You have successfully signed in with Apple.",
+      });
+      setLocation("/dashboard");
+    } catch (error: any) {
+      // Don't show error for redirect in progress
+      if (error.message !== 'REDIRECT_IN_PROGRESS') {
+        toast({
+          title: "Apple Sign In failed",
+          description: error.message || "Failed to sign in with Apple",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsAppleLoading(false);
+    }
   };
 
   return (
@@ -122,6 +148,37 @@ export default function Login() {
           )}
         </CardHeader>
         <CardContent>
+          {/* Sign in with Apple - Primary Option */}
+          <Button
+            variant="outline"
+            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
+            onClick={handleAppleSignIn}
+            disabled={isAppleLoading || !networkStatus}
+            data-testid="button-apple-signin"
+          >
+            {isAppleLoading ? (
+              <>
+                <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                <Apple className="h-5 w-5 mr-2 fill-current" />
+                Sign in with Apple
+              </>
+            )}
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
+            </div>
+          </div>
+
+          {/* Email/Password Sign In */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -176,10 +233,10 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loginMutation.isPending || !networkStatus}
+                disabled={isLoading || !networkStatus}
                 data-testid="button-login"
               >
-                {loginMutation.isPending ? (
+                {isLoading ? (
                   t.signingIn
                 ) : !networkStatus ? (
                   <>
@@ -195,30 +252,6 @@ export default function Login() {
               </Button>
             </form>
           </Form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with</span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "Sign in with Apple will be available in the next update",
-              });
-            }}
-            data-testid="button-apple-signin"
-          >
-            <Apple className="h-5 w-5 mr-2 fill-current" />
-            Sign in with Apple
-          </Button>
 
           <div className="mt-4 text-center">
             <a
