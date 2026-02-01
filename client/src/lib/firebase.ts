@@ -30,28 +30,59 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Validate Firebase configuration
-function validateFirebaseConfig() {
+// Check if Firebase configuration is valid
+function isFirebaseConfigValid() {
+  const requiredKeys = ['apiKey', 'authDomain', 'projectId'];
+  return requiredKeys.every(key => !!firebaseConfig[key as keyof typeof firebaseConfig]);
+}
+
+// Get validation error message
+function getFirebaseConfigErrorMessage() {
   const requiredKeys = ['apiKey', 'authDomain', 'projectId'];
   const missingKeys = requiredKeys.filter(key => !firebaseConfig[key as keyof typeof firebaseConfig]);
+  
+  return (
+    `Firebase configuration incomplete. Missing: ${missingKeys.join(', ')}\n` +
+    'Please set these environment variables in your .env file:\n' +
+    missingKeys.map(key => `VITE_FIREBASE_${key.toUpperCase()}`).join('\n')
+  );
+}
 
-  if (missingKeys.length > 0) {
-    console.error('Missing Firebase configuration:', missingKeys);
-    throw new Error(
-      `Firebase configuration incomplete. Missing: ${missingKeys.join(', ')}\n` +
-      'Please set these environment variables in your .env file:\n' +
-      missingKeys.map(key => `VITE_FIREBASE_${key.toUpperCase()}`).join('\n')
-    );
+// Validate Firebase configuration and throw if invalid
+function validateFirebaseConfig() {
+  if (!isFirebaseConfigValid()) {
+    console.error('Missing Firebase configuration:', getFirebaseConfigErrorMessage());
+    throw new Error(getFirebaseConfigErrorMessage());
   }
 }
 
-// Initialize Firebase app (singleton pattern)
-let app: FirebaseApp;
-let auth: Auth;
+// Initialize Firebase app (singleton pattern, lazy initialization)
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let initError: Error | null = null;
+let initialized = false;
 
 export function initializeFirebase(): { app: FirebaseApp; auth: Auth } {
-  if (!getApps().length) {
+  // If already initialized, return cached instances
+  if (initialized && app && auth) {
+    return { app, auth };
+  }
+
+  // If we previously failed to initialize, throw the same error
+  if (initError) {
+    throw initError;
+  }
+
+  // Validate config before initializing
+  try {
     validateFirebaseConfig();
+  } catch (error) {
+    initError = error as Error;
+    throw initError;
+  }
+
+  // Initialize Firebase app
+  if (!getApps().length) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
 
@@ -68,11 +99,61 @@ export function initializeFirebase(): { app: FirebaseApp; auth: Auth } {
     auth = getAuth(app);
   }
 
+  initialized = true;
   return { app, auth };
 }
 
-// Export initialized instances
-export const { app: firebaseApp, auth: firebaseAuth } = initializeFirebase();
+// Export validation check function
+export function isFirebaseAvailable(): boolean {
+  return isFirebaseConfigValid();
+}
+
+// Cache for lazy-initialized instances
+let cachedFirebaseApp: FirebaseApp | null = null;
+let cachedFirebaseAuth: Auth | null = null;
+
+// Lazy getters - only initialize when actually used
+export function getFirebaseApp(): FirebaseApp {
+  if (!cachedFirebaseApp) {
+    const { app } = initializeFirebase();
+    cachedFirebaseApp = app;
+  }
+  return cachedFirebaseApp;
+}
+
+export function getFirebaseAuth(): Auth {
+  if (!cachedFirebaseAuth) {
+    const { auth } = initializeFirebase();
+    cachedFirebaseAuth = auth;
+  }
+  return cachedFirebaseAuth;
+}
+
+// Create lazy-loading proxies for backward compatibility
+// These will only initialize Firebase when first accessed
+const createLazyProxy = <T extends object>(getter: () => T): T => {
+  return new Proxy({} as T, {
+    get(target, prop, receiver) {
+      const instance = getter();
+      return Reflect.get(instance, prop, receiver);
+    },
+    has(target, prop) {
+      const instance = getter();
+      return Reflect.has(instance, prop);
+    },
+    ownKeys(target) {
+      const instance = getter();
+      return Reflect.ownKeys(instance);
+    },
+    getOwnPropertyDescriptor(target, prop) {
+      const instance = getter();
+      return Reflect.getOwnPropertyDescriptor(instance, prop);
+    },
+  });
+};
+
+export const firebaseApp: FirebaseApp = createLazyProxy(getFirebaseApp);
+export const firebaseAuth: Auth = createLazyProxy(getFirebaseAuth);
 
 /**
  * Sign in with Apple using Firebase Authentication
@@ -86,12 +167,12 @@ export async function signInWithApple(): Promise<FirebaseUser> {
   try {
     // Use redirect on native iOS for better UX
     if (Capacitor.getPlatform() === 'ios') {
-      await signInWithRedirect(firebaseAuth, provider);
+      await signInWithRedirect(getFirebaseAuth(), provider);
       // The result will be handled by getRedirectResult in auth state listener
       throw new Error('REDIRECT_IN_PROGRESS');
     } else {
       // Use popup on web
-      const result = await signInWithPopup(firebaseAuth, provider);
+      const result = await signInWithPopup(getFirebaseAuth(), provider);
       return result.user;
     }
   } catch (error: any) {
@@ -108,7 +189,7 @@ export async function signInWithApple(): Promise<FirebaseUser> {
  */
 export async function checkAppleSignInRedirect(): Promise<FirebaseUser | null> {
   try {
-    const result = await getRedirectResult(firebaseAuth);
+    const result = await getRedirectResult(getFirebaseAuth());
     return result?.user || null;
   } catch (error: any) {
     console.error('Apple Sign In redirect error:', error);
@@ -121,7 +202,7 @@ export async function checkAppleSignInRedirect(): Promise<FirebaseUser | null> {
  */
 export async function signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
   try {
-    const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
+    const result = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
     return result.user;
   } catch (error: any) {
     console.error('Email sign in error:', error);
@@ -134,7 +215,7 @@ export async function signInWithEmail(email: string, password: string): Promise<
  */
 export async function signUpWithEmail(email: string, password: string): Promise<FirebaseUser> {
   try {
-    const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    const result = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
     return result.user;
   } catch (error: any) {
     console.error('Email sign up error:', error);
@@ -147,7 +228,7 @@ export async function signUpWithEmail(email: string, password: string): Promise<
  */
 export async function resetPassword(email: string): Promise<void> {
   try {
-    await sendPasswordResetEmail(firebaseAuth, email);
+    await sendPasswordResetEmail(getFirebaseAuth(), email);
   } catch (error: any) {
     console.error('Password reset error:', error);
     throw new Error(getFirebaseErrorMessage(error));
@@ -159,7 +240,7 @@ export async function resetPassword(email: string): Promise<void> {
  */
 export async function signOut(): Promise<void> {
   try {
-    await firebaseSignOut(firebaseAuth);
+    await firebaseSignOut(getFirebaseAuth());
   } catch (error: any) {
     console.error('Sign out error:', error);
     throw new Error('Failed to sign out. Please try again.');
@@ -170,21 +251,21 @@ export async function signOut(): Promise<void> {
  * Get current Firebase user
  */
 export function getCurrentUser(): FirebaseUser | null {
-  return firebaseAuth.currentUser;
+  return getFirebaseAuth().currentUser;
 }
 
 /**
  * Listen to auth state changes
  */
 export function onAuthChange(callback: (user: FirebaseUser | null) => void): Unsubscribe {
-  return onAuthStateChanged(firebaseAuth, callback);
+  return onAuthStateChanged(getFirebaseAuth(), callback);
 }
 
 /**
  * Get Firebase ID token for API authentication
  */
 export async function getIdToken(): Promise<string | null> {
-  const user = firebaseAuth.currentUser;
+  const user = getFirebaseAuth().currentUser;
   if (!user) return null;
 
   try {
