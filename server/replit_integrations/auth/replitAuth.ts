@@ -4,6 +4,7 @@ import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
 import { z } from "zod";
 import { getDatabaseUrl } from "../../getDatabaseUrl";
+import { sendPasswordResetEmail } from "../../email";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -210,11 +211,26 @@ export function registerAuthRoutes(app: Express) {
       const user = await authStorage.getUserByEmail(email);
 
       // SECURITY: Always return success even if user doesn't exist (prevents email enumeration)
-      // In production, you would send a password reset email here
       console.log("[AUTH] Password reset requested for:", email);
 
-      // For now, return success without actually sending email
-      // TODO: Integrate with SendGrid or similar email service
+      // Only send email if user exists
+      if (user) {
+        const resetToken = authStorage.createPasswordResetToken(user);
+
+        // Send password reset email via SendGrid
+        const emailSent = await sendPasswordResetEmail({
+          to: email,
+          resetToken,
+          firstName: user.firstName || undefined,
+        });
+
+        if (emailSent) {
+          console.log("[AUTH] Password reset email sent successfully to:", email);
+        } else {
+          console.error("[AUTH] Failed to send password reset email to:", email);
+        }
+      }
+
       res.json({
         success: true,
         message: "If an account exists with this email, you will receive password reset instructions."
@@ -225,28 +241,32 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // Reset Password (would be used with a token from email)
+  // Reset Password (uses token from email)
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { email, newPassword } = req.body;
+      const { token, newPassword } = req.body;
 
-      if (!email || !newPassword) {
-        return res.status(400).json({ error: "Email and new password are required" });
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token and new password are required" });
       }
 
       if (newPassword.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });
       }
 
-      const user = await authStorage.getUserByEmail(email);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
+      // Verify the reset token
+      const tokenData = authStorage.verifyPasswordResetToken(token);
+      if (!tokenData) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
       }
 
       // Update password
-      await authStorage.updatePassword(user.id, newPassword);
+      await authStorage.updatePassword(tokenData.userId, newPassword);
 
-      console.log("[AUTH] Password reset successful for user:", user.id);
+      // Invalidate the token after use
+      authStorage.invalidatePasswordResetToken(token);
+
+      console.log("[AUTH] Password reset successful for user:", tokenData.userId);
       res.json({ success: true, message: "Password updated successfully" });
     } catch (error) {
       console.error("[AUTH] Reset password error:", error);

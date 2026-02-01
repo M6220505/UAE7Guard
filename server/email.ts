@@ -64,6 +64,12 @@ interface WelcomeEmail {
   firstName: string;
 }
 
+interface PasswordResetEmail {
+  to: string;
+  resetToken: string;
+  firstName?: string;
+}
+
 // Send threat alert notification
 export async function sendThreatAlert(data: ThreatAlertEmail): Promise<boolean> {
   try {
@@ -253,6 +259,77 @@ export async function sendWelcomeEmail(data: WelcomeEmail): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Failed to send welcome email:', error);
+    return false;
+  }
+}
+
+// Send password reset email
+export async function sendPasswordResetEmail(data: PasswordResetEmail): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+
+    const resetLink = `${process.env.APP_URL || 'https://uae7guard.com'}/reset-password?token=${data.resetToken}`;
+    const greeting = data.firstName ? `${data.firstName}` : 'User';
+
+    const msg = {
+      to: data.to,
+      from: fromEmail,
+      subject: `UAE7Guard - إعادة تعيين كلمة المرور / Password Reset`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #1a1a2e;">UAE7Guard</h1>
+            <p style="color: #666;">نظام حماية العملات المشفرة</p>
+          </div>
+
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h2 style="color: #333; margin-bottom: 15px;">مرحباً ${greeting}! / Hello ${greeting}!</h2>
+
+            <p style="color: #555; line-height: 1.6;">
+              لقد طلبت إعادة تعيين كلمة المرور الخاصة بك. اضغط على الزر أدناه لإعادة تعيين كلمة المرور.
+            </p>
+            <p style="color: #555; line-height: 1.6;">
+              You requested to reset your password. Click the button below to reset your password.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                إعادة تعيين كلمة المرور / Reset Password
+              </a>
+            </div>
+
+            <p style="color: #888; font-size: 13px; line-height: 1.5;">
+              إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذا البريد الإلكتروني.
+            </p>
+            <p style="color: #888; font-size: 13px; line-height: 1.5;">
+              If you didn't request a password reset, you can safely ignore this email.
+            </p>
+
+            <div style="background: white; border-radius: 6px; padding: 15px; margin-top: 20px;">
+              <p style="margin: 0; color: #666; font-size: 12px;">
+                <strong>رابط إعادة التعيين / Reset Link:</strong><br/>
+                <span style="word-break: break-all; font-family: monospace; font-size: 11px;">${resetLink}</span>
+              </p>
+            </div>
+
+            <p style="color: #ef4444; font-size: 12px; margin-top: 15px;">
+              ⚠️ هذا الرابط صالح لمدة ساعة واحدة فقط / This link expires in 1 hour
+            </p>
+          </div>
+
+          <div style="text-align: center; color: #888; font-size: 12px;">
+            <p>UAE7Guard - حماية مجتمع العملات المشفرة</p>
+            <p>Protecting the crypto community</p>
+          </div>
+        </div>
+      `
+    };
+
+    await client.send(msg);
+    console.log('Password reset email sent to:', data.to);
+    return true;
+  } catch (error) {
+    console.error('Failed to send password reset email:', error);
     return false;
   }
 }
