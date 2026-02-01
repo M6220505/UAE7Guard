@@ -41,26 +41,24 @@ if (config.isProduction) {
 }
 
 // Configure CORS to allow mobile app requests
-// This is critical for Capacitor mobile apps to connect to the backend
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (mobile apps, curl, Postman, etc.)
-    // or from capacitor:// and ionic:// schemes used by mobile apps
     if (!origin ||
         origin.startsWith('capacitor://') ||
         origin.startsWith('ionic://') ||
         origin.startsWith('file://') ||
-        origin === 'http://localhost:5173' || // Vite dev server
-        origin === 'http://localhost:5000' || // Production server
-        origin.endsWith('.replit.dev') || // Replit preview
-        origin === 'https://uae7guard.com' || // Production domain
-        origin.endsWith('.uae7guard.com')) { // Production subdomains
+        origin === 'http://localhost:5173' ||
+        origin === 'http://localhost:5000' ||
+        origin.endsWith('.replit.dev') ||
+        origin === 'https://uae7guard.com' ||
+        origin.endsWith('.uae7guard.com')) {
       callback(null, true);
     } else {
       callback(null, true); // Allow all origins for now (can be restricted later)
     }
   },
-  credentials: true, // Allow cookies and sessions
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
@@ -86,46 +84,64 @@ declare module "http" {
   }
 }
 
+// ==========================================
+// تحسين: دالة Stripe الآمنة والمحسنة
+// ==========================================
 async function initStripe() {
+  // 1. تحقق من وجود المفاتيح
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.log('⚠️ Stripe keys not found, skipping initialization');
+    return;
+  }
+
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    console.log('DATABASE_URL not set, skipping Stripe initialization');
+    console.log('⚠️ DATABASE_URL not set, skipping Stripe initialization');
     return;
   }
 
   try {
-    console.log('Initializing Stripe schema...');
+    console.log('🔄 Initializing Stripe schema...');
     await runMigrations({ databaseUrl });
-    console.log('Stripe schema ready');
+    console.log('✅ Stripe schema ready');
 
     const stripeSync = await getStripeSync();
 
-    console.log('Setting up managed webhook...');
+    console.log('🔗 Setting up managed webhook...');
     const replitDomains = process.env.REPLIT_DOMAINS;
+    
     if (replitDomains) {
-      const webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
       try {
+        const webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
         const result = await stripeSync.findOrCreateManagedWebhook(
           `${webhookBaseUrl}/api/stripe/webhook`
         );
         if (result?.webhook?.url) {
-          console.log(`Webhook configured: ${result.webhook.url}`);
+          console.log(`✅ Webhook configured: ${result.webhook.url}`);
         } else {
-          console.log('Webhook setup returned but no URL available');
+          console.log('⚠️ Webhook setup returned but no URL available');
         }
       } catch (webhookError) {
-        console.log('Webhook setup skipped (may need Stripe CLI or production deployment)');
+        console.log('⚠️ Webhook setup skipped (safe to ignore):', webhookError);
       }
     } else {
-      console.log('REPLIT_DOMAINS not set, skipping webhook setup');
+      console.log('ℹ️ REPLIT_DOMAINS not set, skipping webhook setup');
     }
 
-    console.log('Syncing Stripe data...');
-    stripeSync.syncBackfill()
-      .then(() => console.log('Stripe data synced'))
-      .catch((err: Error) => console.error('Error syncing Stripe data:', err));
+    // تحسين مهم: لا تقم بتشغيل syncBackfill في بيئة Vercel لتجنب التوقف
+    if (!process.env.VERCEL) {
+      console.log('🔄 Syncing Stripe data...');
+      stripeSync.syncBackfill()
+        .then(() => console.log('✅ Stripe data synced'))
+        .catch((err: Error) => console.error('❌ Error syncing Stripe data:', err));
+    } else {
+      console.log('ℹ️ Skipping Stripe backfill in Vercel environment to prevent timeouts');
+    }
+
   } catch (error) {
-    console.error('Failed to initialize Stripe:', error);
+    // نحن هنا لا نرمي الخطأ (throw)، بل نسجله فقط
+    // هذا يمنع توقف السيرفر بالكامل
+    console.error('❌ Non-fatal error during Stripe init:', error);
   }
 }
 
@@ -187,7 +203,7 @@ export async function initializeApp() {
     return app;
   }
 
-  // Initialize Stripe first
+  // Initialize Stripe first (with the improved version)
   await initStripe();
 
   await registerRoutes(httpServer, app);
