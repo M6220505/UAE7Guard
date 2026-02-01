@@ -7,31 +7,53 @@ import type { User } from "../../../shared/schema";
 const router = Router();
 
 /**
- * Verify Firebase ID token
- * Note: In production, you should verify the token with Firebase Admin SDK
- * For now, we're trusting the frontend verification
+ * Initialize Firebase Admin SDK
+ * CRITICAL: This requires firebase-admin to be installed AND Firebase service account credentials
+ * to be configured via GOOGLE_APPLICATION_CREDENTIALS environment variable
+ */
+let admin: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  admin = require('firebase-admin');
+  
+  // Only initialize if not already initialized
+  if (!admin.apps.length && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    admin.initializeApp();
+  }
+} catch (error) {
+  console.error('WARNING: firebase-admin not installed. Token verification will be disabled.');
+  console.error('Install firebase-admin: npm install firebase-admin');
+  console.error('Set GOOGLE_APPLICATION_CREDENTIALS environment variable to your service account JSON file');
+}
+
+/**
+ * Verify Firebase ID token with cryptographic signature validation
+ * SECURITY CRITICAL: This function MUST verify the JWT signature to prevent token forgery attacks
+ * 
+ * Requirements:
+ * 1. firebase-admin must be installed: npm install firebase-admin
+ * 2. GOOGLE_APPLICATION_CREDENTIALS env var must point to service account JSON file
+ * 
+ * NEVER use the legacy manual JWT decoding approach - it does NOT verify signatures
+ * and allows attackers to forge arbitrary tokens with any user ID.
  */
 async function verifyFirebaseToken(token: string): Promise<{ uid: string; email: string | null }> {
   try {
-    // In production, use Firebase Admin SDK to verify:
-    // const decodedToken = await admin.auth().verifyIdToken(token);
-    // return { uid: decodedToken.uid, email: decodedToken.email || null };
-
-    // For development, decode the JWT manually (not secure for production!)
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Invalid token format');
+    // Ensure admin is initialized
+    if (!admin || !admin.auth) {
+      throw new Error(
+        'Firebase Admin SDK not properly initialized. ' +
+        'Ensure firebase-admin is installed and GOOGLE_APPLICATION_CREDENTIALS is set.'
+      );
     }
 
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-
-    if (!payload.user_id && !payload.sub) {
-      throw new Error('Invalid token payload');
-    }
+    // Verify the token signature cryptographically
+    // This is the ONLY secure way to verify Firebase tokens
+    const decodedToken = await admin.auth().verifyIdToken(token);
 
     return {
-      uid: payload.user_id || payload.sub,
-      email: payload.email || null,
+      uid: decodedToken.uid,
+      email: decodedToken.email || null,
     };
   } catch (error) {
     console.error('Error verifying Firebase token:', error);
