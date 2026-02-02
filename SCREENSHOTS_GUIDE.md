@@ -1,360 +1,205 @@
-# 📸 UAE7Guard - دليل Screenshots للـ App Store
+# UAE7Guard - Screenshots Guide
 
-## 🎯 الهدف
+## Required Screenshots
 
-التقاط 3-6 screenshots احترافية تُظهر مميزات التطبيق للـ App Store.
+You need **6 screenshots** for app store submission:
 
----
+1. **Home Screen** - Address search interface
+2. **Safe Result** - Green status showing safe address
+3. **Dangerous Result** - Red status showing dangerous address
+4. **Learning Center** - Educational content page
+5. **About Page** - Disclaimers and information
+6. **Arabic Version** - Any screen in Arabic language
 
-## 📱 الطريقة الأسهل: استخدام iOS Simulator
+## Required Dimensions
 
-### الخطوة 1: تشغيل التطبيق في Simulator
+### iOS (Apple App Store)
+- **iPhone 6.5"**: 1284 x 2778 pixels (iPhone 13/14/15 Pro Max)
+- **iPhone 5.5"**: 1242 x 2208 pixels (iPhone 8 Plus)
+- **iPad Pro 12.9"**: 2048 x 2732 pixels (optional)
 
-```bash
-# من مجلد المشروع
-cd /home/user/UAE7Guard
-
-# فتح Xcode
-npm run cap:open:ios
-```
-
-### الخطوة 2: اختيار الجهاز المناسب
-
-في Xcode:
-1. من القائمة العلوية، اختر **iPhone 15 Pro Max** (6.7")
-2. اضغط **Run** (▶️) أو `Cmd + R`
-
-**لماذا iPhone 15 Pro Max؟**
-- Apple تطلب screenshots لحجم 6.7" كأولوية
-- هذا الحجم يعمل لكل الأجهزة الحديثة
-- أسهل من التقاط screenshots لأحجام متعددة
-
-### الخطوة 3: انتظر تحميل التطبيق
-
-- Simulator سيفتح تلقائياً
-- التطبيق سيبدأ بعد ثوانٍ
-- تأكد من اتصال الإنترنت (للحصول على بيانات حقيقية)
+### Android (Google Play Store)
+- **Phone**: 1080 x 1920 pixels (minimum)
+- **Tablet**: 1200 x 1920 pixels (optional)
 
 ---
 
-## 📸 Screenshots المطلوبة (بالترتيب)
+## Method 1: iOS Simulator (Mac Only)
 
-### Screenshot #1: الصفحة الرئيسية / Home Screen ⭐
+### Step 1: Start the App
+\`\`\`bash
+# Build and sync
+npm run build
+npx cap sync ios
 
-**ماذا تُظهر:**
-- الصفحة الرئيسية للبحث
-- شريط البحث واضح
-- شعار التطبيق
-- واجهة نظيفة واحترافية
+# Open Xcode
+npx cap open ios
+\`\`\`
 
-**كيف:**
-1. عند فتح التطبيق، ابقَ في الصفحة الرئيسية
-2. لا تدخل أي بحث بعد
-3. اضغط `Cmd + S` أو `File` → `Save Screen`
-4. احفظ باسم: `01-home-screen.png`
+### Step 2: Run in Simulator
+1. In Xcode, select a device:
+   - iPhone 15 Pro Max (6.5")
+   - iPhone 8 Plus (5.5")
+2. Click the Play button to run
+3. Wait for the app to launch
 
----
+### Step 3: Take Screenshots
+1. Navigate to each required screen
+2. Press: \`Cmd + S\` (saves to Desktop)
+3. Or use: \`Simulator > Window > Screenshot\`
 
-### Screenshot #2: نتيجة فحص آمنة (Safe - أخضر) ✅
-
-**ماذا تُظهر:**
-- نتيجة فحص محفظة آمنة
-- علامة ✅ خضراء
-- رسالة "No scam reports found"
-
-**كيف:**
-1. في شريط البحث، أدخل عنوان آمن:
-   ```
-   0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
-   ```
-2. اضغط **Check** أو **Verify**
-3. انتظر النتيجة (ستكون خضراء ✅)
-4. اضغط `Cmd + S`
-5. احفظ باسم: `02-safe-result.png`
+### Step 4: Organize Screenshots
+\`\`\`bash
+# Move screenshots to project folder
+mv ~/Desktop/Simulator\ Screen\ Shot*.png screenshots/ios/
+\`\`\`
 
 ---
 
-### Screenshot #3: نتيجة فحص خطرة (Scam - أحمر) ⚠️
+## Method 2: Android Emulator
 
-**ماذا تُظهر:**
-- نتيجة فحص محفظة محتال
-- علامة ⚠️ حمراء
-- رسالة تحذير واضحة
-- عدد التقارير
+### Step 1: Start the App
+\`\`\`bash
+# Build and sync
+npm run build
+npx cap sync android
 
-**كيف:**
-1. امسح العنوان السابق
-2. أدخل عنوان scam معروف:
-   ```
-   0x957cD4Ff9b3894FC78b5134A8DC72b032fFbC464
-   ```
-3. اضغط **Check**
-4. انتظر النتيجة (ستكون حمراء ⚠️)
-5. اضغط `Cmd + S`
-6. احفظ باسم: `03-scam-warning.png`
+# Open Android Studio
+npx cap open android
+\`\`\`
 
----
+### Step 2: Run in Emulator
+1. In Android Studio, click "Device Manager"
+2. Create/start a device:
+   - Pixel 6 (1080 x 2340)
+   - Pixel 4 XL (1440 x 3040)
+3. Click Run button
 
-### Screenshot #4: واجهة عربية (Arabic UI) 🌐
+### Step 3: Take Screenshots
+1. Navigate to each required screen
+2. Click the camera icon in emulator controls
+3. Or press: \`Ctrl + S\` (Windows/Linux) or \`Cmd + S\` (Mac)
 
-**ماذا تُظهر:**
-- التطبيق باللغة العربية
-- النص من اليمين لليسار (RTL)
-- دعم اللغة العربية الكامل
-
-**كيف:**
-1. ابحث عن أيقونة 🌐 (عادة في الزاوية العلوية)
-2. اضغط لتبديل اللغة إلى العربية
-3. ارجع للصفحة الرئيسية
-4. اضغط `Cmd + S`
-5. احفظ باسم: `04-arabic-interface.png`
-
-**بديل:**
-- يمكنك التقاط screenshot لصفحة النتائج بالعربية
-- أو Dashboard بالعربية
+### Step 4: Organize Screenshots
+Screenshots are saved in:
+- Mac: \`~/Library/Android/sdk/emulator/screenshots/\`
+- Linux: \`~/Android/Sdk/emulator/screenshots/\`
 
 ---
 
-### Screenshot #5: Dashboard / لوحة التحكم (اختياري)
+## Method 3: Browser with Device Emulation (Quickest)
 
-**ماذا تُظهر:**
-- Dashboard بعد تسجيل الدخول
-- إحصائيات
-- Analytics
-- ميزات إضافية
+### Step 1: Start Development Server
+\`\`\`bash
+npm run dev
+\`\`\`
 
-**كيف:**
-1. سجل دخول بالحساب التجريبي:
-   ```
-   Email: applereview@uae7guard.com
-   Password: AppleReview2026
-   ```
-2. اذهب إلى Dashboard
-3. اضغط `Cmd + S`
-4. احفظ باسم: `05-dashboard.png`
+### Step 2: Open in Browser
+1. Open Chrome/Brave/Edge
+2. Navigate to: \`http://localhost:5000\`
+3. Open DevTools: \`F12\` or \`Ctrl+Shift+I\` (Windows/Linux) or \`Cmd+Opt+I\` (Mac)
 
----
+### Step 3: Set Device Dimensions
+1. Click "Toggle device toolbar" (or press \`Ctrl+Shift+M\`)
+2. Click "Dimensions" dropdown
+3. Select "Responsive"
+4. Set custom dimensions:
+   - **For iOS**: 1284 x 2778
+   - **For Android**: 1080 x 1920
 
-### Screenshot #6: ميزة إضافية (اختياري)
+### Step 4: Take Screenshots
+1. Navigate to each required screen
+2. Right-click on page
+3. Select "Capture screenshot" or "Capture full size screenshot"
+4. Screenshots save to Downloads folder
 
-**أمثلة:**
-- **Live Monitoring** - المراقبة المباشرة
-- **Leaderboard** - لوحة المتصدرين
-- **AI Risk Analysis** - تحليل المخاطر بالذكاء الاصطناعي
-- **Report Submission** - إرسال تقرير
-
-**كيف:**
-1. اذهب للميزة التي تريد إظهارها
-2. تأكد من أنها تبدو احترافية
-3. اضغط `Cmd + S`
-4. احفظ باسم: `06-feature-name.png`
+### Step 5: Organize Screenshots
+\`\`\`bash
+# Move from Downloads to project
+mv ~/Downloads/localhost_*.png screenshots/ios/
+\`\`\`
 
 ---
 
-## 📐 التحقق من دقة Screenshots
+## What to Capture for Each Screenshot
 
-### دقة الشاشة المطلوبة:
+### 1. Home Screen
+- **URL**: \`http://localhost:5000/\`
+- Show the address search input field
+- Display the logo and branding
+- Include "Scan Address" button
 
-**iPhone 15 Pro Max (6.7"):**
-```
-Width: 1290 pixels
-Height: 2796 pixels
-```
+### 2. Safe Result (Green)
+- **Test Address**: Use any valid Ethereum address not in scam database
+- Example: \`0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb\`
+- Should show green status
+- Display safety indicators
 
-### كيف تتحقق:
+### 3. Dangerous Result (Red)
+- **Test Address**: Use a known scam address from your database
+- Should show red status
+- Display warnings and risk information
 
-```bash
-# في Terminal
-cd ~/Desktop
-file 01-home-screen.png
-```
+### 4. Learning Center
+- **URL**: Navigate to learning/educational content section
+- Show educational content
+- Display scam type cards
+- Include navigation elements
 
-**يجب أن ترى:**
-```
-01-home-screen.png: PNG image data, 1290 x 2796
-```
+### 5. About Page
+- **URL**: Navigate to about/info section
+- Show disclaimers
+- Display terms and information
+- Include app version/credits
 
-إذا كانت الدقة مختلفة:
-- تأكد من اختيار **iPhone 15 Pro Max** في Simulator
-- أعد التقاط Screenshot
-
----
-
-## 🎨 نصائح للحصول على screenshots احترافية
-
-### 1. الإضاءة والألوان:
-- استخدم **Light Mode** للوضوح
-- أو **Dark Mode** إذا كان التصميم أفضل
-- تأكد من تباين الألوان
-
-### 2. المحتوى:
-- ✅ استخدم بيانات حقيقية (ليس Lorem Ipsum)
-- ✅ تأكد من عدم وجود أخطاء إملائية
-- ✅ اختبر كل ميزة قبل التصوير
-
-### 3. التوقيت:
-- انتظر حتى تُحمّل الصفحة بالكامل
-- لا تلتقط أثناء Loading
-- تأكد من ظهور كل العناصر
-
-### 4. الترتيب:
-- **Screenshot #1** = الأهم! (يظهر في نتائج البحث)
-- رتب باقي Screenshots منطقياً (Home → Features → Results)
+### 6. Arabic Version
+- Switch language to Arabic (usually a button in settings)
+- Take screenshot of any main screen
+- Ensure all text is in Arabic
+- RTL layout should be visible
 
 ---
 
-## 📂 أين تُحفظ Screenshots؟
+## Quick Start (Recommended)
 
-```
-~/Desktop/
-```
+The **easiest method** is using your browser:
 
-### إعادة تسمية (اختياري لكن موصى به):
+\`\`\`bash
+# Start the dev server
+npm run dev
+\`\`\`
 
-```bash
-cd ~/Desktop
-mv Screenshot\ 2026-01-24\ at\ 10.30.45.png 01-home-screen.png
-```
-
----
-
-## 🚀 رفع Screenshots إلى App Store Connect
-
-### الخطوة 1: تسجيل الدخول
-
-1. اذهب إلى: [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
-2. **My Apps** → **UAE7Guard**
-3. اختر **Version 1.0**
-
-### الخطوة 2: قسم Screenshots
-
-1. انزل لقسم **App Preview and Screenshots**
-2. اختر **iPhone 6.7" Display**
-3. اسحب Screenshots من Desktop إلى المربع
-4. أو اضغط **+** واختر الملفات
-
-### الخطوة 3: الترتيب
-
-- اسحب Screenshots لإعادة ترتيبها
-- **الأول** = الأهم (يظهر في البحث)
-- الترتيب الموصى به:
-  1. Home Screen
-  2. Safe Result
-  3. Scam Warning
-  4. Arabic Interface
-  5. Dashboard
-  6. Additional Features
-
-### الخطوة 4: حفظ
-
-- اضغط **Save** (أعلى يمين الصفحة)
+Then:
+1. Open browser to http://localhost:5000
+2. Press F12 to open DevTools
+3. Press Ctrl+Shift+M (or Cmd+Shift+M on Mac) for device toolbar
+4. Set dimensions to 1284 x 2778 (for iOS) or 1080 x 1920 (for Android)
+5. Navigate through the app and take screenshots
 
 ---
 
-## 🖼️ أحجام إضافية (اختياري)
+## After Taking Screenshots
 
-إذا أردت دعم أجهزة إضافية:
+1. Save all screenshots to \`screenshots/ios/\` and \`screenshots/android/\`
+2. Rename files descriptively:
+   - \`01-home-screen-1284x2778.png\`
+   - \`02-safe-result-1284x2778.png\`
+   - \`03-dangerous-result-1284x2778.png\`
+   - \`04-learning-center-1284x2778.png\`
+   - \`05-about-page-1284x2778.png\`
+   - \`06-arabic-version-1284x2778.png\`
 
-### iPhone 6.5" (1242 × 2688):
-
-```bash
-# في Xcode
-اختر: iPhone 14 Plus أو iPhone 11 Pro Max
-كرر نفس الخطوات
-```
-
-### iPhone 5.5" (1242 × 2208):
-
-```bash
-# في Xcode
-اختر: iPhone 8 Plus
-كرر نفس الخطوات
-```
-
-**ملاحظة:** Apple تقبل فقط screenshots لـ 6.7" للإصدارات الجديدة، لكن يُفضل إضافة 6.5" أيضاً.
+3. Upload to App Store Connect / Google Play Console
 
 ---
 
-## 🐛 حل المشاكل
+## Screenshot Checklist
 
-### المشكلة: Screenshot ضبابية أو منخفضة الجودة
-
-**الحل:**
-1. تأكد من استخدام Simulator وليس جهاز حقيقي (دقة أعلى)
-2. استخدم `Cmd + S` وليس screenshot من خارج Simulator
-3. تحقق من حجم الملف (يجب أن يكون > 500 KB)
-
-### المشكلة: الدقة غير صحيحة
-
-**الحل:**
-1. تأكد من اختيار **iPhone 15 Pro Max** بالضبط
-2. لا تستخدم "Generic iOS Device"
-3. أعد تشغيل Simulator
-
-### المشكلة: التطبيق لا يعمل في Simulator
-
-**الحل:**
-```bash
-# أعد بناء ومزامنة
-npm run cap:sync:ios
-npm run cap:open:ios
-```
-
-### المشكلة: Simulator بطيء جداً
-
-**الحل:**
-1. أغلق تطبيقات أخرى
-2. استخدم Simulator لجهاز واحد فقط
-3. أعد تشغيل Mac
-
----
-
-## ✅ Checklist نهائي
-
-```
-[ ] Screenshot #1: Home Screen - 1290×2796 ✅
-[ ] Screenshot #2: Safe Result - 1290×2796 ✅
-[ ] Screenshot #3: Scam Warning - 1290×2796 ✅
-[ ] Screenshot #4: Arabic Interface - 1290×2796 ✅
-[ ] Screenshot #5: Dashboard (optional) - 1290×2796
-[ ] Screenshot #6: Additional Feature (optional) - 1290×2796
-[ ] كل Screenshots واضحة وبدون أخطاء
-[ ] الترتيب صحيح (Home أولاً)
-[ ] تم رفعها إلى App Store Connect
-[ ] تم حفظ التغييرات
-```
-
----
-
-## 🎯 الحد الأدنى المطلوب
-
-**للتقديم السريع:**
-
-✅ **3 screenshots فقط:**
-1. Home Screen
-2. Safe Result
-3. Scam Warning
-
-**هذا كافٍ للموافقة!** باقي Screenshots اختيارية.
-
----
-
-## 🌟 نصيحة أخيرة
-
-**اجعلها بسيطة!**
-
-- لا تحتاج 10 screenshots
-- 3-5 screenshots كافية جداً
-- الجودة > الكمية
-- اختر أفضل ميزات التطبيق فقط
-
----
-
-**بالتوفيق! 📸**
-
----
-
-**Document Version:** 1.0
-**Last Updated:** January 24, 2026
-**Recommended Screenshots:** 3-6
-**Minimum Required:** 3
+Before submitting, ensure each screenshot:
+- [ ] Is the correct dimensions (1284x2778 for iOS, 1080x1920 for Android)
+- [ ] Shows the app in a realistic usage scenario
+- [ ] Has clear, readable text
+- [ ] Displays the correct UI state (no loading spinners)
+- [ ] Includes no personal or test data
+- [ ] Is in PNG or JPEG format
+- [ ] Is under 10MB file size
