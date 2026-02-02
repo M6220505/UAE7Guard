@@ -128,15 +128,11 @@ async function initStripe() {
       console.log('ℹ️ REPLIT_DOMAINS not set, skipping webhook setup');
     }
 
-    // تحسين مهم: لا تقم بتشغيل syncBackfill في بيئة Vercel لتجنب التوقف
-    if (!process.env.VERCEL) {
-      console.log('🔄 Syncing Stripe data...');
-      stripeSync.syncBackfill()
-        .then(() => console.log('✅ Stripe data synced'))
-        .catch((err: Error) => console.error('❌ Error syncing Stripe data:', err));
-    } else {
-      console.log('ℹ️ Skipping Stripe backfill in Vercel environment to prevent timeouts');
-    }
+    // Sync Stripe data in background
+    console.log('🔄 Syncing Stripe data...');
+    stripeSync.syncBackfill()
+      .then(() => console.log('✅ Stripe data synced'))
+      .catch((err: Error) => console.error('❌ Error syncing Stripe data:', err));
 
   } catch (error) {
     // نحن هنا لا نرمي الخطأ (throw)، بل نسجله فقط
@@ -252,11 +248,8 @@ export async function initializeApp() {
   return app;
 }
 
-// Check if running in Vercel serverless environment
-const isVercelServerless = process.env.VERCEL === '1' && !process.env.PORT;
-
-// Only start the server if not in Vercel serverless mode
-if (!isVercelServerless) {
+// Start the server
+{
   (async () => {
     await initializeApp();
 
