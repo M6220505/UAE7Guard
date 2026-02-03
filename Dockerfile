@@ -1,77 +1,43 @@
-# =============================================================================
-# UAE7Guard Production Dockerfile
-# =============================================================================
-# Multi-stage build for optimized production image
-#
-# Stage 1: Build dependencies and compile application
-# Stage 2: Production runtime with minimal footprint
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# Stage 1: Build Stage
-# -----------------------------------------------------------------------------
-FROM node:20-alpine AS builder
-
-# Set working directory
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    git
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
 
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies (including dev dependencies for build)
-RUN npm ci --include=dev
-
-# Copy source code
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build application
-RUN npm run build
-
-# Remove dev dependencies
-RUN npm prune --production
-
-# -----------------------------------------------------------------------------
-# Stage 2: Production Stage
-# -----------------------------------------------------------------------------
-FROM node:20-alpine AS production
-
-# Set NODE_ENV to production
+# Set environment variables for build
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN npm run build
 
-# Set working directory
+# Stage 3: Runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install runtime dependencies only
-RUN apk add --no-cache \
-    dumb-init \
-    curl
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy built application from builder
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy other necessary files
-COPY --chown=nodejs:nodejs server ./server
-COPY --chown=nodejs:nodejs shared ./shared
+COPY --from=builder /app/public ./public
 
-# Create necessary directories
-RUN mkdir -p /app/uploads && \
-    chown -R nodejs:nodejs /app/uploads
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# Switch to non-root user
-USER nodejs
+# Automatically leverage output traces to reduce image size
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Expose port (Railway sets PORT dynamically)
 EXPOSE ${PORT:-5000}
@@ -80,8 +46,7 @@ EXPOSE ${PORT:-5000}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT:-5000}/api/health || exit 1
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Start application
-CMD ["node", "dist/index.cjs"]
+CMD ["node", "server.js"]
