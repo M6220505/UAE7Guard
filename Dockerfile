@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build Stage
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -40,7 +40,7 @@ RUN npm prune --production
 # -----------------------------------------------------------------------------
 # Stage 2: Production Stage
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
