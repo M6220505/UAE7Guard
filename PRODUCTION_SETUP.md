@@ -1,134 +1,415 @@
 # UAE7Guard Production Setup Guide
 
-## Features Implemented
+## 📋 جدول المحتويات
 
-| Feature | Status | File Location |
-|---------|--------|---------------|
-| Security Headers | Done | `lib/security.ts` |
-| Rate Limiting | Done | `lib/rateLimit.ts` |
-| Logging System | Done | `lib/logger.ts` |
-| Health Checks | Done | `lib/healthCheck.ts` |
-| Caching | Done | `lib/cache.ts` |
-| Monitoring | Done | `lib/monitoring.ts` |
-| Authentication | Done | `lib/auth.ts` |
-| Middleware | Done | `middleware.ts` |
-| Docker Support | Done | `Dockerfile`, `docker-compose.yml` |
-| CI/CD Pipeline | Done | `.github/workflows/ci.yml` |
-| Database Backup | Done | `scripts/backup.sh` |
+- [نظرة عامة](#نظرة-عامة)
+- [المتطلبات الأساسية](#المتطلبات-الأساسية)
+- [التثبيت](#التثبيت)
+- [التكوين](#التكوين)
+- [النشر](#النشر)
+- [المراقبة](#المراقبة)
+- [النسخ الاحتياطي](#النسخ-الاحتياطي)
+- [الأمان](#الأمان)
+- [استكشاف الأخطاء](#استكشاف-الأخطاء)
 
-## Quick Start
+## 🎯 نظرة عامة
 
-### Development
+هذا الدليل يوفر تعليمات شاملة لإعداد ونشر تطبيق UAE7Guard في بيئة الإنتاج.
 
-```bash
-# Install dependencies
-npm install
+### الميزات المطبقة
 
-# Run development server
-npm run dev
-```
+✅ **الأمان (Security)**
+- تشفير SSL/TLS
+- Security Headers (CSP, HSTS, X-Frame-Options)
+- Rate Limiting متعدد المستويات
+- Input Sanitization
+- Session Management آمن
 
-### Production with Docker
+✅ **الأداء (Performance)**
+- Caching System
+- Database Connection Pooling
+- Compression
+- Optimized Docker Images
 
-```bash
-# Build and run
+✅ **المراقبة (Monitoring)**
+- Health Check Endpoints
+- Metrics Collection
+- Request/Response Logging
+- Error Tracking
+
+✅ **التوافر العالي (High Availability)**
+- Database Backups
+- Graceful Shutdown
+- Container Orchestration Ready
+
+✅ **CI/CD**
+- Automated Testing
+- Security Scanning
+- Automated Deployment
+
+## 💻 المتطلبات الأساسية
+
+### البرامج المطلوبة
+
+- **Node.js**: 20.x أو أحدث
+- **PostgreSQL**: 16.x أو أحدث
+- **Docker**: 24.x أو أحدث (اختياري)
+- **Redis**: 7.x أو أحدث (اختياري، للتخزين المؤقت)
+
+### الحسابات الخارجية
+
+- **SendGrid**: لإرسال البريد الإلكتروني
+- **Stripe**: للمدفوعات
+- **OpenAI**: للميزات الذكية
+- **Alchemy**: للبلوكشين
+
+## 🚀 التثبيت
+
+### 1. استنساخ المشروع
+
+\`\`\`bash
+git clone https://github.com/your-org/UAE7Guard.git
+cd UAE7Guard
+\`\`\`
+
+### 2. تثبيت التبعيات
+
+\`\`\`bash
+npm ci --production
+\`\`\`
+
+### 3. إعداد متغيرات البيئة
+
+\`\`\`bash
+# نسخ ملف المثال
+cp .env.example .env
+
+# تحرير الملف بالقيم الفعلية
+nano .env
+\`\`\`
+
+**⚠️ مهم جداً:**
+- لا تستخدم القيم الافتراضية في الإنتاج
+- استخدم كلمات مرور قوية ومفاتيح عشوائية
+- لا تشارك ملف `.env` أبداً
+
+### 4. إنشاء قاعدة البيانات
+
+\`\`\`bash
+# إنشاء قاعدة البيانات
+createdb uae7guard
+
+# تطبيق المخططات
+npm run db:push
+\`\`\`
+
+### 5. بناء التطبيق
+
+\`\`\`bash
+npm run build
+\`\`\`
+
+## ⚙️ التكوين
+
+### متغيرات البيئة الأساسية
+
+#### قاعدة البيانات
+
+\`\`\`bash
+DATABASE_URL=postgresql://user:password@localhost:5432/uae7guard?sslmode=require
+DB_POOL_MIN=2
+DB_POOL_MAX=10
+\`\`\`
+
+#### الأمان
+
+\`\`\`bash
+# توليد SESSION_SECRET بـ:
+# openssl rand -base64 64
+SESSION_SECRET=your-very-long-random-secret-here
+SESSION_SECURE=true
+SESSION_SAME_SITE=strict
+BCRYPT_ROUNDS=12
+\`\`\`
+
+#### Rate Limiting
+
+\`\`\`bash
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_AUTH_MAX=5
+\`\`\`
+
+#### CORS
+
+\`\`\`bash
+CORS_ALLOWED_ORIGINS=https://uae7guard.com,https://app.uae7guard.com
+CORS_CREDENTIALS=true
+\`\`\`
+
+### التكوينات المتقدمة
+
+راجع ملف `.env.example` للحصول على قائمة كاملة بالمتغيرات المتاحة.
+
+## 🐳 النشر باستخدام Docker
+
+### النشر السريع
+
+\`\`\`bash
+# بناء الصور
+docker-compose build
+
+# بدء الخدمات
 docker-compose up -d
 
-# View logs
+# التحقق من الحالة
+docker-compose ps
+\`\`\`
+
+### النشر في الإنتاج
+
+\`\`\`bash
+# استخدام ملف الإنتاج
+docker-compose -f docker-compose.yml --profile production up -d
+\`\`\`
+
+### إدارة الحاويات
+
+\`\`\`bash
+# عرض السجلات
 docker-compose logs -f app
-```
 
-### Environment Variables
+# إعادة التشغيل
+docker-compose restart app
 
-Copy `.env.example` to `.env` and configure:
+# إيقاف الخدمات
+docker-compose down
+\`\`\`
 
-```bash
-cp .env.example .env
-```
+## 📦 النشر التقليدي
 
-Required variables:
-- `AUTH_SECRET`: Secret key for session encryption (generate with `openssl rand -base64 32`)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+### استخدام PM2
 
-## API Endpoints
+\`\`\`bash
+# تثبيت PM2
+npm install -g pm2
+
+# بدء التطبيق
+pm2 start npm --name "uae7guard" -- start
+
+# حفظ التكوين
+pm2 save
+
+# إعداد بدء التشغيل التلقائي
+pm2 startup
+\`\`\`
+
+### استخدام Systemd
+
+إنشاء ملف `/etc/systemd/system/uae7guard.service`:
+
+\`\`\`ini
+[Unit]
+Description=UAE7Guard Application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=nodejs
+WorkingDirectory=/opt/uae7guard
+Environment="NODE_ENV=production"
+ExecStart=/usr/bin/node dist/index.cjs
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+\`\`\`
+
+تفعيل الخدمة:
+
+\`\`\`bash
+sudo systemctl enable uae7guard
+sudo systemctl start uae7guard
+sudo systemctl status uae7guard
+\`\`\`
+
+## 📊 المراقبة
 
 ### Health Checks
 
-- `GET /api/health` - Full system health
-- `GET /api/health?type=live` - Liveness probe (Kubernetes)
-- `GET /api/health?type=ready` - Readiness probe (Kubernetes)
+التطبيق يوفر عدة endpoints للمراقبة:
 
-### Authentication
+- **Basic Health**: `GET /api/health`
+- **Detailed Health**: `GET /api/health/detailed`
+- **Readiness**: `GET /api/health/ready`
+- **Liveness**: `GET /api/health/live`
+- **Metrics**: `GET /api/health/metrics`
 
-- `POST /api/auth/login` - Login (email, password)
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/me` - Get current user
+### مثال استخدام
 
-### Metrics (Admin only)
+\`\`\`bash
+# التحقق من صحة التطبيق
+curl https://your-domain.com/api/health
 
-- `GET /api/metrics` - System metrics and statistics
+# الحصول على معلومات مفصلة
+curl https://your-domain.com/api/health/detailed
 
-## Demo Credentials
+# الحصول على المقاييس
+curl https://your-domain.com/api/health/metrics
+\`\`\`
 
-- Email: `demo@example.com`
-- Password: `admin`
+### مراقبة السجلات
 
-## Security Features
+\`\`\`bash
+# عرض السجلات في الوقت الفعلي
+tail -f logs/application.log
 
-### Headers Applied
-- Strict-Transport-Security (HSTS)
-- X-Content-Type-Options
-- X-Frame-Options
-- X-XSS-Protection
-- Content-Security-Policy
-- Referrer-Policy
-- Permissions-Policy
+# مع Docker
+docker-compose logs -f app
 
-### Rate Limiting
-- API routes: 100 requests/minute
-- Auth routes: 10 requests/minute
+# مع PM2
+pm2 logs uae7guard
+\`\`\`
 
-## Deployment to Vercel
+## 💾 النسخ الاحتياطي
 
-1. Connect your GitHub repository
-2. Add environment variables in Vercel dashboard
-3. Deploy
+### النسخ الاحتياطي التلقائي
 
-Or use the CLI:
+\`\`\`bash
+# تشغيل النسخ الاحتياطي يدوياً
+./scripts/backup-database.sh
 
-```bash
-npx vercel --prod
-```
+# إعداد Cron للنسخ الاحتياطي اليومي
+crontab -e
 
-## CI/CD Pipeline
+# إضافة: النسخ الاحتياطي كل يوم في الساعة 2 صباحاً
+0 2 * * * /path/to/UAE7Guard/scripts/backup-database.sh
+\`\`\`
 
-The GitHub Actions workflow includes:
-- Linting and type checking
-- Build verification
-- Security audit
-- Docker image build
-- Automatic deployment to Vercel
+### استعادة من النسخة الاحتياطية
 
-## Backup Strategy
+\`\`\`bash
+./scripts/restore-database.sh ./backups/uae7guard_backup_YYYYMMDD_HHMMSS.sql.gz
+\`\`\`
 
-Run the backup script:
+### تخزين النسخ الاحتياطية
 
-```bash
-chmod +x scripts/backup.sh
-./scripts/backup.sh
-```
+يُنصح بتخزين النسخ الاحتياطية في:
+- خدمة سحابية (AWS S3, Google Cloud Storage)
+- خادم منفصل
+- نظام NAS
 
-Configure with environment variables:
-- `BACKUP_DIR`: Backup destination (default: `./backups`)
-- `RETENTION_DAYS`: Days to keep backups (default: 7)
-- `DATABASE_URL`: Database connection string
+## 🔒 الأمان
 
-## Monitoring
+### قائمة التحقق الأمنية
 
-Access metrics at `/api/metrics` (requires admin authentication).
+- [ ] استخدام HTTPS في الإنتاج
+- [ ] تفعيل Firewall
+- [ ] تحديث جميع التبعيات
+- [ ] استخدام مفاتيح قوية لـ SESSION_SECRET
+- [ ] تفعيل Rate Limiting
+- [ ] مراجعة CORS origins
+- [ ] تفعيل Database SSL
+- [ ] إخفاء معلومات الخادم
+- [ ] تفعيل Security Headers
+- [ ] مراجعة أذونات الملفات
 
-Metrics include:
-- HTTP request counts and latencies
-- Error tracking
-- Cache hit rates
-- Memory usage
+### تحديثات الأمان
+
+\`\`\`bash
+# فحص الثغرات الأمنية
+npm audit
+
+# تحديث التبعيات بأمان
+npm audit fix
+
+# تحديث التبعيات الرئيسية (بحذر)
+npm update
+\`\`\`
+
+### Firewall Configuration
+
+\`\`\`bash
+# السماح بالمنافذ الأساسية فقط
+sudo ufw allow 22/tcp   # SSH
+sudo ufw allow 80/tcp   # HTTP
+sudo ufw allow 443/tcp  # HTTPS
+sudo ufw enable
+\`\`\`
+
+## 🔧 استكشاف الأخطاء
+
+### التطبيق لا يبدأ
+
+1. **التحقق من السجلات:**
+   \`\`\`bash
+   docker-compose logs app
+   # أو
+   pm2 logs uae7guard
+   \`\`\`
+
+2. **التحقق من متغيرات البيئة:**
+   \`\`\`bash
+   # التأكد من وجود جميع المتغيرات المطلوبة
+   cat .env | grep -v '^#' | grep -v '^$'
+   \`\`\`
+
+3. **التحقق من الاتصال بقاعدة البيانات:**
+   \`\`\`bash
+   psql "$DATABASE_URL" -c "SELECT 1"
+   \`\`\`
+
+### مشاكل الأداء
+
+1. **مراقبة استخدام الموارد:**
+   \`\`\`bash
+   # مع Docker
+   docker stats
+
+   # مع PM2
+   pm2 monit
+   \`\`\`
+
+2. **فحص الاستعلامات البطيئة:**
+   \`\`\`sql
+   -- في PostgreSQL
+   SELECT query, calls, total_time, mean_time
+   FROM pg_stat_statements
+   ORDER BY mean_time DESC
+   LIMIT 10;
+   \`\`\`
+
+### مشاكل الاتصال
+
+1. **التحقق من Health Endpoint:**
+   \`\`\`bash
+   curl -v http://localhost:5000/api/health
+   \`\`\`
+
+2. **التحقق من الشبكة:**
+   \`\`\`bash
+   # مع Docker
+   docker network inspect uae7guard-network
+   \`\`\`
+
+## 📞 الدعم
+
+### الموارد
+
+- **الوثائق**: [docs/](./docs/)
+- **API Reference**: [API.md](./docs/API.md)
+- **GitHub Issues**: https://github.com/your-org/UAE7Guard/issues
+
+### الاتصال
+
+- **البريد الإلكتروني**: support@uae7guard.com
+- **Discord**: [رابط الخادم]
+
+## 📝 License
+
+[رخصة المشروع]
+
+---
+
+**ملاحظة**: هذا الدليل يُحدث باستمرار. آخر تحديث: 2026-01-26

@@ -1,0 +1,132 @@
+Good. Then we lock the whole pipeline so this never breaks again. No half-fixes.
+
+Below is a clean, final setup you can do from Replit only. Copy carefully.
+
+⸻
+
+1️⃣ Bulletproof Codemagic config (source of truth)
+
+Open codemagic.yaml and make it look like this (core parts only):
+
+workflows:
+  ios-release:
+    name: iOS Release
+    max_build_duration: 60
+    environment:
+      vars:
+        XCODE_WORKSPACE: "ios/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        APP_STORE_CONNECT_ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID
+        APP_STORE_CONNECT_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+          npm run build
+
+      - name: Increment build number (HARD GUARANTEE)
+        script: |
+          cd ios
+          LATEST_BUILD=$(agvtool what-version -terse)
+          NEXT_BUILD=$((LATEST_BUILD + 1))
+          agvtool new-version -all $NEXT_BUILD
+
+      - name: Build IPA
+        script: |
+          xcodebuild \
+            -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -archivePath build/App.xcarchive \
+            archive
+
+    artifacts:
+      - build/**
+
+    publishing:
+      app_store_connect:
+        auth: api_key
+
+What this guarantees
+	•	Build number always increases
+	•	No duplicate uploads
+	•	No manual intervention
+	•	Apple cannot reject for this reason again
+
+⸻
+
+2️⃣ Guards to prevent human mistakes (this saves you later)
+
+Add this before the build step:
+
+      - name: Guard: block duplicate builds
+        script: |
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "BUILD_NUMBER missing"
+            exit 1
+          fi
+
+Then in Codemagic UI → Workflow settings:
+	•	Disable parallel builds
+	•	Allow only main branch to publish
+	•	Turn OFF manual retry for failed publishing
+
+This prevents:
+	•	Double uploads
+	•	Parallel collisions
+	•	“I clicked twice” disasters
+
+⸻
+
+3️⃣ App Store / TestFlight strategy (simple, sustainable)
+
+Lock this mental model and never violate it:
+
+Versioning rules
+	•	Version (1.0.0)
+Change only when:
+	•	New features
+	•	App Store review submission
+	•	Build (auto)
+Changes every single CI run, forever
+
+Never reuse a build. Never argue with Apple.
+
+⸻
+
+Release flow (use this every time)
+	1.	Push to main
+	2.	One Codemagic run
+	3.	Upload to TestFlight
+	4.	Verify build appears
+	5.	Only then submit for review
+
+No shortcuts.
+
+⸻
+
+4️⃣ One final rule (this is discipline)
+	•	❌ Never re-run a failed publish without a new build
+	•	❌ Never upload from two places
+	•	❌ Never touch .pbxproj unless forced
+	•	✅ CI is the only publisher
+
+Break this and the pain comes back.
+
+⸻
+
+Bottom line
+
+You now have:
+	•	✅ Automatic build uniqueness
+	•	✅ Guardrails against human error
+	•	✅ Clean App Store release strategy
+
+This issue is closed permanently.
+
+If you want next:
+	•	Crash-proof rollback strategy
+	•	Separate TestFlight / Production workflows
+	•	Emergency hotfix flow without breaking versions
+
+Say which one.

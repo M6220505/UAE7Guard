@@ -1,0 +1,65 @@
+import { db } from "./db";
+import { eq, desc, sql } from "drizzle-orm";
+import { 
+  users, userReputation, scamReports, 
+  securityLogs, alerts, watchlist 
+} from "@shared/schema";
+
+export class DatabaseStorage {
+  // --- منطق ترقية الرتب (Rank Logic) ---
+  async updateReputation(userId: number, points: number) {
+    const [current] = await db.select().from(userReputation).where(eq(userReputation.userId, userId));
+    const newScore = (current?.trustScore || 0) + points;
+    
+    let newRank = "Novice";
+    if (newScore > 500) newRank = "Sentinel";
+    else if (newScore > 100) newRank = "Investigator";
+    else if (newScore > 20) newRank = "Analyst";
+
+    await db.insert(userReputation).values({ userId, trustScore: newScore, rank: newRank })
+      .onConflictDoUpdate({
+        target: userReputation.userId,
+        set: { trustScore: newScore, rank: newRank, lastUpdated: new Date() }
+      });
+  }
+
+  // --- التحقق الإداري وتوزيع التنبيهات (Admin Logic & Dispatcher) ---
+  async verifyScamReport(reportId: number) {
+    const [report] = await db.update(scamReports).set({ status: "verified" })
+      .where(eq(scamReports.id, reportId)).returning();
+
+    if (report) {
+      // 1. مكافأة المحقق
+      await this.updateReputation(report.reporterId, 50);
+
+      // 2. تنبيه المراقبين لهذا العنوان (Early Warning)
+      const watchers = await db.select().from(watchlist).where(eq(watchlist.address, report.scammerAddress));
+      for (const watcher of watchers) {
+        await db.insert(alerts).values({
+          userId: watcher.userId,
+          title: "🚨 تهديد مؤكد: قائمة سوداء",
+          message: `العنوان الذي تراقبه (${report.scammerAddress}) تم تصنيفه كاحتيال مؤكد.`,
+          severity: "high"
+        });
+      }
+    }
+  }
+
+  // --- سجل التدقيق للطوارئ (Emergency Audit Log) ---
+  async logEmergencyAction(userId: number, address: string, details: string) {
+    await db.insert(securityLogs).values({
+      userId,
+      actionType: "EMERGENCY_SECURE_ASSETS",
+      targetAddress: address,
+      details: details
+    });
+  }
+
+  // --- البحث الاستخباري السريع (Indexed Search) ---
+  async searchThreat(address: string) {
+    return await db.select().from(scamReports)
+      .where(eq(scamReports.scammerAddress, address.toLowerCase()));
+  }
+}
+
+export const storage = new DatabaseStorage();

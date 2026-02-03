@@ -1,0 +1,144 @@
+workflows:
+  ios-release:
+    name: iOS Release - UAE7Guard
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: UAE7Guard Production Key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.uae7guard.crypto
+      vars:
+        NODE_VERSION: "20"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        # Backend API URL - Updated to Replit deployment URL
+        # If this URL is incorrect, update it to your actual Replit URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
+        # Apple Review Account Password
+        APPLE_REVIEW_PASSWORD: "AppleReview2026"
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Setup Node.js
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          node --version
+
+      - name: Install dependencies
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm install
+
+      - name: Build with environment variables
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          echo "Building with API URL: $VITE_API_BASE_URL"
+          echo "Apple Review Password configured: ${APPLE_REVIEW_PASSWORD:0:5}***"
+          npm run build
+
+      - name: Copy Capacitor assets
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npx cap copy ios
+
+      - name: Install CocoaPods
+        script: |
+          cd ios/App && pod repo update && pod install
+
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
+      - name: Increment build number (UNIX TIMESTAMP)
+        script: |
+          cd ios/App
+          # Use Unix timestamp for guaranteed unique build number
+          # This number will never repeat (seconds since 1970)
+          NEXT_BUILD=$(date +%s)
+          echo "Using Unix timestamp build number: $NEXT_BUILD"
+          agvtool new-version -all $NEXT_BUILD
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" App/Info.plist
+          echo "BUILD_NUMBER=$NEXT_BUILD" >> $CM_ENV
+
+      - name: Guard - block duplicate builds
+        script: |
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "BUILD_NUMBER missing - aborting to prevent duplicate"
+            exit 1
+          fi
+          echo "Build number confirmed: $BUILD_NUMBER"
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
+            --config Release \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" \
+            --ipa-directory ios/App/build/export
+
+    artifacts:
+      - ios/App/build/export/*.ipa
+      - ios/App/build/**/*.xcarchive
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+  android-release:
+    name: Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      java: 17
+      vars:
+        NODE_VERSION: "20"
+        # Backend API URL - Updated to Replit deployment URL
+        VITE_API_BASE_URL: "https://uae7guard-m6220505.repl.co"
+        # Apple Review Account Password
+        APPLE_REVIEW_PASSWORD: "AppleReview2026"
+    scripts:
+      - name: Setup Node.js
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          node --version
+
+      - name: Install dependencies
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npm install
+
+      - name: Build with environment variables
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          echo "Building with API URL: $VITE_API_BASE_URL"
+          npm run build
+
+      - name: Sync Capacitor Android
+        script: |
+          . ~/.nvm/nvm.sh
+          nvm use $NODE_VERSION
+          npx cap sync android
+
+      - name: Build APK
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/*.aab
