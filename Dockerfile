@@ -39,9 +39,12 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-USER nextjs
+# Expose port (Railway sets PORT dynamically)
+EXPOSE ${PORT:-5000}
 
-EXPOSE 3000
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-5000}/api/health || exit 1
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
