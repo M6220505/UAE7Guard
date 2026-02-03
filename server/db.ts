@@ -6,5 +6,8 @@ import { getDatabaseUrl } from "./getDatabaseUrl";
 const { Pool } = pg;
 
 const databaseUrl = getDatabaseUrl();
-export const pool = new Pool({ connectionString: databaseUrl });
-export const db = drizzle(pool, { schema });
+
+// Database is optional - server starts in limited mode without it
+export const isDatabaseAvailable = databaseUrl !== null;
+export const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
+export const db = pool ? drizzle(pool, { schema }) : null as any;

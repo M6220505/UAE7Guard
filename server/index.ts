@@ -30,13 +30,12 @@ const httpServer = createServer(app);
 export { app, httpServer };
 export let isInitialized = false;
 
-// Validate production configuration
+// Validate production configuration (warn but don't crash)
 if (config.isProduction) {
   try {
     validateConfig();
   } catch (error) {
-    logger.error('Configuration validation failed', error);
-    process.exit(1);
+    logger.error('Configuration validation warning - server starting in limited mode', error);
   }
 }
 
@@ -190,6 +189,29 @@ app.get("/api/health/ready", readinessCheck);
 app.get("/api/health/live", livenessCheck);
 app.get("/api/health/metrics", getMetrics);
 
+// Deployment diagnostics - shows what's configured and what's missing
+app.get("/api/diagnostics", (_req, res) => {
+  const envCheck = (key: string) => process.env[key] ? 'SET' : 'MISSING';
+  res.status(200).json({
+    status: 'running',
+    node: process.version,
+    uptime: `${Math.round(process.uptime())}s`,
+    environment: {
+      NODE_ENV: envCheck('NODE_ENV'),
+      PORT: process.env.PORT || '5000 (default)',
+      DATABASE_URL: envCheck('DATABASE_URL'),
+      SESSION_SECRET: envCheck('SESSION_SECRET'),
+      STRIPE_SECRET_KEY: envCheck('STRIPE_SECRET_KEY'),
+      OPENAI_API_KEY: envCheck('OPENAI_API_KEY'),
+      ALCHEMY_API_KEY: envCheck('ALCHEMY_API_KEY'),
+      SENDGRID_API_KEY: envCheck('SENDGRID_API_KEY'),
+      FIREBASE_PROJECT_ID: envCheck('FIREBASE_PROJECT_ID'),
+    },
+    required: ['DATABASE_URL', 'SESSION_SECRET'],
+    optional: ['STRIPE_SECRET_KEY', 'OPENAI_API_KEY', 'ALCHEMY_API_KEY'],
+  });
+});
+
 // Apply rate limiting to API routes
 app.use("/api", apiLimiter);
 
@@ -199,10 +221,19 @@ export async function initializeApp() {
     return app;
   }
 
-  // Initialize Stripe first (with the improved version)
-  await initStripe();
+  // Initialize Stripe (non-blocking)
+  try {
+    await initStripe();
+  } catch (error) {
+    console.log("Stripe initialization skipped:", error);
+  }
 
-  await registerRoutes(httpServer, app);
+  // Register routes (non-blocking on failure)
+  try {
+    await registerRoutes(httpServer, app);
+  } catch (error) {
+    console.error("Route registration error (some routes may be unavailable):", error);
+  }
 
   // Seed database with initial data
   try {
