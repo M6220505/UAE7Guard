@@ -55,7 +55,7 @@ export const config = {
 
   // Database
   database: {
-    url: getRequiredEnv('DATABASE_URL'),
+    url: getOptionalEnv('DATABASE_URL', ''),
     pool: {
       min: getIntEnv('DB_POOL_MIN', 2),
       max: getIntEnv('DB_POOL_MAX', 10),
@@ -66,7 +66,7 @@ export const config = {
 
   // Security
   security: {
-    sessionSecret: getRequiredEnv('SESSION_SECRET'),
+    sessionSecret: getOptionalEnv('SESSION_SECRET', 'dev-secret-change-in-production-' + Math.random().toString(36)),
     sessionMaxAge: getIntEnv('SESSION_MAX_AGE', 86400000), // 24 hours
     sessionName: getOptionalEnv('SESSION_NAME', 'uae7guard.sid'),
     sessionSecure: getBooleanEnv('SESSION_SECURE', true),
