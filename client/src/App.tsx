@@ -38,6 +38,8 @@ import ReportsAnalytics from "@/pages/reports-analytics";
 import Pricing from "@/pages/pricing";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { AppLoader } from "@/components/app-loader";
 
 const legacyRedirects: Record<string, string> = {
   "/due-diligence": "/verification?tab=due-diligence",
@@ -320,17 +322,21 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark">
-        <LanguageProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-            <IOSInstallPrompt />
-          </TooltipProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <AppLoader minLoadTime={800}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="dark">
+            <LanguageProvider>
+              <TooltipProvider>
+                <Router />
+                <Toaster />
+                <IOSInstallPrompt />
+              </TooltipProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </AppLoader>
+    </ErrorBoundary>
   );
 }
 

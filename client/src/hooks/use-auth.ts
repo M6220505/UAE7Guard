@@ -8,6 +8,7 @@ import {
   getIdToken,
   type FirebaseUser,
   checkAppleSignInRedirect,
+  isFirebaseAvailable,
 } from "@/lib/firebase";
 
 /**
@@ -76,32 +77,50 @@ export function useAuth() {
 
   // Listen to Firebase auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (user) => {
-      setFirebaseUser(user);
+    // If Firebase is not available, skip auth initialization
+    if (!isFirebaseAvailable()) {
+      console.warn("Firebase not configured - running in offline mode");
       setFirebaseLoading(false);
+      return;
+    }
 
-      // If user just signed in, sync with our database
-      if (user) {
-        try {
-          const dbUser = await syncFirebaseUser(user);
-          queryClient.setQueryData(["/api/auth/user", user.uid], dbUser);
-        } catch (error) {
-          console.error("Failed to sync Firebase user:", error);
+    let unsubscribe: (() => void) | undefined;
+
+    try {
+      unsubscribe = onAuthChange(async (user) => {
+        setFirebaseUser(user);
+        setFirebaseLoading(false);
+
+        // If user just signed in, sync with our database
+        if (user) {
+          try {
+            const dbUser = await syncFirebaseUser(user);
+            queryClient.setQueryData(["/api/auth/user", user.uid], dbUser);
+          } catch (error) {
+            console.error("Failed to sync Firebase user:", error);
+          }
+        } else {
+          // User signed out, clear all user queries
+          queryClient.setQueryData(["/api/auth/user"], null);
         }
-      } else {
-        // User signed out, clear all user queries
-        queryClient.setQueryData(["/api/auth/user"], null);
-      }
-    });
+      });
 
-    // Check for Apple Sign In redirect result on iOS
-    checkAppleSignInRedirect().catch((error) => {
-      if (error.message !== 'REDIRECT_IN_PROGRESS') {
-        console.error("Apple Sign In redirect failed:", error);
-      }
-    });
+      // Check for Apple Sign In redirect result on iOS
+      checkAppleSignInRedirect().catch((error) => {
+        if (error.message !== 'REDIRECT_IN_PROGRESS') {
+          console.error("Apple Sign In redirect failed:", error);
+        }
+      });
+    } catch (error) {
+      console.error("Failed to initialize Firebase auth:", error);
+      setFirebaseLoading(false);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [queryClient]);
 
   // Fetch user data from our database (includes profile, subscription, etc.)
