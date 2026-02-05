@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { User } from "@shared/models/auth";
 import { buildApiUrl } from "@/lib/api-config";
 import {
@@ -65,8 +65,53 @@ async function fetchUserByFirebaseUid(firebaseUid: string): Promise<User | null>
   return response.json();
 }
 
+/**
+ * Fetch current session user from backend (session-based auth)
+ */
+async function fetchSessionUser(): Promise<User | null> {
+  try {
+    const response = await fetch(buildApiUrl("/api/auth/user"), {
+      credentials: "include",
+    });
+
+    if (response.status === 401) {
+      return null;
+    }
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Failed to fetch session user:", error);
+    return null;
+  }
+}
+
+/**
+ * Logout from both Firebase and session
+ */
 async function logout(): Promise<void> {
-  await firebaseSignOut();
+  // Logout from session
+  try {
+    await fetch(buildApiUrl("/api/logout"), {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error("Session logout failed:", error);
+  }
+
+  // Logout from Firebase if available
+  if (isFirebaseAvailable()) {
+    try {
+      await firebaseSignOut();
+    } catch (error) {
+      console.error("Firebase logout failed:", error);
+    }
+  }
+
   window.location.href = "/";
 }
 
@@ -74,12 +119,13 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [firebaseLoading, setFirebaseLoading] = useState(true);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
-  // Listen to Firebase auth state changes
+  // Listen to Firebase auth state changes (if Firebase is available)
   useEffect(() => {
-    // If Firebase is not available, skip auth initialization
+    // If Firebase is not available, skip Firebase auth initialization
     if (!isFirebaseAvailable()) {
-      console.warn("Firebase not configured - running in offline mode");
+      console.warn("Firebase not configured - using session-based auth only");
       setFirebaseLoading(false);
       return;
     }
@@ -100,8 +146,8 @@ export function useAuth() {
             console.error("Failed to sync Firebase user:", error);
           }
         } else {
-          // User signed out, clear all user queries
-          queryClient.setQueryData(["/api/auth/user"], null);
+          // User signed out via Firebase, but check if session auth is still valid
+          // Don't clear session data here - let the session query handle it
         }
       });
 
@@ -123,8 +169,24 @@ export function useAuth() {
     };
   }, [queryClient]);
 
-  // Fetch user data from our database (includes profile, subscription, etc.)
-  const { data: user, isLoading: isDbLoading } = useQuery<User | null>({
+  // Fetch user from session-based auth (works with or without Firebase)
+  const { data: sessionUser, isLoading: isSessionLoading, refetch: refetchSession } = useQuery<User | null>({
+    queryKey: ["/api/auth/session-user"],
+    queryFn: fetchSessionUser,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !firebaseLoading, // Wait for Firebase check to complete
+  });
+
+  // Mark session as checked once we have a result
+  useEffect(() => {
+    if (!isSessionLoading) {
+      setSessionChecked(true);
+    }
+  }, [isSessionLoading]);
+
+  // Fetch user data from our database via Firebase (if Firebase user exists)
+  const { data: firebaseDbUser, isLoading: isFirebaseDbLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user", firebaseUser?.uid],
     queryFn: () => (firebaseUser ? fetchUserByFirebaseUid(firebaseUser.uid) : Promise.resolve(null)),
     enabled: !!firebaseUser && !firebaseLoading,
@@ -139,14 +201,23 @@ export function useAuth() {
     },
   });
 
-  const isLoading = firebaseLoading || isDbLoading;
+  // Determine the active user - prefer Firebase auth, fall back to session auth
+  const user = firebaseDbUser || sessionUser || null;
+
+  // Loading state: wait for Firebase check AND session check
+  const isLoading = firebaseLoading || (isSessionLoading && !sessionChecked) ||
+    (firebaseUser && isFirebaseDbLoading);
+
+  // User is authenticated if we have user data from either source
+  const isAuthenticated = !!user;
 
   return {
     user,
     firebaseUser,
     isLoading,
-    isAuthenticated: !!user && !!firebaseUser,
+    isAuthenticated,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
+    refetchSession, // Allow manual session refresh after login
   };
 }
