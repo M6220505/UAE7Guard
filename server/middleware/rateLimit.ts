@@ -233,7 +233,7 @@ export function createUserRateLimiter(options: {
     legacyHeaders: false,
     keyGenerator: (req) => {
       // Use user ID if authenticated, otherwise use IP
-      return req.user?.id?.toString() || req.ip || 'anonymous';
+      return req.user?.id?.toString() || (req as any).clientIp || req.ip || 'anonymous';
     },
   });
 }

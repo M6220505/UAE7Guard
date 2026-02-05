@@ -139,14 +139,17 @@ function generateRequestId(): string {
  */
 export function trustProxy(req: Request, res: Response, next: NextFunction) {
   // Get real IP from X-Forwarded-For or X-Real-IP
+  // Note: req.ip is read-only in Node.js 22+, so we use req.clientIp instead
   const forwarded = req.headers['x-forwarded-for'];
   const realIp = req.headers['x-real-ip'];
 
   if (forwarded) {
     const ips = (Array.isArray(forwarded) ? forwarded[0] : forwarded).split(',');
-    (req as any).ip = ips[0].trim();
+    (req as any).clientIp = ips[0].trim();
   } else if (realIp) {
-    (req as any).ip = Array.isArray(realIp) ? realIp[0] : realIp;
+    (req as any).clientIp = Array.isArray(realIp) ? realIp[0] : realIp;
+  } else {
+    (req as any).clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
   }
 
   next();
@@ -165,7 +168,7 @@ export function slowDown(options: {
   const hits = new Map<string, { count: number; resetTime: number }>();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = req.ip || 'unknown';
+    const key = (req as any).clientIp || req.ip || 'unknown';
     const now = Date.now();
 
     // Clean up old entries
