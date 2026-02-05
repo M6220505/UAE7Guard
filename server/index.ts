@@ -279,10 +279,8 @@ export async function initializeApp() {
   return app;
 }
 
-// Start the server (skip on Vercel serverless)
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
-
-if (!isVercel) {
+// Start the server
+{
   (async () => {
     await initializeApp();
 
