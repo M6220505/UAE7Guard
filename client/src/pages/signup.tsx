@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
-import { buildApiUrl } from "@/lib/api-config";
 import { signUp as supabaseSignUp, isSupabaseConfigured } from "@/lib/supabase";
 
 const signupSchema = z.object({
@@ -52,54 +51,26 @@ export default function Signup() {
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Use Supabase Auth directly if configured (recommended)
-      if (isSupabaseConfigured) {
-        const result = await supabaseSignUp(data.email, data.password, {
-          firstName: data.firstName,
-          lastName: data.lastName,
-        });
+      // Authentication handled exclusively by Supabase Auth (client-side)
+      if (!isSupabaseConfigured) {
+        throw new Error("Authentication service is not configured");
+      }
 
-        // Check if email confirmation is required
-        if (!result.session) {
-          toast({
-            title: "Check your email",
-            description: "We sent you a confirmation link. Please check your email to verify your account.",
-          });
-          setLocation("/login");
-          return;
-        }
+      const result = await supabaseSignUp(data.email, data.password, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+      });
 
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Check if email confirmation is required
+      if (!result.session) {
         toast({
-          title: "Account created!",
-          description: "Welcome to UAE7Guard. You are now logged in.",
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please check your email to verify your account.",
         });
-        setLocation("/dashboard");
+        setLocation("/login");
         return;
       }
 
-      // Fallback: Use Backend API
-      const response = await fetch(buildApiUrl("/api/auth/signup"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Could not create account");
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Account created!",
