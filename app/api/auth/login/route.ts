@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createSession, verifyPassword, type User } from "@/lib/auth"
+import { getUser } from "@/lib/users"
 import { createLogger } from "@/lib/logger"
 
 const logger = createLogger("auth")
@@ -7,20 +8,6 @@ const logger = createLogger("auth")
 // Apple Review Demo Account (for TestFlight & App Store Review)
 const APPLE_REVIEW_EMAIL = "applereview@uae7guard.com"
 const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2026"
-
-// Demo users (replace with database in production)
-const users: Record<string, { password: string; user: User }> = {
-  "demo@example.com": {
-    password: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // admin
-    user: {
-      id: "1",
-      email: "demo@example.com",
-      name: "Demo User",
-      role: "admin",
-      createdAt: "2024-01-01T00:00:00.000Z",
-    },
-  },
-}
 
 export async function POST(request: Request) {
   try {
@@ -52,14 +39,14 @@ export async function POST(request: Request) {
       })
     }
 
-    const userRecord = users[email.toLowerCase()]
+    const userRecord = getUser(email)
 
     if (!userRecord) {
       logger.warn("Login attempt for unknown user", { email })
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const isValid = await verifyPassword(password, userRecord.password)
+    const isValid = await verifyPassword(password, userRecord.passwordHash)
 
     if (!isValid) {
       logger.warn("Invalid password attempt", { email })
