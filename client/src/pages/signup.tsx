@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
-import { signUpWithEmail, signInWithApple } from "@/lib/firebase";
+import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
+import { buildApiUrl } from "@/lib/api-config";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -34,6 +35,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { t } = useLanguage();
+  const firebaseAvailable = isFirebaseAvailable();
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -49,14 +51,30 @@ export default function Signup() {
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Create Firebase account
-      const firebaseUser = await signUpWithEmail(data.email, data.password);
-
-      // Update profile with first and last name (this will be synced to our database via the auth hook)
-      await firebaseUser.updateProfile({
-        displayName: `${data.firstName} ${data.lastName}`,
+      // Use session-based authentication for email/password signup
+      // This works without Firebase and supports the backend database
+      const response = await fetch(buildApiUrl("/api/auth/signup"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }),
       });
 
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Could not create account");
+      }
+
+      // Invalidate auth queries to trigger re-fetch of user data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Account created!",
@@ -115,35 +133,39 @@ export default function Signup() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Sign up with Apple - Primary Option */}
-          <Button
-            variant="outline"
-            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
-            onClick={handleAppleSignUp}
-            disabled={isAppleLoading}
-            data-testid="button-apple-signup"
-          >
-            {isAppleLoading ? (
-              <>
-                <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                Signing up...
-              </>
-            ) : (
-              <>
-                <Apple className="h-5 w-5 mr-2 fill-current" />
-                Sign up with Apple
-              </>
-            )}
-          </Button>
+          {/* Sign up with Apple - Only shown when Firebase is available */}
+          {firebaseAvailable && (
+            <>
+              <Button
+                variant="outline"
+                className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
+                onClick={handleAppleSignUp}
+                disabled={isAppleLoading}
+                data-testid="button-apple-signup"
+              >
+                {isAppleLoading ? (
+                  <>
+                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Signing up...
+                  </>
+                ) : (
+                  <>
+                    <Apple className="h-5 w-5 mr-2 fill-current" />
+                    Sign up with Apple
+                  </>
+                )}
+              </Button>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
-            </div>
-          </div>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-zinc-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Email/Password Sign Up */}
           <Form {...form}>

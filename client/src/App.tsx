@@ -156,16 +156,16 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
     <div className={`min-h-screen bg-background ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md safe-area-pt">
         <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-          <a href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl overflow-hidden bg-[#1a1f2e] flex items-center justify-center flex-shrink-0">
-              <img 
-                src="/logo.png" 
-                alt="UAE7Guard" 
+              <img
+                src="/logo.png"
+                alt="UAE7Guard"
                 className="h-full w-full object-cover"
               />
             </div>
             <span className="font-bold text-lg">UAE7Guard</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />

@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, LogIn, WifiOff, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { isOnline, addNetworkListeners } from "@/lib/network-utils";
-import { signInWithEmail, signInWithApple } from "@/lib/firebase";
+import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
+import { buildApiUrl } from "@/lib/api-config";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -30,6 +31,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { t } = useLanguage();
+  const firebaseAvailable = isFirebaseAvailable();
 
   // Monitor network status
   useEffect(() => {
@@ -74,7 +76,28 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      await signInWithEmail(data.email, data.password);
+      // Use session-based authentication for email/password login
+      // This supports the Apple Review demo account and works without Firebase
+      const response = await fetch(buildApiUrl("/api/auth/login"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Invalid email or password");
+      }
+
+      // Invalidate auth queries to trigger re-fetch of user data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Welcome back!",
@@ -148,35 +171,39 @@ export default function Login() {
           )}
         </CardHeader>
         <CardContent>
-          {/* Sign in with Apple - Primary Option */}
-          <Button
-            variant="outline"
-            className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
-            onClick={handleAppleSignIn}
-            disabled={isAppleLoading || !networkStatus}
-            data-testid="button-apple-signin"
-          >
-            {isAppleLoading ? (
-              <>
-                <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <Apple className="h-5 w-5 mr-2 fill-current" />
-                Sign in with Apple
-              </>
-            )}
-          </Button>
+          {/* Sign in with Apple - Only shown when Firebase is available */}
+          {firebaseAvailable && (
+            <>
+              <Button
+                variant="outline"
+                className="w-full bg-white hover:bg-gray-100 text-black border-gray-300 mb-4"
+                onClick={handleAppleSignIn}
+                disabled={isAppleLoading || !networkStatus}
+                data-testid="button-apple-signin"
+              >
+                {isAppleLoading ? (
+                  <>
+                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <Apple className="h-5 w-5 mr-2 fill-current" />
+                    Sign in with Apple
+                  </>
+                )}
+              </Button>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
-            </div>
-          </div>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-zinc-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-zinc-900 px-2 text-zinc-400">Or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Email/Password Sign In */}
           <Form {...form}>
@@ -254,12 +281,13 @@ export default function Login() {
           </Form>
 
           <div className="mt-4 text-center">
-            <a
+            <Link
               href="/forgot-password"
               className="text-sm text-emerald-400 hover:text-emerald-300 hover:underline"
+              data-testid="link-forgot-password"
             >
               {t.forgotPassword}
-            </a>
+            </Link>
           </div>
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
