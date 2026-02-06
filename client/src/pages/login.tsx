@@ -281,12 +281,13 @@ export default function Login() {
           </Form>
 
           <div className="mt-4 text-center">
-            <a
+            <Link
               href="/forgot-password"
               className="text-sm text-emerald-400 hover:text-emerald-300 hover:underline"
+              data-testid="link-forgot-password"
             >
               {t.forgotPassword}
-            </a>
+            </Link>
           </div>
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
