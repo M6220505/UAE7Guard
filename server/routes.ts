@@ -10,8 +10,13 @@ import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput, type SovereignReport } from "./sovereign-report";
 import { generatePDFReport } from "./pdf-generator";
-import { setupAuth, registerAuthRoutes, isAuthenticated, isAdmin } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes, isAuthenticated as legacyIsAuthenticated, isAdmin as legacyIsAdmin } from "./replit_integrations/auth";
 import firebaseAuthRouter from "./replit_integrations/auth/firebaseAuth";
+import { authenticateUser, requireAdmin, isSupabaseAuthConfigured } from "./middleware/supabaseAuth";
+
+// Use new unified auth middleware that supports both Supabase JWT and legacy sessions
+const isAuthenticated = authenticateUser;
+const isAdmin = requireAdmin;
 import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotificationEmail } from "./email";
 import { getUserIdForRequest } from "./demo-access";
 import { stripeService } from "./stripeService";
@@ -61,6 +66,23 @@ export async function registerRoutes(
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
+  });
+
+  // ===== AUTH VERIFICATION TEST (for iOS/Mobile testing) =====
+  app.get("/api/auth/verify", isAuthenticated, (req: any, res) => {
+    const user = req.verifiedUser || req.user;
+    res.json({
+      success: true,
+      message: "Authentication verified successfully",
+      user: {
+        id: user?.id || user?.claims?.sub,
+        email: user?.email,
+        role: user?.role,
+        authMethod: user?.authMethod || 'session',
+      },
+      supabaseConfigured: isSupabaseAuthConfigured(),
+      timestamp: new Date().toISOString(),
+    });
   });
 
   // ===== SUPPORTED NETWORKS =====
