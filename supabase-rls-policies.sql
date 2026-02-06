@@ -96,11 +96,13 @@ WITH CHECK (auth.uid()::text = reporter_id);
 
 -- 3. UPDATE: Users can update their own pending reports only
 -- NOTE: Both USING and WITH CHECK required for UPDATE
+-- SECURITY: WITH CHECK must also verify status = 'pending' to prevent users
+-- from changing status to bypass restrictions before admin verification
 CREATE POLICY "Users can update their own reports"
 ON scam_reports
 FOR UPDATE
 USING (auth.uid()::text = reporter_id AND status = 'pending')
-WITH CHECK (auth.uid()::text = reporter_id);
+WITH CHECK (auth.uid()::text = reporter_id AND status = 'pending');
 
 -- 4. DELETE: Users can delete their own pending reports only
 CREATE POLICY "Users can delete their own reports"
@@ -210,6 +212,10 @@ USING (
 -- =====================================================
 -- STEP 9: ESCROW_TRANSACTIONS POLICIES
 -- =====================================================
+-- SECURITY CRITICAL: Escrow transactions require strict state-based rules
+-- - Only buyer OR seller can access
+-- - Updates only allowed in modifiable states (pending, active)
+-- - NO DELETE allowed (audit trail + dispute resolution)
 
 CREATE POLICY "Users can view their escrow transactions"
 ON escrow_transactions FOR SELECT
@@ -219,10 +225,21 @@ CREATE POLICY "Users can create escrow as buyer"
 ON escrow_transactions FOR INSERT
 WITH CHECK (auth.uid()::text = buyer_id);
 
+-- UPDATE: Only allowed when status is in modifiable states
+-- Prevents modification after completion, cancellation, or dispute
 CREATE POLICY "Users can update their escrow transactions"
 ON escrow_transactions FOR UPDATE
-USING (auth.uid()::text = buyer_id OR auth.uid()::text = seller_id)
-WITH CHECK (auth.uid()::text = buyer_id OR auth.uid()::text = seller_id);
+USING (
+  (auth.uid()::text = buyer_id OR auth.uid()::text = seller_id)
+  AND status NOT IN ('completed', 'cancelled', 'disputed', 'released', 'refunded')
+)
+WITH CHECK (
+  (auth.uid()::text = buyer_id OR auth.uid()::text = seller_id)
+  AND status NOT IN ('completed', 'cancelled', 'disputed', 'released', 'refunded')
+);
+
+-- NO DELETE POLICY: Escrow transactions must never be deleted
+-- They are required for audit trail and dispute resolution
 
 -- =====================================================
 -- STEP 10: SLIPPAGE_CALCULATIONS POLICIES
