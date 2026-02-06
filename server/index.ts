@@ -26,7 +26,7 @@ import {
 const app = express();
 const httpServer = createServer(app);
 
-// For Vercel serverless: export app and initialization function
+// Export app and initialization function for Railway deployment
 export { app, httpServer };
 export let isInitialized = false;
 

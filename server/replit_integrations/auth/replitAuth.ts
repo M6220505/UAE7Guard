@@ -74,7 +74,8 @@ export function registerAuthRoutes(app: Express) {
       const APPLE_REVIEW_EMAIL = "applereview@uae7guard.com";
       const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2026";
 
-      if (data.email === APPLE_REVIEW_EMAIL && data.password === APPLE_REVIEW_PASSWORD) {
+      // Case-insensitive email comparison for demo account
+      if (data.email.toLowerCase() === APPLE_REVIEW_EMAIL.toLowerCase() && data.password === APPLE_REVIEW_PASSWORD) {
         console.log("[AUTH] Apple Review demo login successful");
 
         // Create demo user session without database lookup
