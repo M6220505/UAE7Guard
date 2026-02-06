@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { createSession, hashPassword } from "@/lib/auth"
-import { userExists, createUser } from "@/lib/users"
+import { createSession } from "@/lib/auth"
+import { userExists, createUser, hashPasswordSecure } from "@/lib/users"
 import { createLogger } from "@/lib/logger"
 
 const logger = createLogger("auth")
@@ -37,24 +37,24 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim()
 
-    // Check if user already exists
-    if (userExists(normalizedEmail)) {
+    // Check if user already exists (in database or memory)
+    if (await userExists(normalizedEmail)) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 409 }
       )
     }
 
-    // Hash the password
-    const passwordHash = await hashPassword(password)
+    // Hash the password using bcrypt (secure)
+    const passwordHash = await hashPasswordSecure(password)
 
     // Create the user name
     const userName = firstName && lastName
       ? `${firstName} ${lastName}`.trim()
       : firstName || email.split("@")[0]
 
-    // Create and store the user
-    const newUser = createUser(normalizedEmail, passwordHash, {
+    // Create and store the user (in database or memory)
+    const newUser = await createUser(normalizedEmail, passwordHash, {
       email: normalizedEmail,
       name: userName,
       role: "user",

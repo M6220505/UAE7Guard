@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { createSession, verifyPassword, type User } from "@/lib/auth"
-import { getUser } from "@/lib/users"
+import { createSession, type User } from "@/lib/auth"
+import { getUser, verifyPasswordSecure } from "@/lib/users"
 import { createLogger } from "@/lib/logger"
 
 const logger = createLogger("auth")
@@ -39,14 +39,16 @@ export async function POST(request: Request) {
       })
     }
 
-    const userRecord = getUser(email)
+    // Get user from database (or fallback to memory)
+    const userRecord = await getUser(email)
 
     if (!userRecord) {
       logger.warn("Login attempt for unknown user", { email })
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const isValid = await verifyPassword(password, userRecord.passwordHash)
+    // Verify password using bcrypt (supports legacy SHA-256 hashes too)
+    const isValid = await verifyPasswordSecure(password, userRecord.passwordHash)
 
     if (!isValid) {
       logger.warn("Invalid password attempt", { email })

@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { isOnline, addNetworkListeners } from "@/lib/network-utils";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
 import { buildApiUrl } from "@/lib/api-config";
+import { signIn as supabaseSignIn, isSupabaseConfigured } from "@/lib/supabase";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -76,8 +77,20 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Use session-based authentication for email/password login
-      // This supports the Apple Review demo account and works without Firebase
+      // Use Supabase Auth directly if configured (recommended)
+      if (isSupabaseConfigured) {
+        await supabaseSignIn(data.email, data.password);
+
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully logged in.",
+        });
+        setLocation("/dashboard");
+        return;
+      }
+
+      // Fallback: Use Backend API (for Apple Review demo account)
       const response = await fetch(buildApiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
@@ -96,7 +109,6 @@ export default function Login() {
         throw new Error(result.error || "Invalid email or password");
       }
 
-      // Invalidate auth queries to trigger re-fetch of user data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({

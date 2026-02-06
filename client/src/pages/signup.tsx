@@ -13,6 +13,7 @@ import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
 import { buildApiUrl } from "@/lib/api-config";
+import { signUp as supabaseSignUp, isSupabaseConfigured } from "@/lib/supabase";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -51,8 +52,33 @@ export default function Signup() {
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Use session-based authentication for email/password signup
-      // This works without Firebase and supports the backend database
+      // Use Supabase Auth directly if configured (recommended)
+      if (isSupabaseConfigured) {
+        const result = await supabaseSignUp(data.email, data.password, {
+          firstName: data.firstName,
+          lastName: data.lastName,
+        });
+
+        // Check if email confirmation is required
+        if (!result.session) {
+          toast({
+            title: "Check your email",
+            description: "We sent you a confirmation link. Please check your email to verify your account.",
+          });
+          setLocation("/login");
+          return;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        toast({
+          title: "Account created!",
+          description: "Welcome to UAE7Guard. You are now logged in.",
+        });
+        setLocation("/dashboard");
+        return;
+      }
+
+      // Fallback: Use Backend API
       const response = await fetch(buildApiUrl("/api/auth/signup"), {
         method: "POST",
         headers: {
@@ -73,7 +99,6 @@ export default function Signup() {
         throw new Error(result.error || "Could not create account");
       }
 
-      // Invalidate auth queries to trigger re-fetch of user data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
