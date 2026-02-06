@@ -13,7 +13,7 @@ import { Shield, Eye, EyeOff, LogIn, WifiOff, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { isOnline, addNetworkListeners } from "@/lib/network-utils";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
-import { buildApiUrl } from "@/lib/api-config";
+import { signIn as supabaseSignIn, isSupabaseConfigured } from "@/lib/supabase";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -76,28 +76,13 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Use session-based authentication for email/password login
-      // This supports the Apple Review demo account and works without Firebase
-      const response = await fetch(buildApiUrl("/api/auth/login"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Invalid email or password");
+      // Authentication handled exclusively by Supabase Auth (client-side)
+      if (!isSupabaseConfigured) {
+        throw new Error("Authentication service is not configured");
       }
 
-      // Invalidate auth queries to trigger re-fetch of user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
+      await supabaseSignIn(data.email, data.password);
+
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Welcome back!",

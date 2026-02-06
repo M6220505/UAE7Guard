@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
-import { buildApiUrl } from "@/lib/api-config";
+import { signUp as supabaseSignUp, isSupabaseConfigured } from "@/lib/supabase";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -51,30 +51,26 @@ export default function Signup() {
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Use session-based authentication for email/password signup
-      // This works without Firebase and supports the backend database
-      const response = await fetch(buildApiUrl("/api/auth/signup"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Could not create account");
+      // Authentication handled exclusively by Supabase Auth (client-side)
+      if (!isSupabaseConfigured) {
+        throw new Error("Authentication service is not configured");
       }
 
-      // Invalidate auth queries to trigger re-fetch of user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/session-user"] });
+      const result = await supabaseSignUp(data.email, data.password, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+      });
+
+      // Check if email confirmation is required
+      if (!result.session) {
+        toast({
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please check your email to verify your account.",
+        });
+        setLocation("/login");
+        return;
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Account created!",

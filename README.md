@@ -153,8 +153,40 @@ npm run cap:open:android # Open Android Studio
 - **Express** - Web framework
 - **PostgreSQL** - Database
 - **Drizzle ORM** - Database ORM
-- **Passport.js** - Authentication
-- **Express Session** - Session management
+- **Supabase Auth** - Authentication (client-side)
+
+## Authentication Architecture
+
+> **Important:** Authentication is handled exclusively by Supabase Auth (client-side)
+
+### How It Works
+
+```
+iOS/Web App → Supabase Auth (direct) → JWT Token
+     ↓
+Backend API → JWT Verification → Business Logic
+```
+
+### Key Points
+
+- **Login/Signup:** Handled directly by Supabase Auth SDK on client
+- **Backend:** Only verifies JWT tokens - never creates users or sessions
+- **API Endpoints:**
+  - `/api/auth/login` → Returns 410 Gone (use Supabase Auth)
+  - `/api/auth/signup` → Returns 410 Gone (use Supabase Auth)
+
+### Setup
+
+1. Configure Supabase in `.env`:
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # Server only
+```
+
+2. In Supabase Dashboard:
+   - Enable Email/Password authentication
+   - Disable Email Confirmation (for development)
 
 ### Blockchain
 - **Alchemy SDK** - Multi-chain blockchain API

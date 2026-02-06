@@ -1,4 +1,9 @@
 import { cookies } from "next/headers"
+import { verifySupabaseToken, extractBearerToken, type VerifiedUser } from "./supabase"
+
+// ============================================================================
+// USER TYPES
+// ============================================================================
 
 export interface User {
   id: string
@@ -10,14 +15,68 @@ export interface User {
 
 export interface Session {
   user: User
+  accessToken: string
   expiresAt: number
-  token: string
 }
 
-// Session storage (use a database in production)
+// ============================================================================
+// JWT VERIFICATION MIDDLEWARE (Backend trusts Supabase JWT only)
+// ============================================================================
+
+/**
+ * Verify request authentication using Supabase JWT
+ * Backend should ONLY verify tokens - never create them
+ */
+export async function verifyAuth(request: Request): Promise<VerifiedUser | null> {
+  // Try Authorization header first (iOS/API calls)
+  const authHeader = request.headers.get('Authorization')
+  const bearerToken = extractBearerToken(authHeader)
+
+  if (bearerToken) {
+    return await verifySupabaseToken(bearerToken)
+  }
+
+  // Try cookie for web (SSR/browser)
+  const cookieStore = await cookies()
+  const accessToken = cookieStore.get('sb-access-token')?.value
+
+  if (accessToken) {
+    return await verifySupabaseToken(accessToken)
+  }
+
+  return null
+}
+
+/**
+ * Require authentication - throws if not authenticated
+ */
+export async function requireAuth(request: Request): Promise<VerifiedUser> {
+  const user = await verifyAuth(request)
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+  return user
+}
+
+/**
+ * Check if user has admin role
+ */
+export async function requireAdmin(request: Request): Promise<VerifiedUser> {
+  const user = await requireAuth(request)
+  // Note: Check your Supabase user metadata or app_metadata for admin role
+  if (user.role !== 'service_role') {
+    throw new Error('Forbidden')
+  }
+  return user
+}
+
+// ============================================================================
+// LEGACY SESSION SUPPORT (For Apple Review demo account)
+// Remove this section once Supabase Auth is fully integrated
+// ============================================================================
+
 const sessions = new Map<string, Session>()
 
-// Generate secure token
 function generateToken(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   let token = ""
@@ -29,46 +88,35 @@ function generateToken(): string {
   return token
 }
 
-// Hash password (simplified - use bcrypt in production)
-export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password + process.env.AUTH_SECRET)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
-
-// Verify password
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password)
-  return passwordHash === hash
-}
-
-// Create session
+/**
+ * @deprecated Use Supabase Auth directly instead
+ * Only kept for Apple Review demo account
+ */
 export async function createSession(user: User): Promise<Session> {
   const token = generateToken()
   const session: Session = {
     user,
-    token,
+    accessToken: token,
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
   }
 
   sessions.set(token, session)
 
-  // Set cookie
   const cookieStore = await cookies()
   cookieStore.set("session_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 7 * 24 * 60 * 60,
     path: "/",
   })
 
   return session
 }
 
-// Get current session
+/**
+ * @deprecated Use Supabase Auth directly instead
+ */
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get("session_token")?.value
@@ -76,7 +124,6 @@ export async function getSession(): Promise<Session | null> {
   if (!token) return null
 
   const session = sessions.get(token)
-
   if (!session) return null
 
   if (Date.now() > session.expiresAt) {
@@ -87,13 +134,17 @@ export async function getSession(): Promise<Session | null> {
   return session
 }
 
-// Get current user
+/**
+ * @deprecated Use Supabase Auth directly instead
+ */
 export async function getCurrentUser(): Promise<User | null> {
   const session = await getSession()
   return session?.user || null
 }
 
-// Destroy session
+/**
+ * @deprecated Use Supabase signOut instead
+ */
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies()
   const token = cookieStore.get("session_token")?.value
@@ -104,34 +155,14 @@ export async function destroySession(): Promise<void> {
   }
 }
 
-// Check if user is authenticated
 export async function isAuthenticated(): Promise<boolean> {
   const session = await getSession()
   return session !== null
 }
 
-// Check if user has required role
 export async function hasRole(requiredRole: "user" | "admin"): Promise<boolean> {
   const user = await getCurrentUser()
   if (!user) return false
   if (requiredRole === "user") return true
   return user.role === "admin"
-}
-
-// Require authentication (throws if not authenticated)
-export async function requireAuth(): Promise<User> {
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new Error("Unauthorized")
-  }
-  return user
-}
-
-// Require admin role
-export async function requireAdmin(): Promise<User> {
-  const user = await requireAuth()
-  if (user.role !== "admin") {
-    throw new Error("Forbidden")
-  }
-  return user
 }
