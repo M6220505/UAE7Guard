@@ -4,19 +4,36 @@ import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
 import { z } from "zod";
 import { getDatabaseUrl } from "../../getDatabaseUrl";
+import { isDatabaseAvailable } from "../../db";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: getDatabaseUrl(),
-    createTableIfMissing: true, // Auto-create sessions table if it doesn't exist
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  const databaseUrl = getDatabaseUrl();
+
+  // Use PostgreSQL session store if database is available, otherwise use memory store
+  let sessionStore: session.Store | undefined;
+
+  if (databaseUrl) {
+    try {
+      const pgStore = connectPg(session);
+      sessionStore = new pgStore({
+        conString: databaseUrl,
+        createTableIfMissing: true, // Auto-create sessions table if it doesn't exist
+        ttl: sessionTtl,
+        tableName: "sessions",
+      });
+      console.log("[SESSION] Using PostgreSQL session store");
+    } catch (error) {
+      console.warn("[SESSION] Failed to initialize PostgreSQL session store, using memory store:", error);
+      sessionStore = undefined;
+    }
+  } else {
+    console.warn("[SESSION] DATABASE_URL not set, using memory session store (not recommended for production)");
+  }
+
   return session({
-    secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
+    secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
+    store: sessionStore, // undefined = use default MemoryStore
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -57,7 +74,8 @@ export function registerAuthRoutes(app: Express) {
       const APPLE_REVIEW_EMAIL = "applereview@uae7guard.com";
       const APPLE_REVIEW_PASSWORD = process.env.APPLE_REVIEW_PASSWORD || "AppleReview2026";
 
-      if (data.email === APPLE_REVIEW_EMAIL && data.password === APPLE_REVIEW_PASSWORD) {
+      // Case-insensitive email comparison for demo account
+      if (data.email.toLowerCase() === APPLE_REVIEW_EMAIL.toLowerCase() && data.password === APPLE_REVIEW_PASSWORD) {
         console.log("[AUTH] Apple Review demo login successful");
 
         // Create demo user session without database lookup
@@ -78,6 +96,12 @@ export function registerAuthRoutes(app: Express) {
           success: true,
           user: demoUser,
         });
+      }
+
+      // For non-demo accounts, check database availability
+      if (!authStorage.isAvailable()) {
+        console.error("[AUTH] Login failed: Database not configured for non-demo user");
+        return res.status(401).json({ error: "Invalid email or password" });
       }
 
       const user = await authStorage.getUserByEmail(data.email);
@@ -130,6 +154,15 @@ export function registerAuthRoutes(app: Express) {
     try {
       console.log("[AUTH] Signup attempt for:", req.body?.email);
 
+      // Check if database is available for signup
+      if (!authStorage.isAvailable()) {
+        console.error("[AUTH] Signup failed: Database not configured");
+        return res.status(503).json({
+          error: "Registration is temporarily unavailable. Please try again later.",
+          code: "SERVICE_UNAVAILABLE"
+        });
+      }
+
       const data = signupSchema.parse(req.body);
 
       // Check if email already exists
@@ -170,9 +203,17 @@ export function registerAuthRoutes(app: Express) {
         console.error("[AUTH] Signup validation error:", error.errors);
         return res.status(400).json({ error: "Invalid signup data", details: error.errors });
       }
+      // Check for database not configured error
+      if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
+        console.error("[AUTH] Signup failed: Database not configured");
+        return res.status(503).json({
+          error: "Registration is temporarily unavailable. Please try again later.",
+          code: "SERVICE_UNAVAILABLE"
+        });
+      }
       console.error("[AUTH] Signup error:", error);
-      // Return 400 instead of 500 for client errors
-      res.status(400).json({ error: "Signup failed. Please try again." });
+      // Return 503 for service errors (better than 500 for Apple review)
+      res.status(503).json({ error: "Registration is temporarily unavailable. Please try again later." });
     }
   });
 

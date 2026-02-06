@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build Stage
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -40,7 +40,7 @@ RUN npm prune --production
 # -----------------------------------------------------------------------------
 # Stage 2: Production Stage
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
@@ -73,12 +73,12 @@ RUN mkdir -p /app/uploads && \
 # Switch to non-root user
 USER nodejs
 
-# Expose port
-EXPOSE 5000
+# Expose port (Railway sets PORT dynamically)
+EXPOSE ${PORT:-5000}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/api/health || exit 1
+    CMD curl -f http://localhost:${PORT:-5000}/api/health || exit 1
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]

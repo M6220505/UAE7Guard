@@ -1,5 +1,5 @@
 import { users, type User, type UpsertUser } from "@shared/schema.ts";
-import { db } from "../../db";
+import { db, isDatabaseAvailable } from "../../db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -17,25 +17,41 @@ export interface IAuthStorage {
   verifyPassword(user: User, password: string): Promise<boolean>;
   updatePassword(userId: string, newPassword: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
+  isAvailable(): boolean;
+}
+
+// Helper to check database availability before operations
+function checkDatabaseAvailable(): void {
+  if (!isDatabaseAvailable || !db) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
 }
 
 class AuthStorage implements IAuthStorage {
+  isAvailable(): boolean {
+    return isDatabaseAvailable && db !== null;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
+    checkDatabaseAvailable();
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
-  
+
   async getUserById(id: string): Promise<User | undefined> {
+    checkDatabaseAvailable();
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    checkDatabaseAvailable();
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    checkDatabaseAvailable();
     const [user] = await db
       .insert(users)
       .values(userData)
@@ -59,8 +75,9 @@ class AuthStorage implements IAuthStorage {
     firstName: string;
     lastName: string;
   }): Promise<User> {
+    checkDatabaseAvailable();
     const hashedPassword = await bcrypt.hash(userData.password, 12);
-    
+
     const [user] = await db
       .insert(users)
       .values({
@@ -71,7 +88,7 @@ class AuthStorage implements IAuthStorage {
         role: "user",
       })
       .returning();
-    
+
     return user;
   }
 
@@ -83,6 +100,7 @@ class AuthStorage implements IAuthStorage {
   }
 
   async updatePassword(userId: string, newPassword: string): Promise<void> {
+    checkDatabaseAvailable();
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await db
       .update(users)
@@ -94,6 +112,7 @@ class AuthStorage implements IAuthStorage {
   }
 
   async deleteUser(userId: string): Promise<void> {
+    checkDatabaseAvailable();
     await db.delete(users).where(eq(users.id, userId));
   }
 }

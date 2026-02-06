@@ -38,6 +38,8 @@ import ReportsAnalytics from "@/pages/reports-analytics";
 import Pricing from "@/pages/pricing";
 import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { AppLoader } from "@/components/app-loader";
 
 const legacyRedirects: Record<string, string> = {
   "/due-diligence": "/verification?tab=due-diligence",
@@ -154,16 +156,16 @@ function SimpleLayout({ children }: { children: React.ReactNode }) {
     <div className={`min-h-screen bg-background ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md safe-area-pt">
         <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-          <a href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl overflow-hidden bg-[#1a1f2e] flex items-center justify-center flex-shrink-0">
-              <img 
-                src="/logo.png" 
-                alt="UAE7Guard" 
+              <img
+                src="/logo.png"
+                alt="UAE7Guard"
                 className="h-full w-full object-cover"
               />
             </div>
             <span className="font-bold text-lg">UAE7Guard</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
@@ -320,17 +322,21 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark">
-        <LanguageProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-            <IOSInstallPrompt />
-          </TooltipProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <AppLoader minLoadTime={800}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="dark">
+            <LanguageProvider>
+              <TooltipProvider>
+                <Router />
+                <Toaster />
+                <IOSInstallPrompt />
+              </TooltipProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </AppLoader>
+    </ErrorBoundary>
   );
 }
 

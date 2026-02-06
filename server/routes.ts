@@ -220,7 +220,7 @@ export async function registerRoutes(
 
   app.post("/api/admin/authenticate", async (req, res) => {
     try {
-      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      const clientIP = (req as any).clientIp || req.ip || req.socket?.remoteAddress || 'unknown';
       const now = Date.now();
       
       // Check rate limiting

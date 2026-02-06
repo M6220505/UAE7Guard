@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
       'https://*.uae7guard.com',
       'https://uae7guard.vercel.app',
       'https://*.vercel.app',
+      'https://*.railway.app',
+      'https://*.up.railway.app',
       'https://*.repl.co',
       'https://*.replit.dev',
       'capacitor://localhost',

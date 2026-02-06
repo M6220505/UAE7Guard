@@ -214,7 +214,7 @@ export function requestLogger(req: any, res: any, next: any): void {
     }
 
     logger.logRequest(method, path, res.statusCode, duration, {
-      ip: req.ip,
+      ip: (req as any).clientIp || req.ip,
       userAgent: req.headers['user-agent'],
       userId: req.user?.id,
     });
@@ -230,7 +230,7 @@ export function errorLogger(err: any, req: any, res: any, next: any): void {
   logger.error('Unhandled error', err, {
     method: req.method,
     path: req.path,
-    ip: req.ip,
+    ip: (req as any).clientIp || req.ip,
     userId: req.user?.id,
   });
 

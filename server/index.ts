@@ -26,17 +26,16 @@ import {
 const app = express();
 const httpServer = createServer(app);
 
-// For Vercel serverless: export app and initialization function
+// Export app and initialization function for Railway deployment
 export { app, httpServer };
 export let isInitialized = false;
 
-// Validate production configuration
+// Validate production configuration (warn but don't crash)
 if (config.isProduction) {
   try {
     validateConfig();
   } catch (error) {
-    logger.error('Configuration validation failed', error);
-    process.exit(1);
+    logger.error('Configuration validation warning - server starting in limited mode', error);
   }
 }
 
@@ -128,15 +127,11 @@ async function initStripe() {
       console.log('ℹ️ REPLIT_DOMAINS not set, skipping webhook setup');
     }
 
-    // تحسين مهم: لا تقم بتشغيل syncBackfill في بيئة Vercel لتجنب التوقف
-    if (!process.env.VERCEL) {
-      console.log('🔄 Syncing Stripe data...');
-      stripeSync.syncBackfill()
-        .then(() => console.log('✅ Stripe data synced'))
-        .catch((err: Error) => console.error('❌ Error syncing Stripe data:', err));
-    } else {
-      console.log('ℹ️ Skipping Stripe backfill in Vercel environment to prevent timeouts');
-    }
+    // Sync Stripe data in background
+    console.log('🔄 Syncing Stripe data...');
+    stripeSync.syncBackfill()
+      .then(() => console.log('✅ Stripe data synced'))
+      .catch((err: Error) => console.error('❌ Error syncing Stripe data:', err));
 
   } catch (error) {
     // نحن هنا لا نرمي الخطأ (throw)، بل نسجله فقط
@@ -194,6 +189,29 @@ app.get("/api/health/ready", readinessCheck);
 app.get("/api/health/live", livenessCheck);
 app.get("/api/health/metrics", getMetrics);
 
+// Deployment diagnostics - shows what's configured and what's missing
+app.get("/api/diagnostics", (_req, res) => {
+  const envCheck = (key: string) => process.env[key] ? 'SET' : 'MISSING';
+  res.status(200).json({
+    status: 'running',
+    node: process.version,
+    uptime: `${Math.round(process.uptime())}s`,
+    environment: {
+      NODE_ENV: envCheck('NODE_ENV'),
+      PORT: process.env.PORT || '5000 (default)',
+      DATABASE_URL: envCheck('DATABASE_URL'),
+      SESSION_SECRET: envCheck('SESSION_SECRET'),
+      STRIPE_SECRET_KEY: envCheck('STRIPE_SECRET_KEY'),
+      OPENAI_API_KEY: envCheck('OPENAI_API_KEY'),
+      ALCHEMY_API_KEY: envCheck('ALCHEMY_API_KEY'),
+      SENDGRID_API_KEY: envCheck('SENDGRID_API_KEY'),
+      FIREBASE_PROJECT_ID: envCheck('FIREBASE_PROJECT_ID'),
+    },
+    required: ['DATABASE_URL', 'SESSION_SECRET'],
+    optional: ['STRIPE_SECRET_KEY', 'OPENAI_API_KEY', 'ALCHEMY_API_KEY'],
+  });
+});
+
 // Apply rate limiting to API routes
 app.use("/api", apiLimiter);
 
@@ -203,10 +221,19 @@ export async function initializeApp() {
     return app;
   }
 
-  // Initialize Stripe first (with the improved version)
-  await initStripe();
+  // Initialize Stripe (non-blocking)
+  try {
+    await initStripe();
+  } catch (error) {
+    console.log("Stripe initialization skipped:", error);
+  }
 
-  await registerRoutes(httpServer, app);
+  // Register routes (non-blocking on failure)
+  try {
+    await registerRoutes(httpServer, app);
+  } catch (error) {
+    console.error("Route registration error (some routes may be unavailable):", error);
+  }
 
   // Seed database with initial data
   try {
@@ -252,11 +279,8 @@ export async function initializeApp() {
   return app;
 }
 
-// Check if running in Vercel serverless environment
-const isVercelServerless = process.env.VERCEL === '1' && !process.env.PORT;
-
-// Only start the server if not in Vercel serverless mode
-if (!isVercelServerless) {
+// Start the server
+{
   (async () => {
     await initializeApp();
 

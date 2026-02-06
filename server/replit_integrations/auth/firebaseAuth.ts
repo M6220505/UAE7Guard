@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../../db";
+import { db, isDatabaseAvailable } from "../../db";
 import { users } from "../../../shared/schema";
 import { eq } from "drizzle-orm";
 import type { User } from "../../../shared/schema";
@@ -90,6 +90,15 @@ async function authenticateFirebase(req: any, res: any, next: any) {
  */
 router.post("/sync", authenticateFirebase, async (req, res) => {
   try {
+    // Check database availability
+    if (!isDatabaseAvailable || !db) {
+      console.error("[FIREBASE] Sync failed: Database not configured");
+      return res.status(503).json({
+        error: "Service temporarily unavailable. Please try again later.",
+        code: "SERVICE_UNAVAILABLE"
+      });
+    }
+
     const { firebaseUid, email, displayName, photoURL } = req.body;
     const firebaseUser = req.firebaseUser;
 
@@ -169,6 +178,15 @@ router.post("/sync", authenticateFirebase, async (req, res) => {
  */
 router.get("/user/:firebaseUid", authenticateFirebase, async (req, res) => {
   try {
+    // Check database availability
+    if (!isDatabaseAvailable || !db) {
+      console.error("[FIREBASE] User fetch failed: Database not configured");
+      return res.status(503).json({
+        error: "Service temporarily unavailable. Please try again later.",
+        code: "SERVICE_UNAVAILABLE"
+      });
+    }
+
     const { firebaseUid } = req.params;
     const firebaseUser = req.firebaseUser;
 

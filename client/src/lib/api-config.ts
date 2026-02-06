@@ -9,10 +9,10 @@ import { Capacitor } from '@capacitor/core';
 
 // Default backend URL for production mobile builds
 // Can be overridden with VITE_API_BASE_URL environment variable during build
-// 🔥 PRODUCTION: Deployed on Vercel
+// 🔥 PRODUCTION: Deployed on Railway
 //
 // Options:
-//   1. Vercel: 'https://uae7guard.vercel.app' (CURRENT)
+//   1. Railway: 'https://web-production-2731e.up.railway.app' (CURRENT)
 //   2. Custom domain: 'https://api.uae7guard.com'
 //   3. Alternative: Set VITE_API_BASE_URL during build
 //
@@ -26,7 +26,7 @@ import { Capacitor } from '@capacitor/core';
 //   2. Start backend: npm run dev
 //   3. Use: http://YOUR_LOCAL_IP:5000 (e.g., http://192.168.1.100:5000)
 //
-const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://uae7guard.vercel.app';
+const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://web-production-2731e.up.railway.app';
 
 // Development API URL (when testing mobile app locally)
 // Can be overridden with VITE_DEV_API_URL environment variable
