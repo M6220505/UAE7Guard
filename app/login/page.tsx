@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signInWithEmail, isSupabaseConfigured } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,17 +24,12 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+      // Use Supabase Auth directly (not backend API)
+      if (!isSupabaseConfigured()) {
+        throw new Error("Authentication service is not configured")
       }
+
+      await signInWithEmail(email, password)
 
       router.push("/dashboard")
       router.refresh()
