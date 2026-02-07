@@ -5,6 +5,12 @@
 --
 -- IMPORTANT: Without INSERT/UPDATE/DELETE policies, users can only SELECT!
 -- This is a common mistake that causes "permission denied" errors on iOS.
+--
+-- AFTER running this file, also run:
+--   supabase-column-security.sql  - Adds column-level protection
+--
+-- For testing RLS policies, see:
+--   docs/rls-test-queries.md      - Standard test queries
 
 -- =====================================================
 -- STEP 1: Enable RLS on all tables
@@ -290,3 +296,16 @@ SELECT
 FROM pg_policies
 WHERE schemaname = 'public'
 ORDER BY tablename, cmd;
+
+-- =====================================================
+-- NEXT STEPS
+-- =====================================================
+-- 1. Run: supabase-column-security.sql
+--    Adds trigger-based column protection for:
+--    - scam_reports: status, verified_by, verified_at
+--    - escrow_transactions: status transitions
+--    - users: role, subscription_*, stripe_*
+--    - user_reputation: trust_score, rank, verified_reports
+--
+-- 2. Test with: docs/rls-test-queries.md
+--    Contains ready-to-use test queries for verification
