@@ -1,8 +1,9 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/components/auth-provider"
 import type { User } from "@/lib/auth"
 
 interface DashboardContentProps {
@@ -10,12 +11,18 @@ interface DashboardContentProps {
 }
 
 export function DashboardContent({ user }: DashboardContentProps) {
-  const router = useRouter()
+  const { signOut } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
-    router.push("/login")
-    router.refresh()
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+    } catch {
+      // Error handling is done in AuthProvider
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   return (
@@ -26,8 +33,8 @@ export function DashboardContent({ user }: DashboardContentProps) {
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back, {user.name || user.email}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Sign out
+          <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
+            {isLoggingOut ? "Signing out..." : "Sign out"}
           </Button>
         </div>
 

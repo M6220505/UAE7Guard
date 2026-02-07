@@ -1,22 +1,34 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
 import { signInWithEmail, isSupabaseConfigured } from "@/lib/supabase"
+import { prefetchDashboardData, fetchWithTimeout } from "@/lib/auth-client"
+import { useAuth } from "@/components/auth-provider"
+
+// Login timeout (8-10 seconds as specified)
+const LOGIN_TIMEOUT = 10000
 
 export default function LoginPage() {
   const router = useRouter()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already authenticated (session restore)
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.replace("/dashboard")
+    }
+  }, [isAuthenticated, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,20 +36,82 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Use Supabase Auth directly (not backend API)
+      // Check if Supabase is configured
       if (!isSupabaseConfigured()) {
         throw new Error("Authentication service is not configured")
       }
 
-      await signInWithEmail(email, password)
+      // Sign in with timeout (max 10 seconds)
+      const signInPromise = signInWithEmail(email, password)
+      await fetchWithTimeout(
+        signInPromise,
+        LOGIN_TIMEOUT,
+        "Login timed out. Please check your connection and try again."
+      )
 
-      router.push("/dashboard")
+      // Prefetch dashboard data immediately after auth (Critical Path optimization)
+      // This ensures we only make 2 requests: Auth + Profile
+      await prefetchDashboardData()
+
+      // Navigate to dashboard
+      router.replace("/dashboard")
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      // User-friendly error messages
+      let errorMessage = "An error occurred"
+      if (err instanceof Error) {
+        if (err.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password. Please try again."
+        } else if (err.message.includes("timed out")) {
+          errorMessage = err.message
+        } else if (err.message.includes("not configured")) {
+          errorMessage = err.message
+        } else {
+          errorMessage = err.message
+        }
+      }
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show skeleton while checking session restore
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // If already authenticated, show loading state while redirecting
+  if (isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">Redirecting to dashboard...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -64,6 +138,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -76,6 +151,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
+                disabled={loading}
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
