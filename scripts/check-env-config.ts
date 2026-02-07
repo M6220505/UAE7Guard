@@ -121,11 +121,9 @@ if (hasErrors) {
   console.log('2. Generate SESSION_SECRET:');
   console.log('   - Run: openssl rand -base64 32');
   console.log('');
-  console.log('3. Update Vercel Environment Variables:');
-  console.log('   - Go to https://vercel.com/dashboard');
-  console.log('   - Select UAE7Guard project → Settings → Environment Variables');
-  console.log('   - Update DATABASE_URL and SESSION_SECRET');
-  console.log('   - Redeploy: Deployments → click "..." → Redeploy');
+  console.log('3. Update Environment Variables:');
+  console.log('   - Update DATABASE_URL and SESSION_SECRET in your .env file');
+  console.log('   - Redeploy your application');
   console.log('');
   process.exit(1);
 } else if (hasWarnings) {

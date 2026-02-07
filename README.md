@@ -222,28 +222,21 @@ See [supabase-schema.sql](./supabase-schema.sql) for complete schema.
 
 ## Deployment
 
-### Vercel + Supabase (Recommended)
+### Railway + Supabase (Recommended)
 
-This project is optimized for Vercel deployment with Supabase database.
+This project is optimized for Railway deployment with Supabase database.
 
 1. **Create Supabase Project:**
    - Visit https://supabase.com
    - Create a new project
    - Copy the connection string
 
-2. **Deploy to Vercel:**
-   ```bash
-   # Install Vercel CLI
-   npm i -g vercel
+2. **Deploy to Railway:**
+   - Visit https://railway.app
+   - Connect your GitHub repository
+   - Configure environment variables in Railway dashboard
 
-   # Deploy
-   vercel
-   ```
-
-3. **Configure Environment Variables:**
-   Add all required variables in Vercel dashboard
-
-4. **Run Database Setup:**
+3. **Run Database Setup:**
    ```bash
    npm run db:setup
    ```

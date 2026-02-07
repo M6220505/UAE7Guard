@@ -10,8 +10,6 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'https://uae7guard.com',
       'https://*.uae7guard.com',
-      'https://uae7guard.vercel.app',
-      'https://*.vercel.app',
       'https://*.railway.app',
       'https://*.up.railway.app',
       'https://*.repl.co',
