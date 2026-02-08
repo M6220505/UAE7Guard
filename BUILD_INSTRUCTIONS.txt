@@ -1,0 +1,239 @@
+================================================================================
+UAE7Guard - Build Instructions for Apple App Store
+================================================================================
+
+Backend URL (Railway):
+https://web-production-2731e.up.railway.app
+
+================================================================================
+OPTION 1: Build Using Xcode (Manual)
+================================================================================
+
+Step 1: Open Terminal and navigate to project
+----------------------------------------------
+cd /root/UAE7Guard
+
+
+Step 2: Set the backend URL
+----------------------------------------------
+export VITE_API_BASE_URL="https://web-production-2731e.up.railway.app"
+
+
+Step 3: Install dependencies (if needed)
+----------------------------------------------
+npm install
+
+
+Step 4: Build the project
+----------------------------------------------
+npm run build
+
+
+Step 5: Sync with iOS
+----------------------------------------------
+npx cap sync ios
+
+
+Step 6: Open in Xcode
+----------------------------------------------
+npx cap open ios
+
+
+Step 7: In Xcode
+----------------------------------------------
+- Select "Any iOS Device (arm64)" from device selector
+- Click Product → Archive
+- Wait for archive to complete (5-10 minutes)
+- Click "Distribute App"
+- Choose "App Store Connect"
+- Follow the prompts to upload
+
+
+================================================================================
+OPTION 2: Build Using Codemagic (Automated - RECOMMENDED)
+================================================================================
+
+Step 1: Go to Codemagic
+----------------------------------------------
+https://codemagic.io/apps
+
+
+Step 2: Select UAE7Guard project
+----------------------------------------------
+Click on your UAE7Guard app
+
+
+Step 3: Configure Environment Variables
+----------------------------------------------
+- Click "Settings" (⚙️ icon)
+- Go to "Environment variables"
+- Add/Update the following:
+
+   Variable Name: VITE_API_BASE_URL
+   Variable Value: https://web-production-2731e.up.railway.app
+   
+   Variable Name: APPLE_REVIEW_PASSWORD
+   Variable Value: AppleReview2026
+
+
+Step 4: Start Build
+----------------------------------------------
+- Click "Start new build"
+- Select branch: main
+- Click "Start build"
+- Wait 15-20 minutes
+- Build will automatically upload to TestFlight!
+
+
+================================================================================
+OPTION 3: Quick Build Commands (Copy-Paste All)
+================================================================================
+
+cd /root/UAE7Guard && \
+export VITE_API_BASE_URL="https://web-production-2731e.up.railway.app" && \
+npm install && \
+npm run build && \
+npx cap sync ios && \
+npx cap open ios
+
+
+================================================================================
+After Upload to TestFlight
+================================================================================
+
+Step 1: Go to App Store Connect
+----------------------------------------------
+https://appstoreconnect.apple.com
+
+
+Step 2: Navigate to TestFlight
+----------------------------------------------
+- My Apps → UAE7Guard → TestFlight
+
+
+Step 3: Wait for build to appear
+----------------------------------------------
+- Usually takes 5-10 minutes after upload
+- You'll get email when it's ready
+
+
+Step 4: Add Beta Review Information
+----------------------------------------------
+- Click on the new build
+- Go to "Test Information"
+- Scroll to "Beta App Review Information"
+- Check ✅ "Sign-in required"
+- Enter:
+  Email: applereview@uae7guard.com
+  Password: AppleReview2026
+
+
+Step 5: Add Review Notes
+----------------------------------------------
+Copy and paste the following in the "Notes" field:
+
+--- START COPY FROM HERE ---
+
+FIXES IMPLEMENTED
+==================
+
+The previous rejection issues have been resolved:
+
+1. App now loads successfully at launch
+   - Added proper error boundary handling
+   - Added loading screen with network status
+   - App works in offline mode
+
+2. Network connectivity improved
+   - Added 10-second timeout for API requests
+   - Added graceful failure handling
+   - App shows offline indicator when network is unavailable
+
+3. Authentication improved
+   - Firebase auth works with fallback mode
+   - Login errors are handled gracefully
+   - Users see clear error messages instead of crashes
+
+TESTING INSTRUCTIONS
+====================
+
+Demo Account:
+Email: applereview@uae7guard.com
+Password: AppleReview2026
+
+How to Test:
+1. Launch app - should show home screen immediately
+2. Tap user icon (top right) to login
+3. Enter demo credentials above
+4. Explore wallet verification features
+5. Test offline mode (enable airplane mode):
+   - App should show "You're offline" indicator
+   - App should still display UI (no crashes)
+
+Test Wallet Address:
+0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+
+The app is now fully functional and ready for review.
+
+Backend: https://web-production-2731e.up.railway.app
+
+--- END COPY TO HERE ---
+
+
+Step 6: Submit for Review
+----------------------------------------------
+- Click "Submit for Review"
+- Done! Wait 1-3 business days for Apple review
+
+
+================================================================================
+Important URLs
+================================================================================
+
+Railway Backend:
+https://web-production-2731e.up.railway.app
+
+GitHub Repository:
+https://github.com/M6220505/UAE7Guard
+
+App Store Connect:
+https://appstoreconnect.apple.com
+
+Codemagic:
+https://codemagic.io
+
+Demo Account:
+Email: applereview@uae7guard.com
+Password: AppleReview2026
+
+
+================================================================================
+Troubleshooting
+================================================================================
+
+Problem: "Command not found: npm"
+Solution: Make sure Node.js is installed
+
+Problem: "Command not found: npx cap"
+Solution: Run: npm install -g @capacitor/cli
+
+Problem: Xcode not opening
+Solution: Make sure Xcode is installed on your Mac
+
+Problem: Build fails
+Solution: Check that Railway backend is accessible:
+curl https://web-production-2731e.up.railway.app/api/health
+
+Problem: Can't upload to App Store Connect
+Solution: Make sure you're logged in to Xcode with Apple Developer account
+
+
+================================================================================
+Need Help?
+================================================================================
+
+1. Check BUILD_AND_DEPLOY_STATUS.md in project root
+2. Check APPLE_RESUBMISSION_GUIDE.md for detailed instructions
+3. Check FIX_SUMMARY.md for technical details
+
+================================================================================

@@ -5,6 +5,10 @@ import { authStorage } from "./storage";
 import { z } from "zod";
 import { getDatabaseUrl } from "../../getDatabaseUrl";
 import { isDatabaseAvailable } from "../../db";
+import { Resend } from "resend";
+
+// Initialize Resend for email
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -267,15 +271,50 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "Email is required" });
       }
 
+      // Check if database is available
+      if (!authStorage.isAvailable()) {
+        console.warn("[AUTH] Forgot password: Database not available");
+        return res.json({
+          success: true,
+          message: "If an account exists with this email, you will receive password reset instructions."
+        });
+      }
+
       // Check if user exists
       const user = await authStorage.getUserByEmail(email);
 
       // SECURITY: Always return success even if user doesn't exist (prevents email enumeration)
-      // In production, you would send a password reset email here
       console.log("[AUTH] Password reset requested for:", email);
 
-      // For now, return success without actually sending email
-      // TODO: Integrate with SendGrid or similar email service
+      // Send email if user exists and Resend is configured
+      if (user && resend) {
+        try {
+          // Generate reset token (valid for 1 hour)
+          const resetToken = Buffer.from(`${user.id}:${Date.now() + 3600000}`).toString('base64');
+          const resetUrl = `${process.env.RAILWAY_STATIC_URL || 'https://uae7guard.com'}/reset-password?token=${resetToken}`;
+
+          await resend.emails.send({
+            from: process.env.FROM_EMAIL || 'noreply@uae7guard.com',
+            to: email,
+            subject: 'Reset Your UAE7Guard Password',
+            html: `
+              <h2>Password Reset Request</h2>
+              <p>You requested to reset your password for your UAE7Guard account.</p>
+              <p>Click the link below to reset your password (valid for 1 hour):</p>
+              <p><a href="${resetUrl}">${resetUrl}</a></p>
+              <p>If you didn't request this, please ignore this email.</p>
+              <br>
+              <p>- UAE7Guard Team</p>
+            `,
+          });
+
+          console.log("[AUTH] Password reset email sent to:", email);
+        } catch (emailError) {
+          console.error("[AUTH] Failed to send reset email:", emailError);
+          // Don't reveal email sending failure to user
+        }
+      }
+
       res.json({
         success: true,
         message: "If an account exists with this email, you will receive password reset instructions."
@@ -286,20 +325,43 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // Reset Password (would be used with a token from email)
+  // Reset Password (with token from email)
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { email, newPassword } = req.body;
+      const { token, newPassword } = req.body;
 
-      if (!email || !newPassword) {
-        return res.status(400).json({ error: "Email and new password are required" });
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token and new password are required" });
       }
 
       if (newPassword.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });
       }
 
-      const user = await authStorage.getUserByEmail(email);
+      // Check database availability
+      if (!authStorage.isAvailable()) {
+        return res.status(503).json({ error: "Service temporarily unavailable" });
+      }
+
+      // Decode and validate token
+      let userId: string;
+      let expiryTime: number;
+      try {
+        const decoded = Buffer.from(token, 'base64').toString('utf-8');
+        const [id, expiry] = decoded.split(':');
+        userId = id;
+        expiryTime = parseInt(expiry);
+
+        // Check if token expired
+        if (Date.now() > expiryTime) {
+          return res.status(400).json({ error: "Reset link has expired. Please request a new one." });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid reset token" });
+      }
+
+      // Get user
+      const user = await authStorage.getUserById(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }

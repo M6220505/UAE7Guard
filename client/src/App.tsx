@@ -32,6 +32,7 @@ import ApiDocs from "@/pages/api-docs";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Verification from "@/pages/verification";
 import Protection from "@/pages/protection";
 import ReportsAnalytics from "@/pages/reports-analytics";
@@ -270,7 +271,7 @@ function Router() {
     return <Redirect to={legacyRedirects[location]} />;
   }
 
-  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/pricing"];
+  const simplePages = ["/about", "/contact", "/learning-center", "/faq", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/reset-password", "/pricing"];
   
   if (simplePages.includes(location)) {
     return (
@@ -285,6 +286,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
           <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
           <Route path="/pricing" component={Pricing} />
         </Switch>
       </SimpleLayout>
