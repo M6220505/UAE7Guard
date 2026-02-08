@@ -25,6 +25,8 @@ import { checkAllDatabases, getScamStatistics } from "./scam-databases";
 import { REAL_CASE_STUDIES, getTotalDocumentedLosses, getCommonRedFlags } from "./case-studies";
 import { analyzeWithRealPatterns, getScamIntelligence } from "./ai/enhanced-analysis";
 import { getRealStatistics, getNetworkStatistics, getTimeSeriesData, getRecentActivity, getTopScamCategories } from "./real-statistics";
+import { PRICING_PLANS, getPlanComparison, canPerformAction, calculateEscrowFee, calculateRevenueSharing } from "./pricing-plans";
+import { trackUsage, getUserUsageStats, checkRateLimit, getPlatformStatistics, calculateMRR } from "./usage-tracking";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "sk-placeholder-key-not-set",
@@ -1972,6 +1974,132 @@ Return ONLY valid JSON with this structure:
     } catch (error: any) {
       console.error('[CATEGORIES] Error:', error);
       res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  // ===== PRICING & PLANS =====
+  app.get("/api/pricing/plans", (_req, res) => {
+    try {
+      const plans = getPlanComparison();
+      res.json({ success: true, plans });
+    } catch (error: any) {
+      console.error('[PRICING] Error:', error);
+      res.status(500).json({ error: "Failed to fetch pricing plans" });
+    }
+  });
+
+  app.get("/api/pricing/compare", (_req, res) => {
+    try {
+      res.json({ success: true, plans: PRICING_PLANS });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch plan comparison" });
+    }
+  });
+
+  app.post("/api/pricing/calculate-escrow-fee", async (req, res) => {
+    try {
+      const { amount, plan = 'free' } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+      
+      const feeInfo = calculateEscrowFee(amount, plan);
+      res.json({ success: true, ...feeInfo });
+    } catch (error: any) {
+      console.error('[ESCROW-FEE] Error:', error);
+      res.status(500).json({ error: "Failed to calculate fee" });
+    }
+  });
+
+  // ===== USAGE TRACKING =====
+  app.get("/api/usage/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const stats = await getUserUsageStats(userId, 'month');
+      res.json({ success: true, stats });
+    } catch (error: any) {
+      console.error('[USAGE] Error:', error);
+      res.status(500).json({ error: "Failed to fetch usage stats" });
+    }
+  });
+
+  app.post("/api/usage/check-limit", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const { action, limit } = req.body;
+      
+      if (!userId || !action) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const result = await checkRateLimit(userId, action, limit || -1, 'month');
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      console.error('[RATE-LIMIT] Error:', error);
+      res.status(500).json({ error: "Failed to check rate limit" });
+    }
+  });
+
+  // ===== PLATFORM ADMIN STATS =====
+  app.get("/api/admin/platform-stats", isAdmin, async (_req, res) => {
+    try {
+      const stats = await getPlatformStatistics();
+      const mrr = calculateMRR(stats.subscriptions);
+      const revenue = calculateRevenueSharing(stats.revenue.thisMonth);
+      
+      res.json({
+        success: true,
+        ...stats,
+        mrr,
+        revenueBreakdown: revenue,
+      });
+    } catch (error: any) {
+      console.error('[PLATFORM-STATS] Error:', error);
+      res.status(500).json({ error: "Failed to fetch platform statistics" });
+    }
+  });
+
+  // ===== SMART CONTRACT INFO =====
+  app.get("/api/contracts/escrow-info", (_req, res) => {
+    try {
+      res.json({
+        success: true,
+        contracts: {
+          ethereum: {
+            address: process.env.ESCROW_CONTRACT_ETH || 'Not deployed',
+            network: 'Ethereum Mainnet',
+            explorerUrl: 'https://etherscan.io/address/',
+          },
+          polygon: {
+            address: process.env.ESCROW_CONTRACT_POLYGON || 'Not deployed',
+            network: 'Polygon',
+            explorerUrl: 'https://polygonscan.com/address/',
+          },
+          testnet: {
+            address: process.env.ESCROW_CONTRACT_TESTNET || '0x1234567890123456789012345678901234567890',
+            network: 'Polygon Mumbai Testnet',
+            explorerUrl: 'https://mumbai.polygonscan.com/address/',
+          },
+        },
+        info: {
+          version: '1.0.0',
+          feeRate: '0.25%',
+          features: [
+            'Multi-party escrow',
+            'Dispute resolution',
+            'Auto-refund on expiry',
+            'ETH and ERC20 support',
+          ],
+        },
+      });
+    } catch (error: any) {
+      console.error('[CONTRACT-INFO] Error:', error);
+      res.status(500).json({ error: "Failed to fetch contract info" });
     }
   });
 
