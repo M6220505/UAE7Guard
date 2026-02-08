@@ -10,8 +10,9 @@ import { calculateMillionDirhamRisk, type RiskInput } from "./risk-engine";
 import { createEncryptedAuditLog, decryptAuditLog, isEncryptionConfigured, type AuditLogData } from "./encryption";
 import { generateSovereignReport, formatReportForDisplay, type SovereignReportInput, type SovereignReport } from "./sovereign-report";
 import { generatePDFReport } from "./pdf-generator";
-import { setupAuth, registerAuthRoutes, isAuthenticated as legacyIsAuthenticated, isAdmin as legacyIsAdmin } from "./replit_integrations/auth";
-import firebaseAuthRouter from "./replit_integrations/auth/firebaseAuth";
+// OLD AUTH DISABLED - Using direct database auth instead
+// import { setupAuth, registerAuthRoutes, isAuthenticated as legacyIsAuthenticated, isAdmin as legacyIsAdmin } from "./replit_integrations/auth";
+// import firebaseAuthRouter from "./replit_integrations/auth/firebaseAuth";
 import { authenticateUser, requireAdmin, isSupabaseAuthConfigured } from "./middleware/supabaseAuth";
 
 // Use new unified auth middleware that supports both Supabase JWT and legacy sessions
@@ -38,8 +39,9 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   // Setup Replit Auth (MUST be before other routes)
-  await setupAuth(app);
-  registerAuthRoutes(app);
+  // OLD AUTH DISABLED - Using direct database auth instead
+  // await setupAuth(app);
+  // registerAuthRoutes(app);
 
   // Register Firebase Auth routes
   app.use("/api/auth/firebase", firebaseAuthRouter);
