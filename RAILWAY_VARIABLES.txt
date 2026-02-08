@@ -11,6 +11,10 @@
 # === STEP 2: Copy Each Variable to Railway ===
 # Railway → Project → Variables → + New Variable
 
+# DATABASE
+DATABASE_URL=postgresql://postgres:TNIPYYeVqAIVCWnhISZYUBgzIKIbcuCT@turntable.proxy.rlwy.net:15072/railway
+
+# EMAIL CONFIGURATION
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
