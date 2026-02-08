@@ -2100,6 +2100,113 @@ Return ONLY valid JSON with this structure:
     }
   });
 
+  // ===== SIMPLE AUTH (Direct Database) =====
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
+      }
+
+      const { signup } = await import('./auth-simple');
+      const result = await signup(email, password, firstName, lastName);
+      
+      res.json({ 
+        success: true, 
+        user: result.user,
+        token: result.token 
+      });
+    } catch (error: any) {
+      console.error('[SIGNUP] Error:', error);
+      res.status(400).json({ error: error.message || "Signup failed" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
+      }
+
+      const { signin } = await import('./auth-simple');
+      const result = await signin(email, password);
+      
+      res.json({ 
+        success: true, 
+        user: result.user,
+        token: result.token 
+      });
+    } catch (error: any) {
+      console.error('[LOGIN] Error:', error);
+      res.status(401).json({ error: error.message || "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email required" });
+      }
+
+      const { requestPasswordReset } = await import('./auth-simple');
+      await requestPasswordReset(email);
+      
+      res.json({ 
+        success: true, 
+        message: "If email exists, reset link sent" 
+      });
+    } catch (error: any) {
+      console.error('[FORGOT-PASSWORD] Error:', error);
+      res.status(500).json({ error: "Request failed" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ error: "Token and password required" });
+      }
+
+      const { resetPassword } = await import('./auth-simple');
+      await resetPassword(token, password);
+      
+      res.json({ success: true, message: "Password reset successful" });
+    } catch (error: any) {
+      console.error('[RESET-PASSWORD] Error:', error);
+      res.status(400).json({ error: error.message || "Reset failed" });
+    }
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return res.status(401).json({ error: "No token provided" });
+      }
+
+      const { verifyToken, getUserById } = await import('./auth-simple');
+      const decoded = verifyToken(token);
+      const user = await getUserById(decoded.userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ success: true, user });
+    } catch (error: any) {
+      console.error('[ME] Error:', error);
+      res.status(401).json({ error: "Invalid token" });
+    }
+  });
+
   // ===== SMART CONTRACT INFO =====
   app.get("/api/contracts/escrow-info", (_req, res) => {
     try {

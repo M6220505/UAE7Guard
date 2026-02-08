@@ -11,8 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, UserPlus, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
-import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
-import { signUp as supabaseSignUp, isSupabaseConfigured } from "@/lib/supabase";
+import { signup as apiSignup } from "@/lib/auth-api";
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -51,25 +50,13 @@ export default function Signup() {
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Authentication handled exclusively by Supabase Auth (client-side)
-      if (!isSupabaseConfigured) {
-        throw new Error("Authentication service is not configured");
-      }
-
-      const result = await supabaseSignUp(data.email, data.password, {
-        firstName: data.firstName,
-        lastName: data.lastName,
-      });
-
-      // Check if email confirmation is required
-      if (!result.session) {
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link. Please check your email to verify your account.",
-        });
-        setLocation("/login");
-        return;
-      }
+      // Direct database authentication
+      await apiSignup(
+        data.email,
+        data.password,
+        data.firstName,
+        data.lastName
+      );
 
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({

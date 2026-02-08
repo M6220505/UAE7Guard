@@ -13,7 +13,7 @@ import { Shield, Eye, EyeOff, LogIn, WifiOff, Apple } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { isOnline, addNetworkListeners } from "@/lib/network-utils";
 import { signInWithApple, isFirebaseAvailable } from "@/lib/firebase";
-import { signIn as supabaseSignIn, isSupabaseConfigured } from "@/lib/supabase";
+import { signin as apiSignin } from "@/lib/auth-api";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -76,12 +76,8 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Authentication handled exclusively by Supabase Auth (client-side)
-      if (!isSupabaseConfigured) {
-        throw new Error("Authentication service is not configured");
-      }
-
-      await supabaseSignIn(data.email, data.password);
+      // Direct database authentication
+      await apiSignin(data.email, data.password);
 
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
