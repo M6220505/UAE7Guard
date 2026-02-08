@@ -24,6 +24,7 @@ import { getStripePublishableKey } from "./stripeClient";
 import { checkAllDatabases, getScamStatistics } from "./scam-databases";
 import { REAL_CASE_STUDIES, getTotalDocumentedLosses, getCommonRedFlags } from "./case-studies";
 import { analyzeWithRealPatterns, getScamIntelligence } from "./ai/enhanced-analysis";
+import { getRealStatistics, getNetworkStatistics, getTimeSeriesData, getRecentActivity, getTopScamCategories } from "./real-statistics";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "sk-placeholder-key-not-set",
@@ -1918,6 +1919,59 @@ Return ONLY valid JSON with this structure:
     } catch (error) {
       console.error("Portal error:", error);
       res.status(500).json({ error: "Failed to create portal session" });
+    }
+  });
+
+  // ===== REAL STATISTICS =====
+  app.get("/api/stats/real", async (_req, res) => {
+    try {
+      const stats = await getRealStatistics();
+      res.json({ success: true, ...stats });
+    } catch (error: any) {
+      console.error('[STATS] Error:', error);
+      res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+  });
+
+  app.get("/api/stats/networks", async (_req, res) => {
+    try {
+      const networks = await getNetworkStatistics();
+      res.json({ success: true, networks });
+    } catch (error: any) {
+      console.error('[NETWORK-STATS] Error:', error);
+      res.status(500).json({ error: "Failed to fetch network statistics" });
+    }
+  });
+
+  app.get("/api/stats/time-series", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const data = await getTimeSeriesData(days);
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error('[TIME-SERIES] Error:', error);
+      res.status(500).json({ error: "Failed to fetch time-series data" });
+    }
+  });
+
+  app.get("/api/activity/recent", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const activity = await getRecentActivity(limit);
+      res.json({ success: true, activity });
+    } catch (error: any) {
+      console.error('[ACTIVITY] Error:', error);
+      res.status(500).json({ error: "Failed to fetch recent activity" });
+    }
+  });
+
+  app.get("/api/stats/categories", (_req, res) => {
+    try {
+      const categories = getTopScamCategories();
+      res.json({ success: true, categories });
+    } catch (error: any) {
+      console.error('[CATEGORIES] Error:', error);
+      res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
 
