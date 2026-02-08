@@ -1,0 +1,28 @@
+# UAE7Guard Railway Environment Variables
+# Copy these one by one to Railway Dashboard
+
+# === STEP 1: Get App Password First ===
+# 1. Login: admin@uae7guard.com
+# 2. Go: https://myaccount.google.com/apppasswords
+# 3. Generate for "UAE7Guard"
+# 4. Copy the 16-character password
+# 5. Replace YOUR_APP_PASSWORD below with it
+
+# === STEP 2: Copy Each Variable to Railway ===
+# Railway → Project → Variables → + New Variable
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=admin@uae7guard.com
+SMTP_PASSWORD=YOUR_APP_PASSWORD
+EMAIL_FROM=admin@uae7guard.com
+EMAIL_SUPPORT=admin@uae7guard.com
+EMAIL_ADMIN=admin@uae7guard.com
+EMAIL_ENABLED=true
+EMAIL_PROVIDER=gmail
+
+# === STEP 3: Test After Deploy ===
+# curl -X POST https://uae7guard.com/api/test-email \
+#   -H "Content-Type: application/json" \
+#   -d '{"to":"your@email.com","type":"welcome"}'
