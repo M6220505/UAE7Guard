@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import LandingPage from "@/pages/landing";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import LearningCenter from "@/pages/learning-center";
@@ -277,6 +278,8 @@ function Router() {
     return (
       <SimpleLayout>
         <Switch>
+          <Route path="/" component={LandingPage} />
+          <Route path="/home" component={Home} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/learning-center" component={LearningCenter} />
