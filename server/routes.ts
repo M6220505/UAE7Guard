@@ -2064,6 +2064,42 @@ Return ONLY valid JSON with this structure:
     }
   });
 
+  // ===== EMAIL TESTING =====
+  app.post("/api/test-email", async (req, res) => {
+    try {
+      const { to, type = 'test' } = req.body;
+      
+      if (!to) {
+        return res.status(400).json({ error: "Email address required" });
+      }
+
+      // Lazy import to avoid issues if not installed
+      const { sendEmail, sendWelcomeEmail, testEmailConnection } = await import('./email-service');
+      
+      if (type === 'connection') {
+        const connected = await testEmailConnection();
+        return res.json({ success: connected, message: connected ? 'SMTP connection successful' : 'SMTP connection failed' });
+      }
+      
+      if (type === 'welcome') {
+        const sent = await sendWelcomeEmail(to, 'Test User');
+        return res.json({ success: sent, message: sent ? 'Welcome email sent' : 'Failed to send email' });
+      }
+      
+      // Default test email
+      const sent = await sendEmail({
+        to,
+        subject: 'UAE7Guard Test Email',
+        html: '<h1>Test Email</h1><p>If you received this, email configuration is working!</p>',
+      });
+      
+      res.json({ success: sent, message: sent ? 'Test email sent successfully' : 'Failed to send email' });
+    } catch (error: any) {
+      console.error('[TEST-EMAIL] Error:', error);
+      res.status(500).json({ error: "Email test failed", message: error.message });
+    }
+  });
+
   // ===== SMART CONTRACT INFO =====
   app.get("/api/contracts/escrow-info", (_req, res) => {
     try {
