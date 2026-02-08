@@ -21,6 +21,7 @@ import { sendThreatAlert, sendReportConfirmation, sendWelcomeEmail, sendNotifica
 import { getUserIdForRequest } from "./demo-access";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
+import { checkAllDatabases, getScamStatistics } from "./scam-databases";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "sk-placeholder-key-not-set",
@@ -91,6 +92,61 @@ export async function registerRoutes(
       success: true,
       networks: SUPPORTED_NETWORKS,
     });
+  });
+
+  // ===== REAL SCAM DATABASE CHECK =====
+  app.post("/api/wallet/scam-check", async (req, res) => {
+    try {
+      const { address, network = 'ethereum' } = req.body;
+
+      if (!address) {
+        return res.status(400).json({ error: "Address is required" });
+      }
+
+      console.log(`[SCAM-CHECK] Checking ${address} on ${network}`);
+
+      // Check across all real scam databases
+      const result = await checkAllDatabases(address, network);
+
+      // Log check for statistics
+      await storage.createSecurityLog({
+        userId: null,
+        address,
+        action: 'scam_database_check',
+        details: {
+          network,
+          totalReports: result.totalReports,
+          riskLevel: result.overallRiskLevel,
+        },
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || 'unknown',
+      });
+
+      res.json({
+        success: true,
+        ...result,
+      });
+    } catch (error: any) {
+      console.error('[SCAM-CHECK] Error:', error);
+      res.status(500).json({ 
+        error: "Failed to check scam databases",
+        message: error.message 
+      });
+    }
+  });
+
+  // ===== SCAM STATISTICS =====
+  app.get("/api/scam-statistics", async (_req, res) => {
+    try {
+      const stats = await getScamStatistics();
+      res.json({
+        success: true,
+        ...stats,
+      });
+    } catch (error: any) {
+      console.error('[SCAM-STATS] Error:', error);
+      res.status(500).json({ error: "Failed to fetch statistics" });
+    }
   });
 
   // ===== MULTI-CHAIN WALLET DATA =====
