@@ -16,28 +16,50 @@ import {
  * This creates or updates the user record in our PostgreSQL database
  */
 async function syncFirebaseUser(firebaseUser: FirebaseUser): Promise<User> {
-  const idToken = await firebaseUser.getIdToken();
+  try {
+    const idToken = await firebaseUser.getIdToken();
 
-  const response = await fetch(buildApiUrl("/api/auth/firebase/sync"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
-    },
-    credentials: "include",
-    body: JSON.stringify({
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const response = await fetch(buildApiUrl("/api/auth/firebase/sync"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      credentials: "include",
+      signal: controller.signal,
+      body: JSON.stringify({
+        firebaseUid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+      }),
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Failed to sync user: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    console.error("Firebase sync failed:", error.message);
+    // Return minimal user object from Firebase data
+    return {
+      id: 0,
       firebaseUid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
-      photoURL: firebaseUser.photoURL,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to sync user: ${response.status}`);
+      email: firebaseUser.email || "",
+      firstName: firebaseUser.displayName?.split(" ")[0] || "User",
+      lastName: firebaseUser.displayName?.split(" ").slice(1).join(" ") || "",
+      profileImageUrl: firebaseUser.photoURL || null,
+      subscriptionTier: "free",
+      subscriptionStatus: "active",
+      createdAt: new Date().toISOString(),
+    } as User;
   }
-
-  return response.json();
 }
 
 /**
@@ -70,21 +92,34 @@ async function fetchUserByFirebaseUid(firebaseUid: string): Promise<User | null>
  */
 async function fetchSessionUser(): Promise<User | null> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     const response = await fetch(buildApiUrl("/api/auth/user"), {
       credentials: "include",
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (response.status === 401) {
       return null;
     }
 
     if (!response.ok) {
+      console.warn(`Session user fetch failed: ${response.status}`);
       return null;
     }
 
     return response.json();
-  } catch (error) {
-    console.error("Failed to fetch session user:", error);
+  } catch (error: any) {
+    // Network error - backend unreachable
+    if (error.name === 'AbortError') {
+      console.warn("Session user fetch timed out - backend may be unreachable");
+    } else {
+      console.warn("Failed to fetch session user:", error.message);
+    }
+    // Return null gracefully - app will work in offline mode
     return null;
   }
 }

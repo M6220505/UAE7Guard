@@ -40,6 +40,7 @@ import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AppLoader } from "@/components/app-loader";
+import { OfflineIndicator } from "@/components/offline-indicator";
 
 const legacyRedirects: Record<string, string> = {
   "/due-diligence": "/verification?tab=due-diligence",
@@ -331,6 +332,7 @@ function App() {
                 <Router />
                 <Toaster />
                 <IOSInstallPrompt />
+                <OfflineIndicator />
               </TooltipProvider>
             </LanguageProvider>
           </ThemeProvider>
