@@ -9,24 +9,31 @@ import { Capacitor } from '@capacitor/core';
 
 // Default backend URL for production mobile builds
 // Can be overridden with VITE_API_BASE_URL environment variable during build
-// 🔥 PRODUCTION: Deployed on Railway
 //
-// Options:
-//   1. Railway: 'https://web-production-2731e.up.railway.app' (CURRENT)
-//   2. Custom domain: 'https://api.uae7guard.com'
-//   3. Alternative: Set VITE_API_BASE_URL during build
+// 🔥 IMPORTANT: Update this URL to your actual backend deployment!
+//
+// Deployment Options:
+//   1. Replit: 'https://uae7guard-yourusername.repl.co'
+//   2. Railway: 'https://web-production-2731e.up.railway.app'
+//   3. Custom domain: 'https://api.uae7guard.com'
+//   4. Environment variable: Set VITE_API_BASE_URL during build
 //
 // To override at build time:
 //   export VITE_API_BASE_URL="https://your-backend-url.com"
 //   npm run build
-//   npm run cap:sync
+//   npx cap sync
 //
 // For testing with local backend on physical device:
 //   1. Get your computer's local IP: ipconfig (Windows) or ifconfig (Mac/Linux)
 //   2. Start backend: npm run dev
 //   3. Use: http://YOUR_LOCAL_IP:5000 (e.g., http://192.168.1.100:5000)
 //
-const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://web-production-2731e.up.railway.app';
+// 🚨 NOTE: If you see "Network error" or "Login failed" in the app:
+//    - Make sure your backend is deployed and accessible
+//    - Update PRODUCTION_API_URL below to match your deployment URL
+//    - Rebuild the app: npm run build && npx cap sync
+//
+const PRODUCTION_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://uae7guard.com';
 
 // Development API URL (when testing mobile app locally)
 // Can be overridden with VITE_DEV_API_URL environment variable
