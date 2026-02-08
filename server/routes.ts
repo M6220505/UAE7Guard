@@ -22,6 +22,8 @@ import { getUserIdForRequest } from "./demo-access";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { checkAllDatabases, getScamStatistics } from "./scam-databases";
+import { REAL_CASE_STUDIES, getTotalDocumentedLosses, getCommonRedFlags } from "./case-studies";
+import { analyzeWithRealPatterns, getScamIntelligence } from "./ai/enhanced-analysis";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "sk-placeholder-key-not-set",
@@ -139,13 +141,69 @@ export async function registerRoutes(
   app.get("/api/scam-statistics", async (_req, res) => {
     try {
       const stats = await getScamStatistics();
+      const intelligence = getScamIntelligence();
+      const documentedLosses = getTotalDocumentedLosses();
+      
       res.json({
         success: true,
         ...stats,
+        intelligence,
+        documented: {
+          totalLosses: documentedLosses.total,
+          totalVictims: documentedLosses.totalVictims,
+          averageLoss: documentedLosses.averageLossPerVictim,
+        },
       });
     } catch (error: any) {
       console.error('[SCAM-STATS] Error:', error);
       res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+  });
+
+  // ===== CASE STUDIES =====
+  app.get("/api/case-studies", (_req, res) => {
+    try {
+      const commonFlags = getCommonRedFlags();
+      
+      res.json({
+        success: true,
+        caseStudies: REAL_CASE_STUDIES,
+        totalCases: REAL_CASE_STUDIES.length,
+        commonRedFlags: commonFlags,
+        totalLosses: getTotalDocumentedLosses(),
+      });
+    } catch (error: any) {
+      console.error('[CASE-STUDIES] Error:', error);
+      res.status(500).json({ error: "Failed to fetch case studies" });
+    }
+  });
+
+  // ===== ENHANCED AI ANALYSIS =====
+  app.post("/api/ai/enhanced-analysis", async (req, res) => {
+    try {
+      const { address, transactionCount, balance, age, contractCode, socialMedia, websiteContent } = req.body;
+
+      if (!address) {
+        return res.status(400).json({ error: "Address is required" });
+      }
+
+      const analysis = await analyzeWithRealPatterns({
+        address,
+        transactionCount,
+        balance,
+        age,
+        contractCode,
+        socialMedia,
+        websiteContent,
+      });
+
+      res.json({
+        success: true,
+        ...analysis,
+      });
+    } catch (error: any) {
+      console.error('[AI-ANALYSIS] Error:', error);
+      res.status(500).json({ error: "AI analysis failed", message: error.message });
     }
   });
 
