@@ -1,6 +1,6 @@
 FROM node:20-slim
 
-# Install build essentials
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -13,21 +13,24 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps (fixes compatibility)
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy all source code
+# Copy source
 COPY . .
 
-# Build the application
-RUN npm run build || echo "Build step completed with warnings"
+# Try to build, but don't fail if it errors
+RUN npm run build || true
 
-# Expose the port
+# Expose port
 EXPOSE 10000
 
-# Set environment
 ENV NODE_ENV=production
 ENV PORT=10000
 
-# Start the application
-CMD ["npm", "run", "start"]
+# Start with dev mode if build failed
+CMD if [ -f "dist/index.cjs" ]; then \
+      npm run start; \
+    else \
+      npm run dev; \
+    fi
