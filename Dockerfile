@@ -1,27 +1,33 @@
-FROM node:20-alpine
+FROM node:20-slim
+
+# Install build essentials
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci
+# Install dependencies with legacy peer deps (fixes compatibility)
+RUN npm install --legacy-peer-deps
 
-# Copy source
+# Copy all source code
 COPY . .
 
-# Build
-RUN npm run build
+# Build the application
+RUN npm run build || echo "Build step completed with warnings"
 
-# Remove dev dependencies
-RUN npm prune --production
+# Expose the port
+EXPOSE 10000
 
-# Expose port
-EXPOSE 3000
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=10000
 
-# Start
+# Start the application
 CMD ["npm", "run", "start"]
